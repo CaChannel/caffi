@@ -1,0 +1,7 @@
+README
+LICENSE
+MANIFEST.in
+caffi/*.py
+graft caffi/lib
+setup.py
+

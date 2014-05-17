@@ -1,0 +1,16 @@
+caffi
+=====
+
+caffi is the Channel Access Foreign Function Interface.
+It uses CFFI to call EPICS channel access library.
+
+It is the goal of this module to provide direct low level
+interface to channel access, alike the C API.
+
+Install
+-------
+::
+    
+    $ pip install caffi
+
+
