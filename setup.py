@@ -7,13 +7,12 @@ setup.py file for caffi
 try:
     from setuptools import setup
 except ImportError:
-    pass
-else:
     from distutils.core import setup
 
 long_description = open('README').read()
 
 setup (name = 'caffi',
+       version = '0.9',
        description = """Channel Access Foreign Function Interface""",
        long_description = long_description,
        author      = "Xiaoqiang Wang",
