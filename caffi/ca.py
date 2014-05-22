@@ -67,8 +67,8 @@ def _exceptionCB(carg):
         'lineNo': carg.lineNo
     }
     user_callback, user_arg = ffi.from_handle(carg.usr)
-    user_callback(epics_arg, user_arg)
-
+    if callable(user_callback):
+        user_callback(epics_arg, user_arg)
 
 def add_exception_event(callback=None, args=()):
     """
@@ -113,7 +113,8 @@ def _eventCB(arg):
         'value' : format_dbr(arg.type, arg.count, arg.dbr)
     }
     user_callback, user_arg = ffi.from_handle(arg.usr)
-    user_callback(epics_arg, user_arg)
+    if (callable(user_callback)):
+        user_callback(epics_arg, user_arg)
 
 
 def create_context(preemptive_callback=True):
@@ -201,7 +202,8 @@ def _connectCB(carg):
     }
 
     user_callback, user_arg = ffi.from_handle(libca.ca_puser(carg.chid))
-    user_callback(epics_arg, user_arg)
+    if callable(user_callback):
+        user_callback(epics_arg, user_arg)
 
 
 def create_channel(name, callback=None, args=(), priority=CA_PRIORITY_DEFAULT):
@@ -285,7 +287,8 @@ def _getCB(arg):
 
     user_callback, user_arg = ffi.from_handle(arg.usr)
     __channels[arg.chid]['callbacks'].remove(arg.usr)
-    user_callback(epics_arg, user_arg)
+    if callable(user_callback):
+        user_callback(epics_arg, user_arg)
 
 
 def get(chid, dbrtype=None, count=None, callback=None, args=()):
@@ -347,7 +350,8 @@ def _put_callback(arg):
     }
     user_callback, user_arg = ffi.from_handle(arg.usr)
     __channels[arg.chid]['callbacks'].remove(arg.usr)
-    user_callback(epics_arg, user_arg)
+    if callable(user_callback):
+        user_callback(epics_arg, user_arg)
 
 
 def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
