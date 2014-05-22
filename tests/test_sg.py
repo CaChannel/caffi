@@ -14,21 +14,29 @@ status = pend_io(3)
 if status != ECA_NORMAL:
     print(message(status))
 
+gid = sg_create()
+
 # put
 for name, chid in pvs.items():
     if field_type(chid) == DBF_STRING:
-        put(chid, ['1','2','3', '4'])
+        sg_put(gid, chid, ['1','2','3', '4'])
     else:
-        put(chid, [1, 2, 3, 4])
+        sg_put(gid, chid, [1, 2, 3, 4])
 
 flush_io()
 
+status = sg_block(gid, 5)
+if status != ECA_NORMAL:
+    print(message(status))
+
 # get
 for name, chid in pvs.items():
-    value = get(chid)
+    value = sg_get(gid, chid)
     vals[name] = value
 
-status = pend_io(3)
+flush_io()
+
+status = sg_block(gid, 0.1)
 if status != ECA_NORMAL:
     print(message(status))
 

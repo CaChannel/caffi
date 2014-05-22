@@ -52,6 +52,11 @@ typedef struct event_handler_args {
 } evargs;
 typedef void caEventCallBackFunc (struct event_handler_args);
 
+void ca_test_event
+(
+    struct event_handler_args
+);
+
 /* arguments passed to user exception handlers */
 struct exception_handler_args {
     void            *usr;   /* user argument supplied when installed */
@@ -66,6 +71,7 @@ struct exception_handler_args {
     unsigned        lineNo; /* source file line number (may be zero) */
 };
 
+typedef unsigned CA_SYNC_GID;
 
 short           ca_field_type(chid chan);
 unsigned long   ca_element_count(chid chan);
@@ -371,6 +377,17 @@ int ca_pend_event(ca_real timeOut);
  */
 int ca_pend_io(ca_real timeOut);
 
+/* calls ca_pend_io() if early is true otherwise ca_pend_event() is called */
+int ca_pend (ca_real timeout, int early);
+
+/*
+ * ca_test_io()
+ *
+ * returns TRUE when get requests (or search requests with null
+ * connection handler pointer) are outstanding
+ */
+int ca_test_io (void);
+
 /************************************************************************/
 /*  Send out all outstanding messages in the send queue                 */
 /************************************************************************/
@@ -408,6 +425,115 @@ int ca_replace_printf_handler (
     caPrintfFunc    *ca_printf_func
 );
 */
+
+/*
+ * CA synch groups
+ *
+ * This facility will allow the programmer to create
+ * any number of synchronization groups. The programmer might then
+ * interleave IO requests within any of the groups. Once The
+ * IO operations are initiated then the programmer is free to
+ * block for IO completion within any one of the groups as needed.
+ */
+
+/*
+ * ca_sg_create()
+ *
+ * create a sync group
+ *
+ * pgid     W   pointer to sync group id that will be written
+ */
+int ca_sg_create (CA_SYNC_GID *  pgid);
+
+/*
+ * ca_sg_delete()
+ *
+ * delete a sync group
+ *
+ * gid      R   sync group id
+ */
+int ca_sg_delete (const CA_SYNC_GID gid);
+
+/*
+ * ca_sg_block()
+ *
+ * block for IO performed within a sync group to complete
+ *
+ * gid      R   sync group id
+ * timeout  R   wait for this duration prior to timing out
+ *          and returning ECA_TIMEOUT
+ */
+int ca_sg_block (const CA_SYNC_GID gid, ca_real timeout);
+
+/*
+ * ca_sg_test()
+ *
+ * test for sync group IO operations in progress
+ *
+ * gid      R   sync group id
+ *
+ * returns one of ECA_BADSYNCGRP, ECA_IOINPROGRESS, ECA_IODONE
+ */
+int ca_sg_test (const CA_SYNC_GID gid);
+
+/*
+ * ca_sg_reset
+ *
+ * gid      R   sync group id
+ */
+int ca_sg_reset(const CA_SYNC_GID gid);
+
+/*
+ * ca_sg_array_get()
+ *
+ * initiate a get within a sync group
+ * (essentially a ca_array_get() with a sync group specified)
+ *
+ * gid      R   sync group id
+ * type     R   data type from db_access.h
+ * count    R   array element count
+ * chan     R   channel identifier
+ * pValue   W   channel value copied to this location
+ */
+int ca_sg_array_get
+(
+    const CA_SYNC_GID gid,
+    chtype type,
+    unsigned long count,
+    chid chan,
+    void *pValue
+);
+
+/*
+ * ca_sg_array_put()
+ *
+ * initiate a put within a sync group
+ * (essentially a ca_array_put() with a sync group specified)
+ *
+ * gid      R   sync group id
+ * type     R   data type from db_access.h
+ * count    R   array element count
+ * chan     R   channel identifier
+ * pValue   R   new channel value copied from this location
+ */
+int ca_sg_array_put
+(
+    const CA_SYNC_GID gid,
+    chtype type,
+    unsigned long count,
+    chid chan,
+    const void *pValue
+);
+
+/*
+ * ca_sg_stat()
+ *
+ * print status of a sync group
+ *
+ * gid      R   sync group id
+ */
+int ca_sg_stat (CA_SYNC_GID gid);
+
 
 /*
  * used when an auxillary thread needs to join a CA client context started

@@ -60,10 +60,10 @@ DBE_PROPERTY    = (1<<3)
 
 
 # caerr.h
-ECA_NORMAL  = 1
-ECA_TIMEOUT = 80
-
-
+ECA_NORMAL          =   1
+ECA_TIMEOUT         =  80
+ECA_IODONE          = 339
+ECA_IOINPROGRESS    = 347
 # db_access.h
 # /* database field types */
 DBF_STRING  = 0

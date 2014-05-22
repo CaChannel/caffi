@@ -1,28 +1,42 @@
 """
 The is the low level access to EPICS channel access library. It maps the corresponding C API to Python functions.
-Only at the `ca_` prefix has been removed, e.g. C function `ca_create_channel` is Python function `create_channel`.
-The order of the argument has been altered to be allow default arguments, thus more pythonic.
-Take C function `array_put_callback` for example,
-::
+Even though as same as possible, there are subtle differences:
 
-    int ca_array_put_callback
-    (
-        chtype                 type,
-        unsigned long          count,
-        chid                   chanId,
-        const void *           pValue,
-        caEventCallBackFunc *  pFunc,
-        void *                 pArg
-    );
+  - The `ca_` prefix of the function name has been removed, e.g. C function `ca_create_channel` is now Python function `create_channel`.
 
-Its Python counterpart,
-::
+  - The order of the argument might have been altered to be allow default arguments, thus more pythonic.
+    Take C function `array_put_callback` for example,
+    ::
 
-    put(chid, value, dbrType=None, count=None, callback=None, args=())
+        int ca_array_put_callback
+        (
+            chtype                 type,
+            unsigned long          count,
+            chid                   chanId,
+            const void *           pValue,
+            caEventCallBackFunc *  pFunc,
+            void *                 pArg
+        );
 
-Only two arguments are mandatory, which are the channel identifier and the value to write.
-The others are made optional and have reasonable defaults.
+    Its Python counterpart,
+    ::
 
+        put(chid, value, dbrType=None, count=None, callback=None, args=())
+
+    Only two arguments are mandatory, which are the channel identifier and the value to write.
+    The others are made optional and have reasonable defaults.
+
+  - In C API the callback function handler has the following signature,
+    ::
+
+        void (*)(struct xxx_handler_args)
+
+    In Python counterpart, the callback signature is
+    ::
+
+        def callback(epicsArgs, userArgs):
+
+    *epicsArgs* is a dict converted from `xxx_handler_args`. *userArgs* is a tuple supplied by user when the callback is registered.
 
 """
 from __future__ import (print_function, absolute_import)
@@ -267,11 +281,13 @@ def create_channel(name, callback=None, args=(), priority=CA_PRIORITY_DEFAULT):
         connect_callback = ffi.NULL
         user_connect_callback = ffi.NULL
     status = libca.ca_create_channel(name, connect_callback, user_connect_callback, priority, pchid)
-    chid = pchid[0]
-    if chid != ffi.NULL:
+    if status == ECA_NORMAL:
+        chid = pchid[0]
         __channels[chid] = {'callbacks':set(), 'monitors' : set()}
         if user_connect_callback != ffi.NULL:
             __channels[chid]['callbacks'].add(user_connect_callback)
+    else:
+        chid = None
     return chid
 
 
@@ -319,7 +335,7 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
     All of these functions return *ECA_DISCONN* if the channel is currently disconnected.
 
     All get requests are accumulated (buffered) and not forwarded to the IOC until one of
-    :func:`flush_io`, :func:`pend_io`, :func:`pend_event`, or ca_sg_pend are called.
+    :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
     This allows several requests to be efficiently sent over the network in one message.
 
     """
@@ -393,7 +409,7 @@ def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
     All of these functions return *ECA_DISCONN* if the channel is currently disconnected.
 
     All put requests are accumulated (buffered) and not forwarded to the IOC until one of :func:`flush_io`, :func:`pend_io`,
-    :func:`pend_event`, or ca_sg_pend are called. This allows several requests to be efficiently combined into one message.
+    or :func:`pend_event` are called. This allows several requests to be efficiently combined into one message.
     """
     if dbrtype is None:
         dbrtype = libca.ca_field_type(chid)
@@ -476,7 +492,7 @@ def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=
     if the requested count is larger.
 
     All subscription requests such as the above are accumulated (buffered)
-    and not forwarded to the IOC until one of :func:`flush_io`, :func:`pend_io`, :func:`pend_event`, or ca_sg_pend are called.
+    and not forwarded to the IOC until one of :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
     This allows several requests to be efficiently sent over the network in one message.
 
     If at any time after subscribing, read access to the specified process variable is lost,
@@ -517,7 +533,7 @@ def clear_subscription(evid):
                 - ECA_BADCHID - Corrupted CHID
 
     All cancel-subscription requests such as the above are accumulated (buffered) and not forwarded to the server
-    until one of :func:`flush_io`, :func:`pend_io`, :func:`pend_event`, or ca_sg_pend are called.
+    until one of :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
     This allows several requests to be efficiently sent together in one message.
 
     """
@@ -540,7 +556,7 @@ def clear_channel(chid):
                 - ECA_BADCHID - Corrupted CHID
 
     All remote operation requests such as the above are accumulated (buffered) and not forwarded to the IOC
-    until one of :func:`flush_io`, :func:`pend_io`, :func:`pend_event`, or ca_sg_pend are called.
+    until one of :func:`flush_io`, :func:`pend_io` or :func:`pend_event` are called.
     This allows several requests to be efficiently sent over the network in one message.
 
     Clearing a channel does not cause its disconnect handler to be called,
@@ -558,7 +574,6 @@ def clear_channel(chid):
     del __channels[chid]
 
     return status
-
 
 
 def pend_event(timeout):
@@ -594,6 +609,7 @@ def poll():
     """
     status = libca.ca_pend_event(1e-12)
     return
+
 
 def pend_io(timeout):
     """
@@ -631,6 +647,34 @@ def pend_io(timeout):
 
     """
     status = libca.ca_pend_io(timeout)
+    return status
+
+
+def pend(timeout, early):
+    """
+    :param float timeout: Specifies the time out interval. A timeout interval of zero specifies forever.
+    :param bool early: Call :func:`pend_io` if *early* is True otherwise :func:`pend_event` is called
+    :return:
+                - ECA_NORMAL - Normal successful completion
+                - ECA_TIMEOUT - Selected IO requests didn't complete before specified timeout
+                - ECA_EVDISALLOW - Function inappropriate for use within an event handler
+
+    """
+    return libca.ca_pend(timeout, early)
+
+
+def test_io():
+    """
+    This function tests to see if all get requests are complete and channels created without a connection callback function
+    are connected. It will report the status of outstanding get requests issued, and channels created without connection callback function,
+    after the last call to ca_pend_io() or CA context initialization whichever is later.
+
+    :return:
+                - ECA_IODONE - All IO operations completed
+                - ECA_IOINPROGRESS - IO operations still in progress
+
+    """
+    status = (libca.test_io() == 1)
     return status
 
 
@@ -710,3 +754,175 @@ def write_access(chid):
     :return: True if the client currently has write access to the specified channel and False otherwise.
     """
     return libca.ca_write_access(chid)
+
+
+def sg_create():
+    """
+    Create a synchronous group and return an identifier for it.
+
+    :return: Synchronous group identifier
+
+    A synchronous group can be used to guarantee that a set of channel access requests have completed.
+    Once a synchronous group has been created then channel access get and put requests may be issued
+    within it using :func:`sg_get` and :func:`sg_put` respectively.
+    The routines :func:`sg_block` and :func:`sg_test` can be used to block for and test for completion respectively.
+    The routine :func:`sg_reset` is used to discard knowledge of old requests which have timed out and
+    in all likelihood will never be satisfied.
+
+    Any number of asynchronous groups can have application requested operations outstanding within them at any given time.
+
+    """
+    pgid = ffi.new('CA_SYNC_GID *')
+    status = libca.ca_sg_create(pgid)
+    if status == ECA_NORMAL:
+        gid = pgid[0]
+    else:
+        gid = None
+    return gid
+
+
+def sg_delete(gid):
+    """
+    Deletes a synchronous group.
+
+    :param gid: Identifier of the synchronous group to be deleted.
+    :return:
+                - ECA_NORMAL - Normal successful completion
+                - ECA_BADSYNCGRP - Invalid synchronous group
+    """
+    return libca.ca_sg_delete(gid)
+
+
+def sg_block(gid, timeout):
+    """
+    Flushes the send buffer and then waits until outstanding requests complete or the specified time out expires.
+    At this time outstanding requests include calls to :func:`sg_array_get` and calls to :func:`sg_array_put`.
+    If ECA_TIMEOUT is returned then failure must be assumed for all outstanding queries.
+    Operations can be reissued followed by another :func:`sg_block`.
+    This routine will only block on outstanding queries issued after the last call to :func:`sg_block`,
+    :func:`ca_sg_reset`, or :func:`sg_create` whichever occurs later in time.
+    If no queries are outstanding then :func:`sg_block` will return immediately without processing any pending channel access activities.
+
+    Values written into your program's variables by a channel access synchronous group request should not be
+    referenced by your program until ECA_NORMAL has been received from :func:`sg_block`.
+    This routine will process pending channel access background activity while it is waiting.
+
+    :param gid: Identifier of the synchronous group.
+    :param timeout: Specifies the time out interval. A timeout interval of zero specifies forever.
+    :return:
+                - ECA_NORMAL - Normal successful completion
+                - ECA_TIMEOUT - The operation timed out
+                - ECA_EVDISALLOW - Function inappropriate for use within an event handler
+                - ECA_BADSYNCGRP - Invalid synchronous group
+    """
+    return libca.ca_sg_block(gid, timeout)
+
+
+def sg_test(gid):
+    """
+    Test to see if all requests made within a synchronous group have completed.
+
+    :param gid: Identifier of the synchronous group.
+    :return: True if all IO operations are completed
+    """
+    return libca.ca_sg_test(gid) == ECA_IODONE
+
+
+def sg_reset(gid):
+    """
+    Reset the number of outstanding requests within the specified synchronous group to zero so that
+    :func:`sg_test` will return True and :func:`sg_block` will not block unless additional subsequent requests are made.
+
+    :param gid: Identifier of the synchronous group.
+    :return:
+                - ECA_NORMAL - Normal successful completion
+                - ECA_BADSYNCGRP - Invalid synchronous group
+    """
+    return libca.sg_reset(gid)
+
+
+def sg_put(gid, chid, value, dbrtype=None, count=None):
+    """
+    Write a value, or array of values, to a channel and increment the outstanding request count of a synchronous group.
+
+    :param gid: Synchronous group identifier
+    :param chid: Channel identifier
+    :param value: The value or array of values to write
+    :param dbrtype: The type of supplied value. Conversion will occur if it does not match the native type.
+                    Specify one from the set of DBR_XXXX in db_access.h.
+    :param count: The element count to be written to the specified channel.
+    :return:
+                - ECA_NORMAL - Normal successful completion
+                - ECA_BADSYNCGRP - Invalid synchronous group
+                - ECA_BADCHID - Corrupted CHID
+                - ECA_BADTYPE - Invalid DBR_XXXX type
+                - ECA_BADCOUNT - Requested count larger than native element count
+                - ECA_STRTOBIG - Unusually large string supplied
+                - ECA_PUTFAIL - A local database put failed
+
+    All remote operation requests such as the above are accumulated (buffered) and not forwarded to the server
+    until one of :func:`flush_io`, :func:`pend_io` or :func:`pend_event` are called.
+    This allows several requests to be efficiently sent in one message.
+
+    If a connection is lost and then resumed outstanding puts are not reissued.
+    """
+    if dbrtype is None:
+        dbrtype = libca.ca_field_type(chid)
+
+    element_count = libca.ca_element_count(chid)
+    if count is None or count < 0:
+        count = element_count
+
+    # treat single value and sequence differently to create c type value
+    try:
+        value_count = len(value)
+    except TypeError:
+        value_count = 1
+    else:
+        # string type is also a sequence but it is counted as one if DBR_STRING type
+        if isinstance(value, basestring) and dbrtype == DBR_STRING:
+            value_count = 1
+
+   # setup c value
+    if value_count == 1:
+        cvalue = ffi.new(DBR_TYPE_STRING[dbrtype]+'*', value)
+    else:
+        cvalue = ffi.new(DBR_TYPE_STRING[dbrtype]+'[]', value)
+
+    # the actual count requested is the minimum of all three
+    count = min(count, element_count, value_count)
+
+    status = libca.ca_sg_array_put(gid, dbrtype, count, chid, cvalue)
+
+    return status
+
+def sg_get(gid, chid, dbrtype=None, count=None):
+    """
+    Read a value from a channel and increment the outstanding request count of a synchronous group.
+
+    :param gid: Identifier of the synchronous group.
+    :param chid: Channel identifier
+    :param dbrtype: External type of returned value. Conversion will occur if this does not match native type.
+                    Specify one from the set of DBR_XXXX in db_access.h
+    :param count: Element count to be read from the specified channel.
+    :return: Pointer to application supplied buffer that is to contain the value or array of values to be returned
+
+
+    The values written into your program's variables by :func:`sg_get` should not be referenced by your program
+    until ECA_NORMAL has been received from ca_sg_block , or until :func:`sg_test` returns True.
+
+    All remote operation requests such as the above are accumulated (buffered) and not forwarded to the server
+    until one of :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
+    This allows several requests to be efficiently sent in one message.
+
+    If a connection is lost and then resumed outstanding gets are not reissued.
+    """
+    if count is None or count < 0:
+        count = libca.ca_element_count(chid)
+
+    if dbrtype is None:
+        dbrtype = libca.ca_field_type(chid)
+
+    value = ffi.new('char[]', dbr_size_n(dbrtype, count))
+    libca.ca_sg_array_get(gid, dbrtype, count, chid, value)
+    return value

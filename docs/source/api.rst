@@ -41,6 +41,16 @@ Information
 .. autofunction:: read_access
 .. autofunction:: write_access
 
+Synchronous
+-----------
+.. autofunction:: sg_create
+.. autofunction:: sg_delete
+.. autofunction:: sg_get
+.. autofunction:: sg_put
+.. autofunction:: sg_block
+.. autofunction:: sg_test
+.. autofunction:: sg_reset
+
 Misc
 ----
 .. autofunction:: add_exception_event
