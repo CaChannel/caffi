@@ -1,7 +1,7 @@
-README
-LICENSE
-MANIFEST.in
-caffi/*.py
+include README
+include LICENSE
+include MANIFEST.in
+include caffi/*.py
 graft caffi/lib
-setup.py
+include tests/*.py
 

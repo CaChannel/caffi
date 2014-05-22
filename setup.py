@@ -3,8 +3,13 @@
 """
 setup.py file for caffi
 """
-from distutils.core import setup
-import imp
+# Use setuptools to include build_sphinx, upload/sphinx commands
+try:
+    from setuptools import setup
+except ImportError:
+    pass
+else:
+    from distutils.core import setup
 
 long_description = open('README').read()
 
