@@ -674,7 +674,7 @@ def test_io():
                 - ECA_IOINPROGRESS - IO operations still in progress
 
     """
-    status = (libca.test_io() == 1)
+    status = (libca.ca_test_io() == 1)
     return status
 
 
