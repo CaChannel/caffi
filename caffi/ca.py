@@ -192,7 +192,7 @@ def current_context():
     context = libca.ca_current_context()
     if context == ffi.NULL:
         context = None
-    return None
+    return context
 
 def show_context(context=None, level=0):
     """
@@ -428,7 +428,7 @@ def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
         if isinstance(value, basestring) and dbrtype == DBR_STRING:
             value_count = 1
 
-   # setup c value
+    # setup c value
     if value_count == 1:
         cvalue = ffi.new(DBR_TYPE_STRING[dbrtype]+'*', value)
     else:
@@ -669,13 +669,10 @@ def test_io():
     are connected. It will report the status of outstanding get requests issued, and channels created without connection callback function,
     after the last call to ca_pend_io() or CA context initialization whichever is later.
 
-    :return:
-                - ECA_IODONE - All IO operations completed
-                - ECA_IOINPROGRESS - IO operations still in progress
+    :return: True if All IO operations completed
 
     """
-    status = (libca.ca_test_io() == 1)
-    return status
+    return (libca.ca_test_io() == ECA_IODONE)
 
 
 def flush_io():
