@@ -471,6 +471,7 @@ def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
 
     return status
 
+
 def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=DBE_VALUE|DBE_ALARM):
     """
     Register a state change subscription and specify a call back function to be invoked
@@ -566,9 +567,10 @@ def clear_subscription(evid):
     """
     status = libca.ca_clear_subscription(evid)
 
-    chid = __monitors[evid][0]
-    __channels[chid]['monitors'].remove(evid)
-    del __monitors[evid]
+    if __monitors.has_key(evid):
+        chid = __monitors[evid][0]
+        __channels[chid]['monitors'].remove(evid)
+        del __monitors[evid]
 
     return status
 
@@ -598,7 +600,8 @@ def clear_channel(chid):
     status = libca.ca_clear_channel(chid)
 
     # remove from channels list
-    del __channels[chid]
+    if __channels.has_key(chid):
+        del __channels[chid]
 
     return status
 
@@ -894,6 +897,7 @@ def sg_put(gid, chid, value, dbrtype=None, count=None):
     status = libca.ca_sg_array_put(gid, dbrtype, count, chid, cvalue)
 
     return status
+
 
 def sg_get(gid, chid, dbrtype=None, count=None):
     """
