@@ -124,54 +124,47 @@ def format_dbr(dbrType, count, dbrValue):
     elif dbrType == DBR_DOUBLE:
         value = format_plain_value('dbr_double_t', count, dbrValue)
 
-    elif dbrType == DBR_STS_STRING or dbrType == DBR_STS_STRING or dbrType == DBR_CTRL_STRING:
+    elif dbrType == DBR_STS_STRING or dbrType == DBR_TIME_STRING or dbrType == DBR_CTRL_STRING:
         value = {}
-        cvalue = ffi.cast('struct dbr_sts_string*', count, dbrValue)
+        cvalue = ffi.cast('struct dbr_sts_string*', dbrValue)
         format_dbr_sts(cvalue, value)
         value['value'] = format_string_value(count, dbrValue)
 
     elif dbrType == DBR_STS_INT:
         value = {}
-        cvalue = ffi.cast('struct dbr_sts_int*', count, dbrValue)
+        cvalue = ffi.cast('struct dbr_sts_int*', dbrValue)
         format_dbr_sts(cvalue, value)
         value['value'] = format_plain_value('dbr_int_t', count, dbr_value_ptr(cvalue, dbrType))
 
     elif dbrType == DBR_STS_FLOAT:
         value = {}
-        cvalue = ffi.cast('struct dbr_sts_float*', count, dbrValue)
+        cvalue = ffi.cast('struct dbr_sts_float*', dbrValue)
         format_dbr_sts(cvalue, value)
         value['value'] = format_plain_value('dbr_float_t', count, dbr_value_ptr(cvalue, dbrType))
 
     elif dbrType == DBR_STS_ENUM:
         value = {}
-        cvalue = ffi.cast('struct dbr_sts_enum*', count, dbrValue)
+        cvalue = ffi.cast('struct dbr_sts_enum*', dbrValue)
         format_dbr_sts(cvalue, value)
         value['value'] = format_plain_value('dbr_enum_t', count, dbr_value_ptr(cvalue, dbrType))
 
     elif dbrType == DBR_STS_CHAR:
         value = {}
-        cvalue = ffi.cast('struct dbr_sts_char*', count, dbrValue)
+        cvalue = ffi.cast('struct dbr_sts_char*', dbrValue)
         format_dbr_sts(cvalue, value)
         value['value'] = format_plain_value('dbr_char_t', count, dbr_value_ptr(cvalue, dbrType))
 
     elif dbrType == DBR_STS_LONG:
         value = {}
-        cvalue = ffi.cast('struct dbr_sts_long*', count, dbrValue)
+        cvalue = ffi.cast('struct dbr_sts_long*', dbrValue)
         format_dbr_sts(cvalue, value)
         value['value'] = format_plain_value('dbr_long_t', count, dbr_value_ptr(cvalue, dbrType))
 
     elif dbrType == DBR_STS_DOUBLE:
         value = {}
-        cvalue = ffi.cast('struct dbr_sts_double*', count, dbrValue)
+        cvalue = ffi.cast('struct dbr_sts_double*', dbrValue)
         format_dbr_sts(cvalue, value)
         value['value'] = format_plain_value('dbr_double_t', count, dbr_value_ptr(cvalue, dbrType))
-
-    elif dbrType == DBR_TIME_STRING:
-        value = {}
-        cvalue = ffi.cast('struct dbr_sts_string*', count, dbrValue)
-        format_dbr_sts(cvalue, value)
-        format_dbr_time(cvalue, value)
-        value['value'] = format_string_value(count, dbrValue)
 
     elif dbrType == DBR_TIME_INT:
         value = {}
