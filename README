@@ -4,13 +4,41 @@ caffi
 caffi is the Channel Access Foreign Function Interface.
 It uses CFFI to call EPICS channel access library.
 
-It is the goal of this module to provide direct low level
+It is the goal of this package to provide direct low level
 interface to channel access, alike the C API.
+
+::
+
+    import sys
+    import caffi.ca as ca
+
+    context = ca.create_context()
+
+    chid = ca.create_channel('catest')
+    status = ca.pend_io(3)
+    if status != ca.ECA_NORMAL:
+        print(ca.message(status))
+        sys.exit(1)
+
+    value = ca.get(chid)
+    status = ca.pend_io(3)
+    if status != ca.ECA_NORMAL:
+        print(ca.message(status))
+        sys.exit(1)
+
+    print(value.get())
+
 
 Install
 -------
+EPICS libraries have been shipped with the package for Windows, Linux and OS X.
+Either use *pip*,
 ::
     
     $ pip install caffi
 
+or download the source tarball, unzip and run,
+::
+
+    $ python setup.py install
 
