@@ -692,6 +692,14 @@ struct dbr_time_string{
 };
 
 /* structure for an short time field */
+struct dbr_time_int{
+	dbr_short_t	status;	 		/* status of value */
+	dbr_short_t	severity;		/* severity of alarm */
+	epicsTimeStamp	stamp;			/* time stamp */
+	dbr_short_t	RISC_pad;		/* RISC alignment */
+	dbr_short_t	value;			/* current value */
+};
+
 struct dbr_time_short{
 	dbr_short_t	status;	 		/* status of value */
 	dbr_short_t	severity;		/* severity of alarm */
