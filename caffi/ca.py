@@ -196,7 +196,7 @@ def attach_context(context):
     If context is non preemptive, then additional threads are not allowed to join the CA context
     because allowing other threads to join implies that CA callbacks will be called preemptively from more than one thread.
     """
-    libca.ca_attach_context(context)
+    return libca.ca_attach_context(context)
 
 
 def current_context():
