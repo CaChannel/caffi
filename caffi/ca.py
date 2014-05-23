@@ -370,6 +370,39 @@ def _put_callback(arg):
         user_callback(epics_arg, user_arg)
 
 
+def _setup_put(chid, value, dbrtype=None, count=None):
+    """
+    Setup the C value for ca put. This is used by both :func:`put` and :func:`sg_put`.
+    Return (dbrtype, count, c_value) tuple.
+    """
+    if dbrtype is None:
+        dbrtype = libca.ca_field_type(chid)
+
+    element_count = libca.ca_element_count(chid)
+    if count is None or count < 0:
+        count = element_count
+
+    # treat single value and sequence differently to create c type value
+    try:
+        value_count = len(value)
+    except TypeError:
+        value_count = 1
+    else:
+        # string type is also a sequence but it is counted as one if DBR_STRING type
+        if isinstance(value, basestring) and dbrtype == DBR_STRING:
+            value_count = 1
+
+    # setup c value
+    if value_count == 1:
+        cvalue = ffi.new(DBR_TYPE_STRING[dbrtype]+'*', value)
+    else:
+        cvalue = ffi.new(DBR_TYPE_STRING[dbrtype]+'[]', value)
+
+    # the actual count requested is the minimum of all three
+    count = min(count, element_count, value_count)
+
+    return (dbrtype, count, cvalue)
+
 def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
     """
     Write a scalar or array value to a process variable.
@@ -411,31 +444,7 @@ def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
     All put requests are accumulated (buffered) and not forwarded to the IOC until one of :func:`flush_io`, :func:`pend_io`,
     or :func:`pend_event` are called. This allows several requests to be efficiently combined into one message.
     """
-    if dbrtype is None:
-        dbrtype = libca.ca_field_type(chid)
-
-    element_count = libca.ca_element_count(chid)
-    if count is None or count < 0:
-        count = element_count
-
-    # treat single value and sequence differently to create c type value
-    try:
-        value_count = len(value)
-    except TypeError:
-        value_count = 1
-    else:
-        # string type is also a sequence but it is counted as one if DBR_STRING type
-        if isinstance(value, basestring) and dbrtype == DBR_STRING:
-            value_count = 1
-
-    # setup c value
-    if value_count == 1:
-        cvalue = ffi.new(DBR_TYPE_STRING[dbrtype]+'*', value)
-    else:
-        cvalue = ffi.new(DBR_TYPE_STRING[dbrtype]+'[]', value)
-
-    # the actual count requested is the minimum of all three
-    count = min(count, element_count, value_count)
+    dbrtype, count, cvalue = _setup_put(chid, value, dbrtype, count)
 
     if callback == None or not callable(callback):
         libca.ca_array_put(dbrtype, count, chid, cvalue)
@@ -863,31 +872,7 @@ def sg_put(gid, chid, value, dbrtype=None, count=None):
 
     If a connection is lost and then resumed outstanding puts are not reissued.
     """
-    if dbrtype is None:
-        dbrtype = libca.ca_field_type(chid)
-
-    element_count = libca.ca_element_count(chid)
-    if count is None or count < 0:
-        count = element_count
-
-    # treat single value and sequence differently to create c type value
-    try:
-        value_count = len(value)
-    except TypeError:
-        value_count = 1
-    else:
-        # string type is also a sequence but it is counted as one if DBR_STRING type
-        if isinstance(value, basestring) and dbrtype == DBR_STRING:
-            value_count = 1
-
-   # setup c value
-    if value_count == 1:
-        cvalue = ffi.new(DBR_TYPE_STRING[dbrtype]+'*', value)
-    else:
-        cvalue = ffi.new(DBR_TYPE_STRING[dbrtype]+'[]', value)
-
-    # the actual count requested is the minimum of all three
-    count = min(count, element_count, value_count)
+    dbrtype, count, cvalue = _setup_put(chid, value, dbrtype, count)
 
     status = libca.ca_sg_array_put(gid, dbrtype, count, chid, cvalue)
 
