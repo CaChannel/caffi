@@ -2,9 +2,9 @@
 The is the low level access to EPICS channel access library. It maps the corresponding C API to Python functions.
 Even though as same as possible, there are subtle differences:
 
-  - The `ca_` prefix of the function name has been removed, e.g. C function `ca_create_channel` is now Python function `create_channel`.
+  - The `ca_` prefix of the C function name has been removed, e.g. C function `ca_create_channel` is now Python function `create_channel`.
 
-  - The order of the argument might have been altered to be allow default arguments, thus more pythonic.
+  - The order of the argument might have been altered to allow default arguments, thus more pythonic.
     Take C function `array_put_callback` for example,
     ::
 
@@ -37,6 +37,18 @@ Even though as same as possible, there are subtle differences:
         def callback(epicsArgs, userArgs):
 
     *epicsArgs* is a dict converted from `xxx_handler_args`. *userArgs* is a tuple supplied by user when the callback is registered.
+
+  - C functions normally return status code to indicate success or failure. The Python counterparts follow
+    this but have exceptions:
+
+    - C function `ca_test_io` and `ca_sg_test` return status code ECA_IODONE/ECA_IOINPROGRESS.
+      The Python counterparts return True/False.
+
+    - The get functions in C require user supplied memory pointer passed as argument. In Python the functions
+      return :class:`caffi.dbr.DBRValue` to wrap this allocated memory.
+
+    - All the creation functions, :func:`create_channel`, :func:`create_subscription` and :func:`sg_create`
+      return the created objects instead of status code. If status code indicates a failure, *None* is returned.
 
 """
 from __future__ import (print_function, absolute_import)
@@ -449,12 +461,13 @@ def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
     dbrtype, count, cvalue = _setup_put(chid, value, dbrtype, count)
 
     if callback == None or not callable(callback):
-        libca.ca_array_put(dbrtype, count, chid, cvalue)
+        status = libca.ca_array_put(dbrtype, count, chid, cvalue)
     else:
         put_callback = ffi.new_handle((callback,args,))
         __channels[chid]['callbacks'].add(put_callback)
-        libca.ca_array_put_callback(dbrtype, count, chid, cvalue, _put_callback, put_callback)
+        status = libca.ca_array_put_callback(dbrtype, count, chid, cvalue, _put_callback, put_callback)
 
+    return status
 
 def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=DBE_VALUE|DBE_ALARM):
     """
@@ -477,12 +490,7 @@ def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=
                     - DBE_ALARM - Trigger events when the channel alarm state changes
                     - DBE_PROPERTY - Trigger events when a channel property changes.
 
-    :return:
-                - ECA_NORMAL - Normal successful completion
-                - ECA_BADCHID - Corrupted CHID
-                - ECA_BADTYPE - Invalid DBR_XXXX type
-                - ECA_ALLOCMEM - Unable to allocate memory
-                - ECA_ADDFAIL - A local database event add failed
+    :return: Event identifier
 
     A significant change can be a change in the process variable's value, alarm status, or alarm severity.
     In the process control function block database the deadband field determines
@@ -523,13 +531,19 @@ def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=
 
     monitor_callback = ffi.new_handle((callback,args,))
 
+    # - ECA_NORMAL - Normal successful completion
+    # - ECA_BADCHID - Corrupted CHID
+    # - ECA_BADTYPE - Invalid DBR_XXXX type
+    # - ECA_ALLOCMEM - Unable to allocate memory
+    # - ECA_ADDFAIL - A local database event add failed
     status = libca.ca_create_subscription(dbrtype, count, chid, mask, _eventCB, monitor_callback, pevid)
 
-    evid = pevid[0]
-
-    if evid != ffi.NULL:
+    if status == ECA_NORMAL:
+        evid = pevid[0]
         __channels[chid]['monitors'].add(evid)
         __monitors[evid] = (chid, monitor_callback)
+    else:
+        evid = None
 
     return evid
 
@@ -697,8 +711,7 @@ def flush_io():
     in parallel with labor performed in the server.
     Outstanding requests are also sent whenever the buffer which holds them becomes full.
     """
-    status = libca.ca_flush_io()
-    return status
+    return libca.ca_flush_io()
 
 
 def field_type(chid):
@@ -804,11 +817,11 @@ def sg_delete(gid):
 def sg_block(gid, timeout):
     """
     Flushes the send buffer and then waits until outstanding requests complete or the specified time out expires.
-    At this time outstanding requests include calls to :func:`sg_array_get` and calls to :func:`sg_array_put`.
+    At this time outstanding requests include calls to :func:`sg_get` and calls to :func:`sg_put`.
     If ECA_TIMEOUT is returned then failure must be assumed for all outstanding queries.
     Operations can be reissued followed by another :func:`sg_block`.
     This routine will only block on outstanding queries issued after the last call to :func:`sg_block`,
-    :func:`ca_sg_reset`, or :func:`sg_create` whichever occurs later in time.
+    :func:`sg_reset`, or :func:`sg_create` whichever occurs later in time.
     If no queries are outstanding then :func:`sg_block` will return immediately without processing any pending channel access activities.
 
     Values written into your program's variables by a channel access synchronous group request should not be
