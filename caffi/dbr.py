@@ -308,6 +308,17 @@ def format_dbr(dbrType, count, dbrValue):
         format_dbr_ctrl(cvalue, value)
         value['value'] = format_plain_value('dbr_double_t', count, dbr_value_ptr(cvalue, dbrType))
 
+    elif dbrType == DBR_CLASS_NAME:
+        value = format_string_value(count, dbrValue)
+
+    elif dbrType == DBR_STSACK_STRING:
+        value = {}
+        cvalue = ffi.cast('struct dbr_stsack_string*', dbrValue)
+        format_dbr_sts(cvalue, value)
+        value['ackt'] = cvalue.ackt
+        value['acks'] = cvalue.acks
+        value['value'] = format_string_value(count, dbr_value_ptr(cvalue, dbrType))
+
     # It should never reach here
     else:
         value = None

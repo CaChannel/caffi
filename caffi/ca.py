@@ -77,6 +77,8 @@ DBR_TYPE_STRING = {
     DBR_ENUM:    'dbr_enum_t',
     DBR_LONG:    'dbr_long_t',
     DBR_DOUBLE:  'dbr_double_t',
+    DBR_PUT_ACKT:'dbr_put_ackt_t',
+    DBR_PUT_ACKS:'dbr_put_acks_t',
 }
 
 @ffi.callback('void(*)(struct exception_handler_args)')
