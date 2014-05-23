@@ -124,11 +124,11 @@ def format_dbr(dbrType, count, dbrValue):
     elif dbrType == DBR_DOUBLE:
         value = format_plain_value('dbr_double_t', count, dbrValue)
 
-    elif dbrType == DBR_STS_STRING or dbrType == DBR_TIME_STRING or dbrType == DBR_CTRL_STRING:
+    elif dbrType == DBR_STS_STRING or dbrType == DBR_GR_STRING or dbrType == DBR_CTRL_STRING:
         value = {}
         cvalue = ffi.cast('struct dbr_sts_string*', dbrValue)
         format_dbr_sts(cvalue, value)
-        value['value'] = format_string_value(count, dbrValue)
+        value['value'] = format_string_value(count, dbr_value_ptr(cvalue, dbrType))
 
     elif dbrType == DBR_STS_INT:
         value = {}
@@ -165,6 +165,13 @@ def format_dbr(dbrType, count, dbrValue):
         cvalue = ffi.cast('struct dbr_sts_double*', dbrValue)
         format_dbr_sts(cvalue, value)
         value['value'] = format_plain_value('dbr_double_t', count, dbr_value_ptr(cvalue, dbrType))
+
+    elif dbrType == DBR_TIME_STRING:
+        value = {}
+        cvalue = ffi.cast('struct dbr_time_string*', dbrValue)
+        format_dbr_sts(cvalue, value)
+        format_dbr_time(cvalue, value)
+        value['value'] = format_string_value(count, dbr_value_ptr(cvalue, dbrType))
 
     elif dbrType == DBR_TIME_INT:
         value = {}
