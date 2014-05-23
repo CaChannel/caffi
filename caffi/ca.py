@@ -320,11 +320,13 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
                     If *callback* is specified, a count of zero means use the current element count from the server.
     :param callback: User supplied callback function to be run when requested operation completes.
     :param args: User supplied variable retained and then passed back to user supplied function above
-    :return:  Pointer to a buffer where the current value of the channel is to be written.
+    :return: :class:`caffi.dbr.DBRValue` or None if callback function is specified
 
     When no *callback* is specified the returned channel value can't be assumed to be stable
     in the application supplied buffer until after *ECA_NORMAL* is returned from :func:`pend_io`.
     If a connection is lost outstanding ca get requests are not automatically reissued following reconnect.
+
+    Call :meth:`caffi.dbr.DBRValue.get` to retrieve the value.
 
     When *callback* is specified a value is read from the channel and
     then the user's callback is invoked with a pointer to the retrieved value.
@@ -353,7 +355,7 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
     else:
         value = ffi.new('char[]', dbr_size_n(dbrtype, count))
         libca.ca_array_get(dbrtype, count, chid, value)
-        return value
+        return DBRValue(dbrtype, count, value)
 
 
 @ffi.callback('void(struct event_handler_args)')
@@ -887,11 +889,12 @@ def sg_get(gid, chid, dbrtype=None, count=None):
     :param dbrtype: External type of returned value. Conversion will occur if this does not match native type.
                     Specify one from the set of DBR_XXXX in db_access.h
     :param count: Element count to be read from the specified channel.
-    :return: Pointer to application supplied buffer that is to contain the value or array of values to be returned
+    :return: :class:`caffi.dbr.DBRValue` or None if callback function is specified
 
-
-    The values written into your program's variables by :func:`sg_get` should not be referenced by your program
+    The values returned by :func:`sg_get` should not be referenced by your program
     until ECA_NORMAL has been received from ca_sg_block , or until :func:`sg_test` returns True.
+
+    Call :meth:`caffi.dbr.DBRValue.get` to retrieve the value.
 
     All remote operation requests such as the above are accumulated (buffered) and not forwarded to the server
     until one of :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
@@ -905,6 +908,6 @@ def sg_get(gid, chid, dbrtype=None, count=None):
     if dbrtype is None:
         dbrtype = libca.ca_field_type(chid)
 
-    value = ffi.new('char[]', dbr_size_n(dbrtype, count))
-    libca.ca_sg_array_get(gid, dbrtype, count, chid, value)
-    return value
+    cvalue = ffi.new('char[]', dbr_size_n(dbrtype, count))
+    libca.ca_sg_array_get(gid, dbrtype, count, chid, cvalue)
+    return DBRValue(dbrtype, count, cvalue)

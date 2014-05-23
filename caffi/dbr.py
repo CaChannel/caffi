@@ -1,4 +1,4 @@
-__all__ = ['format_dbr', 'dbr_size_n']
+__all__ = ['DBRValue', 'format_dbr', 'dbr_size_n']
 
 from datetime import datetime
 
@@ -313,3 +313,33 @@ def format_dbr(dbrType, count, dbrValue):
         value = None
 
     return value
+
+
+class DBRValue(object):
+    """
+    :param dbrtype: The external type of the supplied *cvalue*
+    :param count: Element count of the supplied *cvalue*
+    :param cvalue: Pointer to the structure of *dbrtype* with *count* element
+
+    An convenient object to represent the value returned by :func:`caffi.ca.get` and :func:`caffi.ca.sg_get`.
+    It holds the reference to the memory allocated by the get functions,
+    in addition the type and element count information.
+
+    Once the memory is assured to be stable, normally when the gets function completed with success,
+    call :meth:`get` to get the returned values.
+
+    """
+    def __init__(self, dbrtype, count, cvalue):
+        """
+        """
+        self.dbrtype = dbrtype
+        self.count = count
+        self.cvalue = cvalue
+
+    def get(self):
+        """
+        :return: Value for plain DBR_XXXX type or a dict for DBR_STS_XXXX etc.
+
+        .. note:: This method should be called unless the get request has succeeded.
+        """
+        return format_dbr(self.dbrtype, self.count, self.cvalue)

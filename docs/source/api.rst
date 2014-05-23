@@ -61,7 +61,14 @@ Module :mod:`caffi.dbr`
 
 .. module:: caffi.dbr
 
+.. autoclass:: DBRValue
+
+    .. automethod:: get
+
 .. autofunction:: format_dbr
 
-Module :mod:`constants`
-=======================
+
+Module :mod:`caffi.constants`
+=============================
+
+.. automodule:: caffi.constants

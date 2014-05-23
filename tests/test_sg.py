@@ -42,7 +42,4 @@ if status != ECA_NORMAL:
 
 # dump value
 for name, value in vals.items():
-    chid = pvs[name]
-    type = field_type(chid)
-    count = element_count(chid)
-    print(name, format_dbr(type, count, value))
+    print(name, value.get())

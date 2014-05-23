@@ -1,3 +1,7 @@
+"""
+The macros defined in C header files, *cadef.h*, *caeventmask.h*, *caerr.h* are exported as integer constants.
+
+"""
 
 # cadef.h
 #/*
