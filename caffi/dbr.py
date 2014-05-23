@@ -36,6 +36,142 @@ def dbr_size_n(TYPE,COUNT):
 def dbr_value_ptr(PDBR, DBR_TYPE):
     return ffi.cast('char*', PDBR) + libca.dbr_value_offset[DBR_TYPE]
 
+#/*
+# * type checking macros -- return non-zero if condition is true, zero otherwise
+# */
+def dbf_type_is_valid(dbftype):
+    return dbftype >= 0 and dbftype <= LAST_TYPE
+
+
+def dbr_type_is_valid(dbrtype):
+    return dbrtype >= 0 and dbrtype <= LAST_BUFFER_TYPE
+
+
+def dbr_type_is_plain(dbrtype):
+    return dbrtype >= DBR_STRING and dbrtype <= DBR_DOUBLE
+
+
+def dbr_type_is_STS(dbrtype):
+    return dbrtype >= DBR_STS_STRING and dbrtype <= DBR_STS_DOUBLE
+
+
+def dbr_type_is_TIME(dbrtype):
+    return dbrtype >= DBR_TIME_STRING and dbrtype <= DBR_TIME_DOUBLE
+
+
+def dbr_type_is_GR(dbrtype):
+    return dbrtype >= DBR_GR_STRING and dbrtype <= DBR_GR_DOUBLE
+
+
+def dbr_type_is_CTRL(dbrtype):
+    return dbrtype >= DBR_CTRL_STRING and dbrtype <= DBR_CTRL_DOUBLE
+
+
+def dbr_type_is_STRING(dbrtype):
+    return ( dbr_type_is_valid(dbrtype) and
+             dbrtype % (LAST_TYPE + 1) == DBR_STRING )
+
+
+def dbr_type_is_SHORT(dbrtype):
+    return ( dbr_type_is_valid(dbrtype) and
+             dbrtype % (LAST_TYPE + 1) == DBR_SHORT )
+
+
+def dbr_type_is_FLOAT(dbrtype):
+    return ( dbr_type_is_valid(dbrtype) and
+             dbrtype % (LAST_TYPE + 1) == DBR_FLOAT )
+
+def dbr_type_is_ENUM(dbrtype):
+    return ( dbr_type_is_valid(dbrtype) and
+             dbrtype % (LAST_TYPE + 1) == DBR_ENUM )
+
+
+def dbr_type_is_CHAR(dbrtype):
+    return ( dbr_type_is_valid(dbrtype) and
+             dbrtype % (LAST_TYPE + 1) == DBR_CHAR )
+
+
+def dbr_type_is_LONG(dbrtype):
+    return ( dbr_type_is_valid(dbrtype) and
+             dbrtype % (LAST_TYPE + 1) == DBR_LONG )
+
+
+def dbr_type_is_DOUBLE(dbrtype):
+    return ( dbr_type_is_valid(dbrtype) and
+             dbrtype % (LAST_TYPE + 1) == DBR_DOUBLE )
+
+
+#/*
+# * type conversion macros
+# */
+def dbf_type_to_text(dbftype):
+    if dbftype >= -1 and dbftype <= LAST_TYPE + 1:
+        return ffi.string(libca.dbf_text[dbftype + 1])
+    else:
+        return ffi.string(libca.dbf_text_invalid)
+
+
+def dbf_text_to_type(text):
+    for dbftype in range(0, LAST_TYPE + 2):
+        if text == ffi.string(libca.dbf_text[dbftype+1]):
+            break
+    else:
+        dbftype = -1
+
+    return dbftype
+
+
+def dbr_type_to_text(dbrtype):
+    if dbrtype >= 0 and dbrtype <= LAST_BUFFER_TYPE:
+        return ffi.string(libca.dbr_text[dbrtype])
+    else:
+        return ffi.string(libca.dbr_text_invalid)
+
+
+def dbr_text_to_type(text):
+    for dbrtype in range(0, LAST_BUFFER_TYPE + 1):
+        if text == ffi.string(libca.dbr_text[dbrtype]):
+            break
+    else:
+        dbrtype = -1
+    return dbrtype
+
+
+def dbf_type_to_DBR(dbftype):
+    if dbf_type_is_valid(dbftype):
+        return dbftype
+    else:
+        return -1
+
+
+def dbf_type_to_DBR_STS(dbftype):
+    if dbf_type_is_valid(dbftype):
+        return dbftype + LAST_TYPE + 1
+    else:
+        return -1
+
+
+def dbf_type_to_DBR_TIME(dbftype):
+    if dbf_type_is_valid(dbftype):
+        return dbftype + 2 * (LAST_TYPE + 1)
+    else:
+        return -1
+
+
+def dbf_type_to_DBR_GR(dbftype):
+    if dbf_type_is_valid(dbftype):
+        return dbftype + 3 * (LAST_TYPE + 1)
+    else:
+        return -1
+
+
+def dbf_type_to_DBR_CTRL(dbftype):
+    if dbf_type_is_valid(dbftype):
+        return dbftype + 4 * (LAST_TYPE + 1)
+    else:
+        return -1
+
+
 #
 # Functions that convert from DBR structure to dict
 #
