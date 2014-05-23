@@ -67,7 +67,7 @@ def format_dbr_ctrl(cvalue, value):
 def format_dbr_enum(cvalue, value):
     no_str = cvalue.no_str
     value['no_str'] = no_str
-    value['strs'] = [ffi.string(cstr) for cstr in cvalue.strs[:no_str]]
+    value['strs'] = [ffi.string(cstr) for cstr in cvalue.strs[0:no_str]]
 
 
 def format_plain_value(valueType, count, cvalue):
@@ -232,7 +232,7 @@ def format_dbr(dbrType, count, dbrValue):
 
     elif dbrType == DBR_GR_ENUM:
         value = {}
-        cvalue = ffi.cast('struct dbr_gr_enume*', dbrValue)
+        cvalue = ffi.cast('struct dbr_gr_enum*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_enum(cvalue, value)
         value['value'] = format_plain_value('dbr_enum_t', count, dbr_value_ptr(cvalue, dbrType))
