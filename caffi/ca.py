@@ -309,6 +309,48 @@ def create_channel(name, callback=None, args=(), priority=CA_PRIORITY_DEFAULT):
     return chid
 
 
+@ffi.callback('void(struct access_rights_handler_args)')
+def _access_rights_callback(arg):
+    epics_arg = {
+        'chid'  : arg.chid,
+        'read'  : arg.ar.access & 0x01 == 0x01,
+        'write' : arg.ar.access & 0x02 == 0x02
+    }
+
+    user_callback, user_arg = ffi.from_handle(__channels[arg.chid]['access_rights_callback'])
+    if callable(user_callback):
+        user_callback(epics_arg, user_arg)
+
+
+def replace_access_rights_event(chid, callback=None, args=()):
+    """
+    Install or replace the access rights state change callback handler for the specified channel.
+
+    :param chid: The channel identifier
+    :param callable callback: User supplied call back function. Passing None uninstalls the
+                              current handler.
+    :return:
+                - ECA_NORMAL
+
+    The callback handler is called in the following situations.
+
+        - whenever CA connects the channel immediately before the channel's connection handler is called
+        - whenever CA disconnects the channel immediately after the channel's disconnect call back is called
+        - once immediately after installation if the channel is connected.
+        - whenever the access rights state of a connected channel changes
+
+    When a channel is created no access rights handler is installed.
+    """
+    if callable(callback):
+        user_access_rights_callback = ffi.new_handle((callback, args))
+    else:
+        user_access_rights_callback = ffi.NULL
+    # store the reference so it won't be garbage collected
+    __channels[chid]['access_rights_callback'] = user_access_rights_callback
+    status = libca.ca_replace_access_rights_event(chid, _access_rights_callback)
+    return ECA(status)
+
+
 @ffi.callback('void(struct event_handler_args)')
 def _getCB(arg):
     epics_arg = {

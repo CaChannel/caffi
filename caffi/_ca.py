@@ -19,9 +19,15 @@ struct connection_handler_args {
 };
 typedef void caCh (struct connection_handler_args args);
 
+/* CFFI does not support bit field */
+/*
 typedef struct ca_access_rights {
     unsigned    read_access:1;
     unsigned    write_access:1;
+} caar;
+*/
+typedef struct ca_access_rights {
+    unsigned    access;
 } caar;
 
 /* arguments passed to user access rights handlers */

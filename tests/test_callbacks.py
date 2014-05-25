@@ -31,10 +31,17 @@ def monitorCB(epicsArgs, userArgs):
     print('    ', epicsArgs)
     print('    ', userArgs)
 
+
+def accessCB(epicsArgs, userArgs):
+    print(epicsArgs)
+
 add_exception_event(exceptionCB)
 
 chid = create_channel('cacalc', callback=connectCB)
 status = pend_event(2)
+
+replace_access_rights_event(chid, accessCB)
+flush_io()
 
 evid = create_subscription(chid, monitorCB, (1, 2, 3))
 pend_event(1)
