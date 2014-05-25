@@ -72,3 +72,17 @@ Module :mod:`caffi.constants`
 =============================
 
 .. automodule:: caffi.constants
+
+.. autoclass:: ChannelState
+
+.. autoclass:: DBR
+
+.. autoclass:: DBF
+
+.. autoclass:: CA_OP
+
+.. autoclass:: ECA
+
+.. autoclass:: AlarmSeverity
+
+.. autoclass:: AlarmCondition

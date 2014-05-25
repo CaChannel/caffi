@@ -88,8 +88,8 @@ def _exceptionCB(carg):
         'type'  : carg.type,
         'count' : carg.count,
         'addr'  : carg.addr,
-        'stat'  : carg.stat,
-        'op'    : carg.op,
+        'stat'  : ECA(carg.stat),
+        'op'    : CA_OP(carg.op),
         'ctx'   : carg.ctx,
         'file'  : ffi.string(carg.pFile),
         'lineNo': carg.lineNo
@@ -127,7 +127,7 @@ def add_exception_event(callback=None, args=()):
     global __exception_callback
     __exception_callback = ffi.new_handle((callback, args))
     status = libca.ca_add_exception_event(_exceptionCB, __exception_callback)
-    return status
+    return ECA(status)
 
 
 
@@ -137,7 +137,7 @@ def _eventCB(arg):
         'chid'  : arg.chid,
         'type'  : arg.type,
         'count' : arg.count,
-        'status': arg.status,
+        'status': ECA(arg.status),
         'value' : format_dbr(arg.type, arg.count, arg.dbr)
     }
     user_callback, user_arg = ffi.from_handle(arg.usr)
@@ -164,9 +164,11 @@ def create_context(preemptive_callback=True):
 
     """
     if preemptive_callback:
-        return libca.ca_context_create(libca.ca_enable_preemptive_callback)
+        status =  libca.ca_context_create(libca.ca_enable_preemptive_callback)
     else:
-        return libca.ca_context_create(libca.ca_disable_preemptive_callback)
+        status= libca.ca_context_create(libca.ca_disable_preemptive_callback)
+
+    return ECA(status)
 
 
 def destroy_context():
@@ -196,7 +198,8 @@ def attach_context(context):
     If context is non preemptive, then additional threads are not allowed to join the CA context
     because allowing other threads to join implies that CA callbacks will be called preemptively from more than one thread.
     """
-    return libca.ca_attach_context(context)
+    status =  libca.ca_attach_context(context)
+    return ECA(status)
 
 
 def current_context():
@@ -207,6 +210,7 @@ def current_context():
     if context == ffi.NULL:
         context = None
     return context
+
 
 def show_context(context=None, level=0):
     """
@@ -311,7 +315,7 @@ def _getCB(arg):
         'chid'  : arg.chid,
         'type'  : arg.type,
         'count' : arg.count,
-        'status': arg.status,
+        'status': ECA(arg.status),
         'value' : format_dbr(arg.type, arg.count, arg.dbr)
     }
 
@@ -334,7 +338,7 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
                     If *callback* is specified, a count of zero means use the current element count from the server.
     :param callback: User supplied callback function to be run when requested operation completes.
     :param args: User supplied variable retained and then passed back to user supplied function above
-    :return: :class:`caffi.dbr.DBRValue` or None if callback function is specified
+    :return: :class:`caffi.dbr.DBRValue` or :class:`constants.ECA` CA if failed or callback function is specified.
 
     When no *callback* is specified the returned channel value can't be assumed to be stable
     in the application supplied buffer until after *ECA_NORMAL* is returned from :func:`pend_io`.
@@ -364,13 +368,15 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
     if callable(callback):
         get_callback = ffi.new_handle((callback, args))
         __channels[chid]['callbacks'].add(get_callback)
-        libca.ca_array_get_callback(dbrtype, count, chid, _getCB, get_callback)
-        return None
+        status = libca.ca_array_get_callback(dbrtype, count, chid, _getCB, get_callback)
+        return ECA(status)
     else:
         value = ffi.new('char[]', dbr_size_n(dbrtype, count))
-        libca.ca_array_get(dbrtype, count, chid, value)
-        return DBRValue(dbrtype, count, value)
-
+        status = libca.ca_array_get(dbrtype, count, chid, value)
+        if status == ECA_NORMAL:
+            return DBRValue(dbrtype, count, value)
+        else:
+            return ECA(status)
 
 @ffi.callback('void(struct event_handler_args)')
 def _put_callback(arg):
@@ -378,7 +384,7 @@ def _put_callback(arg):
         'chid'  : arg.chid,
         'type'  : arg.type,
         'count' : arg.count,
-        'status': arg.status
+        'status': ECA(arg.status)
     }
     user_callback, user_arg = ffi.from_handle(arg.usr)
     __channels[arg.chid]['callbacks'].remove(arg.usr)
@@ -418,6 +424,7 @@ def _setup_put(chid, value, dbrtype=None, count=None):
     count = min(count, element_count, value_count)
 
     return (dbrtype, count, cvalue)
+
 
 def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
     """
@@ -469,7 +476,7 @@ def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
         __channels[chid]['callbacks'].add(put_callback)
         status = libca.ca_array_put_callback(dbrtype, count, chid, cvalue, _put_callback, put_callback)
 
-    return status
+    return ECA(status)
 
 
 def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=DBE_VALUE|DBE_ALARM):
@@ -572,7 +579,7 @@ def clear_subscription(evid):
         __channels[chid]['monitors'].remove(evid)
         del __monitors[evid]
 
-    return status
+    return ECA(status)
 
 
 def clear_channel(chid):
@@ -594,8 +601,9 @@ def clear_channel(chid):
 
     """
     # clear all subscriptions for this channel
-    for evid in list(__channels[chid]['monitors']):
-        status = clear_subscription(evid)
+    if __channels.has_key(chid):
+        for evid in list(__channels[chid]['monitors']):
+            status = clear_subscription(evid)
 
     status = libca.ca_clear_channel(chid)
 
@@ -603,7 +611,7 @@ def clear_channel(chid):
     if __channels.has_key(chid):
         del __channels[chid]
 
-    return status
+    return ECA(status)
 
 
 def pend_event(timeout):
@@ -625,9 +633,8 @@ def pend_event(timeout):
 
     See also Thread Safety and Preemptive Callback to User Code.
     """
-
     status = libca.ca_pend_event(timeout)
-    return status
+    return ECA(status)
 
 
 def poll():
@@ -638,7 +645,7 @@ def poll():
 
     """
     status = libca.ca_pend_event(1e-12)
-    return
+    return ECA(status)
 
 
 def pend_io(timeout):
@@ -677,7 +684,7 @@ def pend_io(timeout):
 
     """
     status = libca.ca_pend_io(timeout)
-    return status
+    return ECA(status)
 
 
 def pend(timeout, early):
@@ -690,7 +697,8 @@ def pend(timeout, early):
                 - ECA_EVDISALLOW - Function inappropriate for use within an event handler
 
     """
-    return libca.ca_pend(timeout, early)
+    status = libca.ca_pend(timeout, early)
+    return ECA(status)
 
 
 def test_io():
@@ -716,7 +724,8 @@ def flush_io():
     in parallel with labor performed in the server.
     Outstanding requests are also sent whenever the buffer which holds them becomes full.
     """
-    return libca.ca_flush_io()
+    status =  libca.ca_flush_io()
+    return ECA(status)
 
 
 def field_type(chid):
@@ -724,7 +733,7 @@ def field_type(chid):
     :param chid: channel identifier
     :return: the native type in the server of the process variable.
     """
-    return libca.ca_field_type(chid)
+    return DBF(libca.ca_field_type(chid))
 
 
 def element_count(chid):
@@ -748,7 +757,7 @@ def state(chid):
     :param chid: channel identifier
     :return:
     """
-    return libca.ca_state(chid)
+    return ChannelState(libca.ca_state(chid))
 
 
 def message(status):
@@ -771,7 +780,7 @@ def read_access(chid):
     :param chid: channel identifier
     :return: True if the client currently has read access to the specified channel and False otherwise.
     """
-    return libca.ca_read_access(chid)
+    return (libca.ca_read_access(chid) == 1)
 
 
 def write_access(chid):
@@ -779,7 +788,7 @@ def write_access(chid):
     :param chid: channel identifier
     :return: True if the client currently has write access to the specified channel and False otherwise.
     """
-    return libca.ca_write_access(chid)
+    return (libca.ca_write_access(chid) == 1)
 
 
 def sg_create():
@@ -816,7 +825,8 @@ def sg_delete(gid):
                 - ECA_NORMAL - Normal successful completion
                 - ECA_BADSYNCGRP - Invalid synchronous group
     """
-    return libca.ca_sg_delete(gid)
+    status = libca.ca_sg_delete(gid)
+    return ECA(status)
 
 
 def sg_block(gid, timeout):
@@ -841,7 +851,8 @@ def sg_block(gid, timeout):
                 - ECA_EVDISALLOW - Function inappropriate for use within an event handler
                 - ECA_BADSYNCGRP - Invalid synchronous group
     """
-    return libca.ca_sg_block(gid, timeout)
+    status = libca.ca_sg_block(gid, timeout)
+    return ECA(status)
 
 
 def sg_test(gid):
@@ -864,7 +875,8 @@ def sg_reset(gid):
                 - ECA_NORMAL - Normal successful completion
                 - ECA_BADSYNCGRP - Invalid synchronous group
     """
-    return libca.sg_reset(gid)
+    status = libca.sg_reset(gid)
+    return ECA(status)
 
 
 def sg_put(gid, chid, value, dbrtype=None, count=None):
@@ -896,7 +908,7 @@ def sg_put(gid, chid, value, dbrtype=None, count=None):
 
     status = libca.ca_sg_array_put(gid, dbrtype, count, chid, cvalue)
 
-    return status
+    return ECA(status)
 
 
 def sg_get(gid, chid, dbrtype=None, count=None):
@@ -908,7 +920,7 @@ def sg_get(gid, chid, dbrtype=None, count=None):
     :param dbrtype: External type of returned value. Conversion will occur if this does not match native type.
                     Specify one from the set of DBR_XXXX in db_access.h
     :param count: Element count to be read from the specified channel.
-    :return: :class:`caffi.dbr.DBRValue` or None if callback function is specified
+    :return: :class:`caffi.dbr.DBRValue` or :class:`constants.ECA` if failed.
 
     The values returned by :func:`sg_get` should not be referenced by your program
     until ECA_NORMAL has been received from ca_sg_block , or until :func:`sg_test` returns True.
@@ -928,5 +940,8 @@ def sg_get(gid, chid, dbrtype=None, count=None):
         dbrtype = libca.ca_field_type(chid)
 
     cvalue = ffi.new('char[]', dbr_size_n(dbrtype, count))
-    libca.ca_sg_array_get(gid, dbrtype, count, chid, cvalue)
-    return DBRValue(dbrtype, count, cvalue)
+    status = libca.ca_sg_array_get(gid, dbrtype, count, chid, cvalue)
+    if status == ECA_NORMAL:
+        return DBRValue(dbrtype, count, cvalue)
+    else:
+        return ECA(status)
