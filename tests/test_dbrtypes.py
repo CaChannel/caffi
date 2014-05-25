@@ -28,7 +28,7 @@ status = pend_io(2)
 if status != ECA_NORMAL:
     print(message(status))
 
-for dbrtype in range(DBR_STRING, DBR_CTRL_DOUBLE+1):
+for dbrtype in DBR:
     value = get(chid, dbrtype)
     status = pend_io(2)
     if status != ECA_NORMAL:
