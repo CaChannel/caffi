@@ -392,6 +392,7 @@ class DBR(IntEnum):
     """
     Enum redefined from DBR_XXX macros.
     """
+    INVALID     = TYPENOTCONN
     STRING      = DBR_STRING
     INT         = DBR_INT
     SHORT       = DBR_SHORT
