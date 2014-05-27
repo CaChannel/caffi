@@ -36,7 +36,8 @@ Even though as same as possible, there are subtle differences:
 
         def callback(epicsArgs, userArgs):
 
-    *epicsArgs* is a dict converted from `xxx_handler_args`. *userArgs* is a tuple supplied by user when the callback is registered.
+    *epicsArgs* is a dict converted from `xxx_handler_args`.
+    *userArgs* is a tuple supplied by user when the callback is registered.
 
   - C functions normally return status code to indicate success or failure. The Python counterparts follow
     this but have exceptions:
@@ -49,6 +50,26 @@ Even though as same as possible, there are subtle differences:
 
     - All the creation functions, :func:`create_channel`, :func:`create_subscription` and :func:`sg_create`
       return the created objects instead of status code. If status code indicates a failure, *None* is returned.
+
+  - In C the following macros definition are also accessible as :class:`enum.IntEnum` type:
+
+    ======================  ============
+    C Macros                Python Enum
+    ======================  ============
+    *ECA_XXX*               :class:`caffi.constants.ECA`
+    *DBF_XXX*               :class:`caffi.constants.DBF`
+    *DBR_XXX*               :class:`caffi.constants.DBR`
+    *CA_OP_XXX*             :class:`caffi.constants.CA_OP`
+    *cs_xxx*                :class:`caffi.constants.ChannelState`
+    *XXX_ALARM* (severity)  :class:`caffi.constants.AlarmSeverity`
+    *XXX_ALARM* (status)    :class:`caffi.constants.AlarmCondition`
+    ======================  ============
+
+    This makes it convenient when interactively examine the code value. e.g.
+    ::
+
+        >>> ca.pend_io(2)
+        <ECA.NORMAL: 1>
 
 """
 from __future__ import (print_function, absolute_import)
@@ -85,7 +106,7 @@ DBR_TYPE_STRING = {
 def _exceptionCB(carg):
     epics_arg = {
         'chid'  : carg.chid,
-        'type'  : carg.type,
+        'type'  : DBR(carg.type),
         'count' : carg.count,
         'addr'  : carg.addr,
         'stat'  : ECA(carg.stat),
@@ -135,7 +156,7 @@ def add_exception_event(callback=None, args=()):
 def _eventCB(arg):
     epics_arg = {
         'chid'  : arg.chid,
-        'type'  : arg.type,
+        'type'  : DBR(arg.type),
         'count' : arg.count,
         'status': ECA(arg.status),
         'value' : format_dbr(arg.type, arg.count, arg.dbr)
@@ -355,7 +376,7 @@ def replace_access_rights_event(chid, callback=None, args=()):
 def _getCB(arg):
     epics_arg = {
         'chid'  : arg.chid,
-        'type'  : arg.type,
+        'type'  : DBR(arg.type),
         'count' : arg.count,
         'status': ECA(arg.status),
         'value' : format_dbr(arg.type, arg.count, arg.dbr)
@@ -420,11 +441,12 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
         else:
             return ECA(status)
 
+
 @ffi.callback('void(struct event_handler_args)')
 def _put_callback(arg):
     epics_arg = {
         'chid'  : arg.chid,
-        'type'  : arg.type,
+        'type'  : DBR(arg.type),
         'count' : arg.count,
         'status': ECA(arg.status)
     }
