@@ -17,7 +17,7 @@ if status != ECA_NORMAL:
 # put
 for name, chid in pvs.items():
     if field_type(chid) == DBF_STRING:
-        put(chid, ['1','2','3', '4'])
+        put(chid, [b'1',b'2',b'3', b'4'])
     else:
         put(chid, [1, 2, 3, 4])
 

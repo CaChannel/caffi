@@ -19,7 +19,7 @@ gid = sg_create()
 # put
 for name, chid in pvs.items():
     if field_type(chid) == DBF_STRING:
-        sg_put(gid, chid, ['1','2','3', '4'])
+        sg_put(gid, chid, [b'1',b'2',b'3', b'4'])
     else:
         sg_put(gid, chid, [1, 2, 3, 4])
 

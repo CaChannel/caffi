@@ -77,7 +77,19 @@ from __future__ import (print_function, absolute_import)
 # compatible to python 3
 import sys
 if sys.hexversion >= 0x03000000:
-    basestring = [str, bytes]
+    basestring = (str, bytes)
+
+
+def tobytes(string):
+    if isinstance(string, bytes):
+        return string
+
+    if sys.hexversion >= 0x03000000:
+        if not isinstance(string, basestring):
+            string = str(string)
+        return bytes(string, 'utf8')
+    else:
+        return str(string)
 
 # globals
 __channels = {}
@@ -311,6 +323,8 @@ def create_channel(name, callback=None, args=(), priority=CA_PRIORITY_DEFAULT):
     enter a disconnected state at any time.
 
     """
+    name = tobytes(name)
+
     pchid = ffi.new('chid *')
 
     if callable(callback):
@@ -477,6 +491,8 @@ def _setup_put(chid, value, dbrtype=None, count=None):
         # string type is also a sequence but it is counted as one if DBR_STRING type
         if isinstance(value, basestring) and dbrtype == DBR_STRING:
             value_count = 1
+            # convert to bytes
+            value = tobytes(value)
 
     # setup c value
     if value_count == 1:
@@ -638,7 +654,7 @@ def clear_subscription(evid):
     """
     status = libca.ca_clear_subscription(evid)
 
-    if __monitors.has_key(evid):
+    if evid in __monitors:
         chid = __monitors[evid][0]
         __channels[chid]['monitors'].remove(evid)
         del __monitors[evid]
@@ -665,14 +681,14 @@ def clear_channel(chid):
 
     """
     # clear all subscriptions for this channel
-    if __channels.has_key(chid):
+    if chid in __channels:
         for evid in list(__channels[chid]['monitors']):
             status = clear_subscription(evid)
 
     status = libca.ca_clear_channel(chid)
 
     # remove from channels list
-    if __channels.has_key(chid):
+    if chid in __channels:
         del __channels[chid]
 
     return ECA(status)
