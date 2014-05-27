@@ -321,6 +321,9 @@ int ca_clear_subscription
     evid    eventId
 );
 
+chid ca_evid_to_chid ( evid id );
+
+
 /************************************************************************/
 /*                                                                      */
 /*   Requested data is not necessarily stable prior to                  */
