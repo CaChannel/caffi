@@ -1039,10 +1039,12 @@ const char   *dbr_text_invalid;
 """)
 
 
-import os.path
+import os
 import platform
 import sys
-def get_libca_path():
+
+
+def get_libca():
     cwd = os.path.dirname(os.path.abspath(__file__))
     osname = platform.system()
     is64bit = sys.maxsize > 2**32
@@ -1064,7 +1066,17 @@ def get_libca_path():
     else:
         raise OSError('Unsupported Operation System %s' % osname)
 
-    return os.path.join(cwd, 'lib', host_arch, libca_name)
+    return os.path.join(cwd, 'lib', host_arch), libca_name
 
+#
+libca_path, libca_name = get_libca()
 
-libca = ffi.dlopen(get_libca_path())
+# save and set current dir to ca library's path
+old_cwd = os.getcwd()
+os.chdir(libca_path)
+
+# load ca library
+libca = ffi.dlopen(libca_name)
+
+# restore current dir
+os.chdir(old_cwd)
