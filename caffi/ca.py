@@ -123,7 +123,7 @@ DBR_TYPE_STRING = {
 }
 
 @ffi.callback('void(*)(struct exception_handler_args)')
-def _exceptionCB(carg):
+def _exception_callback(carg):
     epics_arg = {
         'chid'  : carg.chid,
         'type'  : DBR(carg.type),
@@ -167,23 +167,8 @@ def add_exception_event(callback=None, args=()):
     # otherwise it will be garbage collected
     global __exception_callback
     __exception_callback = ffi.new_handle((callback, args))
-    status = libca.ca_add_exception_event(_exceptionCB, __exception_callback)
+    status = libca.ca_add_exception_event(_exception_callback, __exception_callback)
     return ECA(status)
-
-
-
-@ffi.callback('void(struct event_handler_args)')
-def _eventCB(arg):
-    epics_arg = {
-        'chid'  : arg.chid,
-        'type'  : DBR(arg.type),
-        'count' : arg.count,
-        'status': ECA(arg.status),
-        'value' : format_dbr(arg.type, arg.count, arg.dbr)
-    }
-    user_callback, user_arg = ffi.from_handle(arg.usr)
-    if (callable(user_callback)):
-        user_callback(epics_arg, user_arg)
 
 
 def create_context(preemptive_callback=True):
@@ -268,7 +253,7 @@ def show_context(context=None, level=0):
 
 
 @ffi.callback('void(*)(struct connection_handler_args)')
-def _connectCB(carg):
+def _connect_callback(carg):
     epics_arg = {
         'chid'  : carg.chid,
         'up'    : carg.op == CA_OP_CONN_UP
@@ -337,7 +322,7 @@ def create_channel(name, callback=None, args=(), priority=CA_PRIORITY_DEFAULT):
     pchid = ffi.new('chid *')
 
     if callable(callback):
-        connect_callback = _connectCB
+        connect_callback = _connect_callback
         user_connect_callback = ffi.new_handle((callback, args))
     else:
         connect_callback = ffi.NULL
@@ -398,7 +383,7 @@ def replace_access_rights_event(chid, callback=None, args=()):
 
 
 @ffi.callback('void(struct event_handler_args)')
-def _getCB(arg):
+def _get_callback(arg):
     epics_arg = {
         'chid'  : arg.chid,
         'type'  : DBR(arg.type),
@@ -461,7 +446,7 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
 
     if callable(callback):
         get_callback = ffi.new_handle((callback, args))
-        status = libca.ca_array_get_callback(dbrtype, count, chid, _getCB, get_callback)
+        status = libca.ca_array_get_callback(dbrtype, count, chid, _get_callback, get_callback)
         if status == ECA_NORMAL:
             __channels[chid]['callbacks'].add(get_callback)
         return ECA(status), DBRValue()
@@ -577,6 +562,20 @@ def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
     return ECA(status)
 
 
+@ffi.callback('void(struct event_handler_args)')
+def _event_callback(arg):
+    epics_arg = {
+        'chid'  : arg.chid,
+        'type'  : DBR(arg.type),
+        'count' : arg.count,
+        'status': ECA(arg.status),
+        'value' : format_dbr(arg.type, arg.count, arg.dbr)
+    }
+    user_callback, user_arg = ffi.from_handle(arg.usr)
+    if (callable(user_callback)):
+        user_callback(epics_arg, user_arg)
+
+
 def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=DBE_VALUE|DBE_ALARM):
     """
     Register a state change subscription and specify a call back function to be invoked
@@ -650,7 +649,7 @@ def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=
     # - ECA_BADTYPE - Invalid DBR_XXXX type
     # - ECA_ALLOCMEM - Unable to allocate memory
     # - ECA_ADDFAIL - A local database event add failed
-    status = libca.ca_create_subscription(dbrtype, count, chid, mask, _eventCB, monitor_callback, pevid)
+    status = libca.ca_create_subscription(dbrtype, count, chid, mask, _event_callback, monitor_callback, pevid)
     evid = pevid[0]
 
     if status == ECA_NORMAL and evid != ffi.NULL:
