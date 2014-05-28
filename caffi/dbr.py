@@ -353,7 +353,7 @@ def format_dbr(dbrType, count, dbrValue):
         cvalue = ffi.cast('struct dbr_stsack_string*', dbrValue)
         format_dbr_sts(cvalue, value)
         value['ackt'] = cvalue.ackt
-        value['acks'] = cvalue.acks
+        value['acks'] = AlarmSeverity(cvalue.acks)
         value['value'] = format_string_value(count, dbr_value_ptr(cvalue, dbrType))
 
     # It should never reach here
@@ -377,7 +377,7 @@ class DBRValue(object):
     call :meth:`get` to get the returned values.
 
     """
-    def __init__(self, dbrtype, count, cvalue):
+    def __init__(self, dbrtype=DBR.INVALID, count=0, cvalue=ffi.NULL):
         """
         """
         self.dbrtype = dbrtype

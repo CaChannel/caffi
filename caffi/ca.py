@@ -45,11 +45,19 @@ Even though as same as possible, there are subtle differences:
     - C function `ca_test_io` and `ca_sg_test` return status code ECA_IODONE/ECA_IOINPROGRESS.
       The Python counterparts return True/False.
 
-    - The get functions in C require user supplied memory pointer passed as argument. In Python the functions
-      return :class:`caffi.dbr.DBRValue` to wrap this allocated memory.
+    - The get functions in C require a user supplied memory pointer passed as argument. In Python the function
+      :func:`get` and :func:`sg_get` returns a tuple of form (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
+
+      The first item is the status code, which must be ECA.NORMAL, before using the second item.
+
+      The second item holds the reference to the allocated memory. And the memory is not stable until a subsequent
+      call of :func:`pend_io` returns ECA_NORMAL. Then the value can be retrieved by calling
+      :meth:`caffi.dbr.DBRValue.get`.
+
 
     - All the creation functions, :func:`create_channel`, :func:`create_subscription` and :func:`sg_create`
-      return the created objects instead of status code. If status code indicates a failure, *None* is returned.
+      return a tuple of the form (:class:`caffi.constants.ECA`, *object identifier*).
+      The object identifier can only be used if the first item is ECA.NORTMAL.
 
   - In C the following macros definition are also accessible as :class:`enum.IntEnum` type:
 
@@ -291,7 +299,8 @@ def create_channel(name, callback=None, args=(), priority=CA_PRIORITY_DEFAULT):
                         Specifying many different priorities within the same program can increase resource consumption
                         in the client and the server because an independent virtual circuit, and associated data structures,
                         is created for each priority that is used on a particular server.
-    :return:            The channel identifier.
+    :return:            (:class:`caffi.constants.ECA`, the channel identifier).
+    :rtype:             tuple
 
     The CA client library will attempt to establish and maintain a virtual circuit between the caller's application
     and a named process variable in a CA server.
@@ -334,14 +343,12 @@ def create_channel(name, callback=None, args=(), priority=CA_PRIORITY_DEFAULT):
         connect_callback = ffi.NULL
         user_connect_callback = ffi.NULL
     status = libca.ca_create_channel(name, connect_callback, user_connect_callback, priority, pchid)
-    if status == ECA_NORMAL:
-        chid = pchid[0]
+    chid = pchid[0]
+    if chid != ffi.NULL:
         __channels[chid] = {'callbacks':set(), 'monitors' : set()}
         if user_connect_callback != ffi.NULL:
             __channels[chid]['callbacks'].add(user_connect_callback)
-    else:
-        chid = None
-    return chid
+    return ECA(status), chid
 
 
 @ffi.callback('void(struct access_rights_handler_args)')
@@ -376,10 +383,14 @@ def replace_access_rights_event(chid, callback=None, args=()):
 
     When a channel is created no access rights handler is installed.
     """
+    if chid not in __channels:
+        return ECA.BADCHID
+
     if callable(callback):
         user_access_rights_callback = ffi.new_handle((callback, args))
     else:
         user_access_rights_callback = ffi.NULL
+
     # store the reference so it won't be garbage collected
     __channels[chid]['access_rights_callback'] = user_access_rights_callback
     status = libca.ca_replace_access_rights_event(chid, _access_rights_callback)
@@ -415,7 +426,8 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
                     If *callback* is specified, a count of zero means use the current element count from the server.
     :param callback: User supplied callback function to be run when requested operation completes.
     :param args: User supplied variable retained and then passed back to user supplied function above
-    :return: :class:`caffi.dbr.DBRValue` or :class:`constants.ECA` CA if failed or callback function is specified.
+    :return: (:class:`constants.ECA`, :class:`caffi.dbr.DBRValue`)
+    :rtype tuple:
 
     When no *callback* is specified the returned channel value can't be assumed to be stable
     in the application supplied buffer until after *ECA_NORMAL* is returned from :func:`pend_io`.
@@ -436,24 +448,27 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
     This allows several requests to be efficiently sent over the network in one message.
 
     """
-    if count is None or count < 0:
-        count = libca.ca_element_count(chid)
+    if chid not in __channels:
+        return ECA.BADCHID, DBRValue()
 
     if dbrtype is None:
         dbrtype = libca.ca_field_type(chid)
+    if not dbr_type_is_valid(dbrtype):
+        return ECA.BADTYPE, DBRValue()
+
+    if count is None or count < 0:
+        count = libca.ca_element_count(chid)
 
     if callable(callback):
         get_callback = ffi.new_handle((callback, args))
-        __channels[chid]['callbacks'].add(get_callback)
         status = libca.ca_array_get_callback(dbrtype, count, chid, _getCB, get_callback)
-        return ECA(status)
+        if status == ECA_NORMAL:
+            __channels[chid]['callbacks'].add(get_callback)
+        return ECA(status), DBRValue()
     else:
         value = ffi.new('char[]', dbr_size_n(dbrtype, count))
         status = libca.ca_array_get(dbrtype, count, chid, value)
-        if status == ECA_NORMAL:
-            return DBRValue(dbrtype, count, value)
-        else:
-            return ECA(status)
+        return ECA(status), DBRValue(dbrtype, count, value)
 
 
 @ffi.callback('void(struct event_handler_args)')
@@ -547,6 +562,9 @@ def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
     All put requests are accumulated (buffered) and not forwarded to the IOC until one of :func:`flush_io`, :func:`pend_io`,
     or :func:`pend_event` are called. This allows several requests to be efficiently combined into one message.
     """
+    if chid not in __channels:
+        return ECA.BADCHID
+
     dbrtype, count, cvalue = _setup_put(chid, value, dbrtype, count)
 
     if callback == None or not callable(callback):
@@ -580,7 +598,8 @@ def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=
                     - DBE_ALARM - Trigger events when the channel alarm state changes
                     - DBE_PROPERTY - Trigger events when a channel property changes.
 
-    :return: Event identifier
+    :return: (:class:`caffi.constants.ECA`, Event identifier)
+    :rtype: tuple
 
     A significant change can be a change in the process variable's value, alarm status, or alarm severity.
     In the process control function block database the deadband field determines
@@ -610,8 +629,13 @@ def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=
     with at least one update indicating the current state of the channel.
 
     """
+    if chid not in __channels:
+        return ECA.BADCHID, ffi.NULL
+
     if dbrtype is None:
         dbrtype = libca.ca_field_type(chid)
+    if not dbr_type_is_valid(dbrtype):
+        return ECA.BADTYPE, ffi.NULL
 
     element_count = libca.ca_element_count(chid)
     if count is None or count < 0 or count > element_count:
@@ -627,15 +651,13 @@ def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=
     # - ECA_ALLOCMEM - Unable to allocate memory
     # - ECA_ADDFAIL - A local database event add failed
     status = libca.ca_create_subscription(dbrtype, count, chid, mask, _eventCB, monitor_callback, pevid)
+    evid = pevid[0]
 
-    if status == ECA_NORMAL:
-        evid = pevid[0]
+    if status == ECA_NORMAL and evid != ffi.NULL:
         __channels[chid]['monitors'].add(evid)
         __monitors[evid] = (chid, monitor_callback)
-    else:
-        evid = None
 
-    return evid
+    return ECA(status), evid
 
 
 def clear_subscription(evid):
@@ -875,7 +897,8 @@ def sg_create():
     """
     Create a synchronous group and return an identifier for it.
 
-    :return: Synchronous group identifier
+    :return: Status code, Synchronous group identifier
+    :rtype: tuple
 
     A synchronous group can be used to guarantee that a set of channel access requests have completed.
     Once a synchronous group has been created then channel access get and put requests may be issued
@@ -889,11 +912,8 @@ def sg_create():
     """
     pgid = ffi.new('CA_SYNC_GID *')
     status = libca.ca_sg_create(pgid)
-    if status == ECA_NORMAL:
-        gid = pgid[0]
-    else:
-        gid = None
-    return gid
+    gid = pgid[0]
+    return ECA(status), gid
 
 
 def sg_delete(gid):
@@ -1000,7 +1020,8 @@ def sg_get(gid, chid, dbrtype=None, count=None):
     :param dbrtype: External type of returned value. Conversion will occur if this does not match native type.
                     Specify one from the set of DBR_XXXX in db_access.h
     :param count: Element count to be read from the specified channel.
-    :return: :class:`caffi.dbr.DBRValue` or :class:`constants.ECA` if failed.
+    :return: (:class:`constants.ECA`, :class:`caffi.dbr.DBRValue`)
+    :rtype: tuple
 
     The values returned by :func:`sg_get` should not be referenced by your program
     until ECA_NORMAL has been received from ca_sg_block , or until :func:`sg_test` returns True.
@@ -1021,7 +1042,4 @@ def sg_get(gid, chid, dbrtype=None, count=None):
 
     cvalue = ffi.new('char[]', dbr_size_n(dbrtype, count))
     status = libca.ca_sg_array_get(gid, dbrtype, count, chid, cvalue)
-    if status == ECA_NORMAL:
-        return DBRValue(dbrtype, count, cvalue)
-    else:
-        return ECA(status)
+    return status, DBRValue(dbrtype, count, cvalue)

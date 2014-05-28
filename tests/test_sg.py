@@ -1,44 +1,56 @@
 from __future__ import print_function
-from caffi.ca import *
+import sys
+import caffi.ca as ca
 
 pvs = {}
 vals = {}
 
-create_context(True)
+# check for status code
+def check_status(status):
+    if status != ca.ECA.NORMAL:
+        print(ca.message(status))
+        sys.exit(1)
 
+
+status = ca.create_context(True)
+check_status(status)
+
+# create channels
 for name in ['cawaves', 'cawaveh', 'cawavef',  'cawavec', 'cawavel','cawave']:
-    chid = create_channel(name)
-    pvs[name] = chid
+    status, chid = ca.create_channel(name)
+    if status == ca.ECA.NORMAL:
+        pvs[name] = chid
 
-status = pend_io(3)
-if status != ECA_NORMAL:
-    print(message(status))
+# wait for connections
+status = ca.pend_io(3)
+check_status(status)
 
-gid = sg_create()
+# create synchronous group
+status, gid = ca.sg_create()
+check_status(status)
 
 # put
 for name, chid in pvs.items():
-    if field_type(chid) == DBF_STRING:
-        sg_put(gid, chid, [b'1',b'2',b'3', b'4'])
+    if ca.field_type(chid) == ca.DBF.STRING:
+        ca.sg_put(gid, chid, [b'1',b'2',b'3', b'4'])
     else:
-        sg_put(gid, chid, [1, 2, 3, 4])
+        ca.sg_put(gid, chid, [1, 2, 3, 4])
 
-flush_io()
+ca.flush_io()
 
-status = sg_block(gid, 5)
-if status != ECA_NORMAL:
-    print(message(status))
+status = ca.sg_block(gid, 3)
+check_status(status)
 
 # get
 for name, chid in pvs.items():
-    value = sg_get(gid, chid)
-    vals[name] = value
+    status, value = ca.sg_get(gid, chid)
+    if status == ca.ECA.NORMAL:
+        vals[name] = value
+ca.flush_io()
 
-flush_io()
-
-status = sg_block(gid, 0.1)
-if status != ECA_NORMAL:
-    print(message(status))
+# wait for get completion
+status = ca.sg_block(gid, 3)
+check_status(status)
 
 # dump value
 for name, value in vals.items():

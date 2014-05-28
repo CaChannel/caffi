@@ -1,42 +1,37 @@
 from __future__ import print_function
+import sys
+import caffi.ca as ca
 
-from caffi.ca import *
+# check for status code
+def check_status(status):
+    if status != ca.ECA.NORMAL:
+        print(ca.message(status))
+        sys.exit(1)
 
-# DBF_ENUM
-chid = create_channel('cabo')
+# create channel
+status, chid = ca.create_channel('catest')
+check_status(status)
 
-status = pend_io(2)
-if status != ECA_NORMAL:
-    print(message(status))
-
-for dbrtpye in [DBR_ENUM, DBR_STS_ENUM, DBR_TIME_ENUM,
-                DBR_GR_ENUM, DBR_CTRL_ENUM]:
-    value = get(chid, dbrtpye)
-    status = pend_io(2)
-    if status != ECA_NORMAL:
-        print(message(status))
-    else:
-        print(value.get())
-
-clear_channel(chid)
+# wait for connection
+status = ca.pend_io(2)
+check_status(status)
 
 
 # DBF_DOUBLE can be read by any DBR types
-chid = create_channel('catest')
-
-status = pend_io(2)
-if status != ECA_NORMAL:
-    print(message(status))
-
-for dbrtype in DBR:
-    if dbrtype == DBR.INVALID:
+for dbrtype in ca.DBR:
+    # these are not for valid types for ca get
+    if dbrtype in [ca.DBR.INVALID, ca.DBR.PUT_ACKS, ca.DBR_PUT_ACKT] :
         continue
-    value = get(chid, dbrtype)
-    status = pend_io(2)
-    if status != ECA_NORMAL:
-        print(message(status))
+
+    status, dbrvalue = ca.get(chid, dbrtype)
+    if status != ca.ECA.NORMAL:
+        continue
+
+    status = ca.pend_io(2)
+    if status != ca.ECA.NORMAL:
+        print(ca.message(status))
     else:
         print(dbrtype)
-        print('    ', value.get())
+        print('    ', dbrvalue.get())
 
-clear_channel(chid)
+ca.clear_channel(chid)
