@@ -104,7 +104,7 @@ def format_dbr_ctrl(cvalue, value):
 def format_dbr_enum(cvalue, value):
     no_str = cvalue.no_str
     value['no_str'] = no_str
-    value['strs'] = [ffi.string(cstr) for cstr in cvalue.strs[0:no_str]]
+    value['strs'] = tuple(ffi.string(cstr) for cstr in cvalue.strs[0:no_str])
 
 
 def format_plain_value(valueType, count, cvalue):
