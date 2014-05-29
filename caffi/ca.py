@@ -858,7 +858,9 @@ def host_name(chid):
     :param chid: channel identifier
     :return: the name of the host to which a channel is currently connected.
     """
-    return to_string(ffi.string(libca.ca_host_name(chid)))
+    cstring = ffi.new('char[256]')
+    libca.ca_get_host_name(chid, cstring, 256)
+    return to_string(ffi.string(cstring))
 
 
 def read_access(chid):
