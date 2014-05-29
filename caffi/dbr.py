@@ -18,8 +18,8 @@ except ImportError:
     has_numpy = False
 
 from ._ca import *
-
 from .constants import *
+from .compat import *
 
 #/*
 # * DBR structure size in bytes
@@ -42,9 +42,11 @@ def dbr_value_ptr(PDBR, DBR_TYPE):
 # */
 def dbf_type_to_text(dbftype):
     if dbftype >= -1 and dbftype <= LAST_TYPE + 1:
-        return ffi.string(libca.dbf_text[dbftype + 1])
+        text = ffi.string(libca.dbf_text[dbftype + 1])
     else:
-        return ffi.string(libca.dbf_text_invalid)
+        text = ffi.string(libca.dbf_text_invalid)
+
+    return to_string(text)
 
 
 def dbf_text_to_type(text):
@@ -59,9 +61,11 @@ def dbf_text_to_type(text):
 
 def dbr_type_to_text(dbrtype):
     if dbrtype >= 0 and dbrtype <= LAST_BUFFER_TYPE:
-        return ffi.string(libca.dbr_text[dbrtype])
+        text = ffi.string(libca.dbr_text[dbrtype])
     else:
-        return ffi.string(libca.dbr_text_invalid)
+        text = ffi.string(libca.dbr_text_invalid)
+
+    return to_string(text)
 
 
 def dbr_text_to_type(text):
@@ -87,7 +91,7 @@ def format_dbr_time(cvalue, value):
 
 
 def format_dbr_gr(cvalue, value):
-    value['units'] = ffi.string(cvalue.units)
+    value['units'] = to_string(ffi.string(cvalue.units))
     value['upper_disp_limit'] = cvalue.upper_disp_limit
     value['lower_disp_limit'] = cvalue.lower_disp_limit
     value['upper_alarm_limit'] = cvalue.upper_alarm_limit
@@ -104,7 +108,7 @@ def format_dbr_ctrl(cvalue, value):
 def format_dbr_enum(cvalue, value):
     no_str = cvalue.no_str
     value['no_str'] = no_str
-    value['strs'] = tuple(ffi.string(cstr) for cstr in cvalue.strs[0:no_str])
+    value['strs'] = tuple(to_string(ffi.string(cstr)) for cstr in cvalue.strs[0:no_str])
 
 
 def format_plain_value(valueType, count, cvalue):
@@ -123,11 +127,11 @@ def format_plain_value(valueType, count, cvalue):
 def format_string_value(count, dbrValue):
     cvalue = ffi.cast('dbr_string_t*', dbrValue)
     if count == 1:
-        value = ffi.string(cvalue[0])
+        value = to_string(ffi.string(cvalue[0]))
     else:
         value = []
         for i in range(count):
-            value.append(ffi.string(cvalue[i]))
+            value.append(to_string(ffi.string(cvalue[i])))
     return value
 
 def format_dbr(dbrType, count, dbrValue):

@@ -82,22 +82,7 @@ Even though as same as possible, there are subtle differences:
 """
 from __future__ import (print_function, absolute_import)
 
-# compatible to python 3
-import sys
-if sys.hexversion >= 0x03000000:
-    basestring = (str, bytes)
-
-
-def tobytes(string):
-    if isinstance(string, bytes):
-        return string
-
-    if sys.hexversion >= 0x03000000:
-        if not isinstance(string, basestring):
-            string = str(string)
-        return bytes(string, 'utf8')
-    else:
-        return str(string)
+from .compat import *
 
 # globals
 __channels = {}
@@ -132,7 +117,7 @@ def _exception_callback(carg):
         'stat'  : ECA(carg.stat),
         'op'    : CA_OP(carg.op),
         'ctx'   : carg.ctx,
-        'file'  : ffi.string(carg.pFile),
+        'file'  : to_string(ffi.string(carg.pFile)),
         'lineNo': carg.lineNo
     }
     user_callback, user_arg = ffi.from_handle(carg.usr)
@@ -317,7 +302,7 @@ def create_channel(name, callback=None, args=(), priority=CA_PRIORITY_DEFAULT):
     enter a disconnected state at any time.
 
     """
-    name = tobytes(name)
+    name = to_bytes(name)
 
     pchid = ffi.new('chid *')
 
@@ -492,7 +477,7 @@ def _setup_put(chid, value, dbrtype=None, count=None):
         if isinstance(value, basestring) and dbrtype == DBR_STRING:
             value_count = 1
             # convert to bytes
-            value = tobytes(value)
+            value = to_bytes(value)
 
     # setup c value
     if value_count == 1:
@@ -850,7 +835,7 @@ def name(chid):
     :param chid: channel identifier
     :return: the name provided when the supplied channel id was created.
     """
-    return ffi.string(libca.ca_name(chid))
+    return to_string(ffi.string(libca.ca_name(chid)))
 
 
 def state(chid):
@@ -865,7 +850,7 @@ def message(status):
     """
     :return: a message corresponding to a user specified CA status code.
     """
-    return ffi.string(libca.ca_message(status))
+    return to_string(ffi.string(libca.ca_message(status)))
 
 
 def host_name(chid):
@@ -873,7 +858,7 @@ def host_name(chid):
     :param chid: channel identifier
     :return: the name of the host to which a channel is currently connected.
     """
-    return ffi.string(libca.ca_host_name(chid))
+    return to_string(ffi.string(libca.ca_host_name(chid)))
 
 
 def read_access(chid):
