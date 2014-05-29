@@ -14,13 +14,21 @@ interface to channel access, alike the C API.
 
     context = ca.create_context()
 
-    chid = ca.create_channel('catest')
+    status, chid = ca.create_channel('catest')
+    if status != ca.ECA_NORMAL:
+        print(ca.message(status))
+        sys.exit(1)
+
     status = ca.pend_io(3)
     if status != ca.ECA_NORMAL:
         print(ca.message(status))
         sys.exit(1)
 
-    value = ca.get(chid)
+    status, value = ca.get(chid)
+    if status != ca.ECA_NORMAL:
+        print(ca.message(status))
+        sys.exit(1)
+
     status = ca.pend_io(3)
     if status != ca.ECA_NORMAL:
         print(ca.message(status))
@@ -32,6 +40,7 @@ interface to channel access, alike the C API.
 Install
 -------
 EPICS libraries have been shipped with the package for Windows, Linux and OS X.
+
 Either use *pip*,
 ::
     
