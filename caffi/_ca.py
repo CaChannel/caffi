@@ -1076,7 +1076,7 @@ old_cwd = os.getcwd()
 os.chdir(libca_path)
 
 # load ca library
-libca = ffi.dlopen(libca_name)
+libca = ffi.dlopen(os.path.join(libca_path, libca_name))
 
 # restore current dir
 os.chdir(old_cwd)
