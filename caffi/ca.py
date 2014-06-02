@@ -86,14 +86,12 @@ from .compat import *
 
 # globals
 __channels = {}
-__monitors = {}
 __exception_callback = None
 
 from ._ca import *
 from .constants import *
 from .dbr import *
 
-# macros defined in C, rewrote as functions
 
 DBR_TYPE_STRING = {
     DBR_STRING : 'dbr_string_t',
@@ -315,7 +313,7 @@ def create_channel(name, callback=None, args=(), priority=CA_PRIORITY_DEFAULT):
     status = libca.ca_create_channel(name, connect_callback, user_connect_callback, priority, pchid)
     chid = pchid[0]
     if chid != ffi.NULL:
-        __channels[chid] = {'callbacks':set(), 'monitors' : set()}
+        __channels[chid] = {'callbacks':set(), 'monitors' : {}}
         if user_connect_callback != ffi.NULL:
             __channels[chid]['callbacks'].add(user_connect_callback)
     return ECA(status), chid
@@ -638,8 +636,7 @@ def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=
     evid = pevid[0]
 
     if status == ECA_NORMAL and evid != ffi.NULL:
-        __channels[chid]['monitors'].add(evid)
-        __monitors[evid] = (chid, monitor_callback)
+        __channels[chid]['monitors'][evid] = monitor_callback
 
     return ECA(status), evid
 
@@ -659,11 +656,10 @@ def clear_subscription(evid):
 
     """
     status = libca.ca_clear_subscription(evid)
+    chid = libca.ca_evid_to_chid(evid)
 
-    if evid in __monitors:
-        chid = __monitors[evid][0]
-        __channels[chid]['monitors'].remove(evid)
-        del __monitors[evid]
+    if evid in __channels[chid]['monitors']:
+        del __channels[chid]['monitors'][evid]
 
     return ECA(status)
 
@@ -687,9 +683,8 @@ def clear_channel(chid):
 
     """
     # clear all subscriptions for this channel
-    if chid in __channels:
-        for evid in list(__channels[chid]['monitors']):
-            status = clear_subscription(evid)
+    for evid in __channels[chid]['monitors']:
+        status = clear_subscription(evid)
 
     status = libca.ca_clear_channel(chid)
 
