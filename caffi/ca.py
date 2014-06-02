@@ -118,6 +118,8 @@ def _exception_callback(carg):
         'file'  : to_string(ffi.string(carg.pFile)),
         'lineNo': carg.lineNo
     }
+    if __exception_callback != carg.usr:
+        return
     user_callback, user_arg = ffi.from_handle(carg.usr)
     if callable(user_callback):
         user_callback(epics_arg, user_arg)
@@ -326,6 +328,11 @@ def _access_rights_callback(arg):
         'read'  : arg.ar.access & 0x01 == 0x01,
         'write' : arg.ar.access & 0x02 == 0x02
     }
+    # If chid is not in cache, it well indicates
+    # that the python object has been garbage collected.
+    # Then don't try to call from_handle, that is undefined and may crash.
+    if arg.chid in __channels:
+        return
 
     user_callback, user_arg = ffi.from_handle(__channels[arg.chid]['access_rights_callback'])
     if callable(user_callback):
@@ -374,6 +381,11 @@ def _get_callback(arg):
         'status': ECA(arg.status),
         'value' : format_dbr(arg.type, arg.count, arg.dbr)
     }
+    # If chid or the callback object is not in cache, it well indicates
+    # that the python object has been garbage collected.
+    # Then don't try to call from_handle, that is undefined and may crash.
+    if arg.chid not in __channels or arg.usr not in __channels[arg.chid]['callbacks']:
+        return
 
     user_callback, user_arg = ffi.from_handle(arg.usr)
     __channels[arg.chid]['callbacks'].remove(arg.usr)
@@ -447,6 +459,12 @@ def _put_callback(arg):
         'count' : arg.count,
         'status': ECA(arg.status)
     }
+    # If chid or the callback object is not in cache, it well indicates
+    # that the python object has been garbage collected.
+    # Then don't try to call from_handle, that is undefined and may crash.
+    if arg.chid not in __channels or arg.usr not in __channels[arg.chid]['callbacks']:
+        return
+
     user_callback, user_arg = ffi.from_handle(arg.usr)
     __channels[arg.chid]['callbacks'].remove(arg.usr)
     if callable(user_callback):
@@ -554,6 +572,11 @@ def _event_callback(arg):
         'status': ECA(arg.status),
         'value' : format_dbr(arg.type, arg.count, arg.dbr)
     }
+    # If chid or the callback object is not in cache, it well indicates
+    # that the python object has been garbage collected.
+    # Then don't try to call from_handle, that is undefined and may crash.
+    if arg.chid not in __channels or arg.usr not in __channels[arg.chid]['monitors'].values():
+        return
     user_callback, user_arg = ffi.from_handle(arg.usr)
     if (callable(user_callback)):
         user_callback(epics_arg, user_arg)
@@ -683,7 +706,7 @@ def clear_channel(chid):
 
     """
     # clear all subscriptions for this channel
-    for evid in __channels[chid]['monitors']:
+    for evid in list(__channels[chid]['monitors']):
         status = clear_subscription(evid)
 
     status = libca.ca_clear_channel(chid)
