@@ -1066,7 +1066,15 @@ def get_libca():
     else:
         raise OSError('Unsupported Operation System %s' % osname)
 
-    return os.path.join(cwd, 'lib', host_arch), libca_name
+    # system defined epics installation precedes package bounded library
+    # but not for 'win32-x86' because the package bounded library has been
+    # modified not to use __stdcall convention.
+    epics_base = os.environ.get('EPICS_BASE')
+    if epics_base and host_arch != 'win32-x86':
+        host_arch = os.environ.get('EPICS_HOST_ARCH', host_arch)
+        return os.path.join(epics_base, 'lib', host_arch), libca_name
+    else:
+        return os.path.join(cwd, 'lib', host_arch), libca_name
 
 #
 libca_path, libca_name = get_libca()
