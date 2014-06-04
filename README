@@ -7,6 +7,34 @@ It uses CFFI to call EPICS channel access library.
 It is the goal of this package to provide direct low level
 interface to channel access, alike the C API.
 
+
+Install
+-------
+EPICS dynamic libraries have been shipped with the package for Windows, Linux and OS X.
+But if the environment variables *EPICS_BASE* and *EPICS_HOST_ARCH* are set,
+those libraries under path ``${EPICS_BASE}/lib/${EPICS_HOST_ARCH}`` will be used.
+
+Either use *pip*,
+::
+
+    $ pip install caffi
+
+or checkout source code from the git repository,
+::
+
+    $ git clone http://bitbucket.org/xwang/caffi
+    $ cd caffi
+    $ python setup.py install
+
+
+Documents
+---------
+Latest documents are hosted at `Read the Dcos <http://caffi.readthedocs.org>`_.
+
+
+Example
+-------
+
 ::
 
     import sys
@@ -15,39 +43,15 @@ interface to channel access, alike the C API.
     context = ca.create_context()
 
     status, chid = ca.create_channel('catest')
-    if status != ca.ECA_NORMAL:
-        print(ca.message(status))
-        sys.exit(1)
+    assert status == ca.ECA.NORMAL
 
     status = ca.pend_io(3)
-    if status != ca.ECA_NORMAL:
-        print(ca.message(status))
-        sys.exit(1)
+    assert status == ca.ECA.NORMAL
 
     status, value = ca.get(chid)
-    if status != ca.ECA_NORMAL:
-        print(ca.message(status))
-        sys.exit(1)
+    assert status == ca.ECA.NORMAL
 
     status = ca.pend_io(3)
-    if status != ca.ECA_NORMAL:
-        print(ca.message(status))
-        sys.exit(1)
+    assert status == ca.ECA.NORMAL
 
     print(value.get())
-
-
-Install
--------
-EPICS libraries have been shipped with the package for Windows, Linux and OS X.
-
-Either use *pip*,
-::
-    
-    $ pip install caffi
-
-or download the source tarball, unzip and run,
-::
-
-    $ python setup.py install
-
