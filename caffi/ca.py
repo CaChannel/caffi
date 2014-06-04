@@ -2,7 +2,7 @@
 The is the low level access to EPICS channel access library. It maps the corresponding C API to Python functions.
 Even though as same as possible, there are subtle differences:
 
-  - The `ca_` prefix of the C function name has been removed, e.g. C function `ca_create_channel` is now Python function `create_channel`.
+  - The `ca_` prefix of the C function name has been removed, e.g. C function `ca_create_channel` is now Python function :func:`create_channel`.
 
   - The order of the argument might have been altered to allow default arguments, thus more pythonic.
     Take C function `array_put_callback` for example,
@@ -407,7 +407,7 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
     :param callback: User supplied callback function to be run when requested operation completes.
     :param args: User supplied variable retained and then passed back to user supplied function above
     :return: (:class:`constants.ECA`, :class:`caffi.dbr.DBRValue`)
-    :rtype tuple:
+    :rtype: tuple
 
     When no *callback* is specified the returned channel value can't be assumed to be stable
     in the application supplied buffer until after *ECA_NORMAL* is returned from :func:`pend_io`.
@@ -416,8 +416,8 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
     Call :meth:`caffi.dbr.DBRValue.get` to retrieve the value.
 
     When *callback* is specified a value is read from the channel and
-    then the user's callback is invoked with a pointer to the retrieved value.
-    Note that ca_pend_io will not block for the delivery of values requested by ca_get_callback.
+    then the user's callback is invoked with a dict containing the value.
+    Note that ca_pend_io will not block for the delivery of values.
     If the channel disconnects before a ca get callback request can be completed,
     then the clients call back function is called with failure status.
 
@@ -594,7 +594,6 @@ def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=
                     Conversion will occur if this does not match the native type.
                     Default is the native type.
     :param count:   Element count to be written to the channel. Default is native element count.
-                    But it can be reduced to match the length of user supplied value.
     :param mask:    A mask with bits set for each of the event trigger types requested.
                     The event trigger mask must be a bitwise or of one or more of the following constants.
 
