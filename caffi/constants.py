@@ -93,6 +93,35 @@ DBE_PROPERTY    = (1<<3)
 
 
 # caerr.h
+#/*  CA Status Code Definitions   */
+
+CA_K_INFO       = 3   #/* successful */
+CA_K_ERROR      = 2   #/* failed- continue */
+CA_K_SUCCESS    = 1   #/* successful */
+CA_K_WARNING    = 0   #/* unsuccessful */
+CA_K_SEVERE     = 4   #/* failed- quit */
+CA_K_FATAL      = CA_K_ERROR | CA_K_SEVERE
+
+CA_M_MSG_NO     = 0x0000FFF8
+CA_M_SEVERITY   = 0x00000007
+CA_M_LEVEL      = 0x00000003
+CA_M_SUCCESS    = 0x00000001
+CA_M_ERROR      = 0x00000002
+CA_M_SEVERE     = 0x00000004
+
+CA_V_MSG_NO     = 0x03
+CA_V_SEVERITY   = 0x00
+CA_V_SUCCESS    = 0x00
+
+
+def CA_EXTRACT_MSG_NO(code):
+    return (code & CA_M_MSG_NO) >> CA_V_MSG_NO
+
+
+def CA_EXTRACT_MSG_SEVERITY(code):
+    return (code & CA_M_SEVERITY) >> CA_V_SEVERITY
+
+
 ECA_NORMAL          =   1
 ECA_MAXIOC          =  10
 ECA_UKNHOST         =  18
@@ -154,6 +183,18 @@ ECA_NOTTHREADED     = 458
 ECA_16KARRAYCLIEN   = 464
 ECA_CONNSEQTMO      = 472
 ECA_UNRESPTMO       = 480
+
+
+class CA_K(IntEnum):
+    """
+    Enum redefined from CA_K_XXX
+    """
+    INFO    = CA_K_INFO
+    ERROR   = CA_K_ERROR
+    SUCCESS = CA_K_SUCCESS
+    WARNING = CA_K_WARNING
+    SEVERE  = CA_K_SEVERE
+    FATAL   = CA_K_FATAL
 
 
 class ECA(IntEnum):
@@ -222,6 +263,18 @@ class ECA(IntEnum):
     ARRAYCLIEN      = ECA_16KARRAYCLIEN
     CONNSEQTMO      = ECA_CONNSEQTMO
     UNRESPTMO       = ECA_UNRESPTMO
+
+    def severity(self):
+        """
+        Return the severity of the status code
+        """
+        return CA_K(CA_EXTRACT_MSG_SEVERITY(self.value))
+
+    def message(self):
+        """
+        Return the string representation of the status code
+        """
+        return self.name
 
 
 # db_access.h
