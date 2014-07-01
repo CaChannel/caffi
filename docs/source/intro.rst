@@ -86,7 +86,7 @@ The :func:`caffi.ca.pend_io` approach is best suited to simple command line prog
 and the connection callback method is best suited to toolkit components with long runtime duration.
 Use of :func:`caffi.ca.state` is appropriate only in programs that prefer to poll for connection state changes
 instead of opting for asynchronous notification.
-The ca_pend_io function blocks only for channels created specifying no callback function.
+The :func:`caffi.ca.pend_io` function blocks only for channels created specifying no callback function.
 The user's connection state change function will be run immediately from within :func:`caffi.ca.create_channel`
 if the CA client and CA server are both hosted within the same address space (within the same process).
 
