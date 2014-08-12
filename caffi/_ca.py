@@ -8,7 +8,6 @@ ffi.cdef("""
 typedef void *chid;
 typedef chid chanId;
 typedef long chtype;
-typedef unsigned capri;
 typedef double ca_real;
 typedef void *evid;
 
@@ -79,6 +78,25 @@ struct exception_handler_args {
 
 typedef unsigned CA_SYNC_GID;
 
+/*
+ *  External OP codes for CA operations
+ */
+#define CA_OP_GET             0
+#define CA_OP_PUT             1
+#define CA_OP_CREATE_CHANNEL  2
+#define CA_OP_ADD_EVENT       3
+#define CA_OP_CLEAR_EVENT     4
+#define CA_OP_OTHER           5
+
+/*
+ * used with connection_handler_args
+ */
+#define CA_OP_CONN_UP       6
+#define CA_OP_CONN_DOWN     7
+
+/* depricated */
+#define CA_OP_SEARCH        2
+
 short           ca_field_type(chid chan);
 unsigned long   ca_element_count(chid chan);
 const char *    ca_name (chid chan);
@@ -106,6 +124,7 @@ enum channel_state ca_state (chid chan);
 enum ca_preemptive_callback_select
 { ca_disable_preemptive_callback, ca_enable_preemptive_callback };
 int ca_context_create(enum ca_preemptive_callback_select enable_premptive);
+void ca_detach_context ();
 
 /************************************************************************/
 /*  Remove CA facility from your task                                   */
@@ -113,6 +132,15 @@ int ca_context_create(enum ca_preemptive_callback_select enable_premptive);
 /*  Normally called automatically at task exit                          */
 /************************************************************************/
 void ca_context_destroy (void);
+
+typedef unsigned capri;
+#define CA_PRIORITY_MAX 99
+#define CA_PRIORITY_MIN 0
+#define CA_PRIORITY_DEFAULT 0
+
+#define CA_PRIORITY_DB_LINKS 80
+#define CA_PRIORITY_ARCHIVE 20
+#define CA_PRIORITY_OPI 0
 
 /*
  * ca_create_channel ()
@@ -558,6 +586,57 @@ int ca_context_status ( struct ca_client_context *, unsigned level );
 
 const char * ca_message(long ca_status);
 
+""")
+
+# alarm.h
+ffi.cdef("""
+#define NO_ALARM            0
+
+/* ALARM SEVERITIES - must match menuAlarmSevr.dbd */
+typedef enum {
+    epicsSevNone = NO_ALARM,
+    epicsSevMinor,
+    epicsSevMajor,
+    epicsSevInvalid,
+    ALARM_NSEV
+} epicsAlarmSeverity;
+
+/* ALARM STATUS - must match menuAlarmStat.dbd */
+
+typedef enum {
+    epicsAlarmNone = NO_ALARM,
+    epicsAlarmRead,
+    epicsAlarmWrite,
+    epicsAlarmHiHi,
+    epicsAlarmHigh,
+    epicsAlarmLoLo,
+    epicsAlarmLow,
+    epicsAlarmState,
+    epicsAlarmCos,
+    epicsAlarmComm,
+    epicsAlarmTimeout,
+    epicsAlarmHwLimit,
+    epicsAlarmCalc,
+    epicsAlarmScan,
+    epicsAlarmLink,
+    epicsAlarmSoft,
+    epicsAlarmBadSub,
+    epicsAlarmUDF,
+    epicsAlarmDisable,
+    epicsAlarmSimm,
+    epicsAlarmReadAccess,
+    epicsAlarmWriteAccess,
+    ALARM_NSTATUS
+} epicsAlarmCondition;
+""")
+
+# caeventmask.h
+ffi.cdef("""
+#define DBE_VALUE    1
+#define DBE_ARCHIVE  2
+#define DBE_LOG      2
+#define DBE_ALARM    4
+#define DBE_PROPERTY 8
 """)
 
 # epicsTypes.h

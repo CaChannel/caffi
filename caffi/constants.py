@@ -1,71 +1,56 @@
 """
-The macros defined in C header files, *cadef.h*, *caeventmask.h*, *caerr.h* are exported as integer constants.
+The macros defined in C header files, *cadef.h*, *caeventmask.h*, *caerr.h* are exported as IntEnum.
 
 """
 from enum import IntEnum
 
-# cadef.h
+__all__ = ['ChannelState', 'CA_OP', 'CA_PRIORITY',
+           'CA_K', 'ECA', 'DBE',
+           'AlarmSeverity', 'AlarmCondition', 'POSIX_TIME_AT_EPICS_EPOCH']
 
-cs_never_conn = 0
-cs_prev_conn  = 1
-cs_conn       = 2
-cs_closed     = 3
+from ._ca import *
+from .compat import to_string
 
 class ChannelState(IntEnum):
     """
     Enum redefined from C enum channel_state
     """
-    NEVER_CONN = cs_never_conn
-    PREV_CONN  = cs_prev_conn
-    CONN       = cs_conn
-    CLOSED     = cs_closed
+    NEVER_CONN = libca.cs_never_conn
+    PREV_CONN  = libca.cs_prev_conn
+    CONN       = libca.cs_conn
+    CLOSED     = libca.cs_closed
 
-
-#/*
-# *  External OP codes for CA operations
-# */
-CA_OP_GET             = 0
-CA_OP_PUT             = 1
-CA_OP_CREATE_CHANNEL  = 2
-CA_OP_ADD_EVENT       = 3
-CA_OP_CLEAR_EVENT     = 4
-CA_OP_OTHER           = 5
 
 class CA_OP(IntEnum):
     """
     Enum redefined from C macros CA_OP_XXX
     """
-    GET             = CA_OP_GET
-    PUT             = CA_OP_PUT
-    CREATE_CHANNEL  = CA_OP_CREATE_CHANNEL
-    ADD_EVENT       = CA_OP_ADD_EVENT
-    CLEAR_EVENT     = CA_OP_CLEAR_EVENT
-    OTHER           = CA_OP_OTHER
+    GET             = libca.CA_OP_GET
+    PUT             = libca.CA_OP_PUT
+    CREATE_CHANNEL  = libca.CA_OP_CREATE_CHANNEL
+    ADD_EVENT       = libca.CA_OP_ADD_EVENT
+    CLEAR_EVENT     = libca.CA_OP_CLEAR_EVENT
+    OTHER           = libca.CA_OP_OTHER
+    CONN_UP         = libca.CA_OP_CONN_UP
+    CONN_DOWN       = libca.CA_OP_CONN_DOWN
 
 
-#/*
-# * used with connection_handler_args
-# */
-CA_OP_CONN_UP    =   6
-CA_OP_CONN_DOWN  =   7
+class CA_PRIORITY(IntEnum):
+    """
+    Enum redefined from CA_PRIORITY_XXX macros.
+    """
+    MAX     = libca.CA_PRIORITY_MAX
+    MIN     = libca.CA_PRIORITY_MIN
+    DEFAULT = libca.CA_PRIORITY_DEFAULT
 
-TYPENOTCONN = -1 #/* the channel's native type when disconnected   */
+    DB_LINKS= libca.CA_PRIORITY_DB_LINKS
+    ARCHIVE = libca.CA_PRIORITY_ARCHIVE
+    OPI     = libca.CA_PRIORITY_OPI
 
-CA_PRIORITY_MAX     = 99
-CA_PRIORITY_MIN     = 0
-CA_PRIORITY_DEFAULT = CA_PRIORITY_MIN
 
-CA_PRIORITY_DB_LINKS= 80
-CA_PRIORITY_ARCHIVE = 20
-CA_PRIORITY_OPI     = 0
-
-# caeventmask.h
-"""
-    event selections
-    (If any more than 8 of these are needed then update the
-    select field in the event_block struct in db_event.c from
-    unsigned char to unsigned short)
-
+class DBE(IntEnum):
+    """
+    Enum redefined from DBE_XXX macros.
 
     DBE_VALUE
     Trigger an event when a significant change in the channel's value
@@ -81,15 +66,12 @@ CA_PRIORITY_OPI     = 0
     DBE_PROPERTY
     Trigger an event when a property change (control limit, graphical
     limit, status string, enum string ...) occurs.
-
-"""
-
-
-DBE_VALUE       = (1<<0)
-DBE_ARCHIVE     = (1<<1)
-DBE_LOG         = DBE_ARCHIVE
-DBE_ALARM       = (1<<2)
-DBE_PROPERTY    = (1<<3)
+    """
+    VALUE       = libca.DBE_VALUE
+    ARCHIVE     = libca.DBE_ARCHIVE
+    LOG         = libca.DBE_LOG
+    ALARM       = libca.DBE_ALARM
+    PROPERTY    = libca.DBE_PROPERTY
 
 
 # caerr.h
@@ -274,300 +256,13 @@ class ECA(IntEnum):
         """
         Return the string representation of the status code
         """
-        return self.name
-
-
-# db_access.h
-# /* database field types */
-DBF_STRING  = 0
-DBF_INT     = 1
-DBF_SHORT   = 1
-DBF_FLOAT   = 2
-DBF_ENUM    = 3
-DBF_CHAR    = 4
-DBF_LONG    = 5
-DBF_DOUBLE  = 6
-DBF_NO_ACCESS=7
-LAST_TYPE   = DBF_DOUBLE
-
-
-# /* data request buffer types */
-DBR_STRING      = DBF_STRING
-DBR_INT	        = DBF_INT
-DBR_SHORT       = DBF_INT
-DBR_FLOAT       = DBF_FLOAT
-DBR_ENUM        = DBF_ENUM
-DBR_CHAR        = DBF_CHAR
-DBR_LONG        = DBF_LONG
-DBR_DOUBLE      = DBF_DOUBLE
-DBR_STS_STRING  = 7
-DBR_STS_SHORT   = 8
-DBR_STS_INT     = DBR_STS_SHORT
-DBR_STS_FLOAT   = 9
-DBR_STS_ENUM    = 10
-DBR_STS_CHAR    = 11
-DBR_STS_LONG    = 12
-DBR_STS_DOUBLE  = 13
-DBR_TIME_STRING = 14
-DBR_TIME_INT    = 15
-DBR_TIME_SHORT  = 15
-DBR_TIME_FLOAT  = 16
-DBR_TIME_ENUM   = 17
-DBR_TIME_CHAR   = 18
-DBR_TIME_LONG   = 19
-DBR_TIME_DOUBLE = 20
-DBR_GR_STRING   = 21
-DBR_GR_SHORT    = 22
-DBR_GR_INT      = DBR_GR_SHORT
-DBR_GR_FLOAT    = 23
-DBR_GR_ENUM     = 24
-DBR_GR_CHAR     = 25
-DBR_GR_LONG     = 26
-DBR_GR_DOUBLE   = 27
-DBR_CTRL_STRING = 28
-DBR_CTRL_SHORT  = 29
-DBR_CTRL_INT    = DBR_CTRL_SHORT
-DBR_CTRL_FLOAT  = 30
-DBR_CTRL_ENUM   = 31
-DBR_CTRL_CHAR   = 32
-DBR_CTRL_LONG   = 33
-DBR_CTRL_DOUBLE = 34
-DBR_PUT_ACKT    = DBR_CTRL_DOUBLE + 1
-DBR_PUT_ACKS    = DBR_PUT_ACKT + 1
-DBR_STSACK_STRING=DBR_PUT_ACKS + 1
-DBR_CLASS_NAME  = DBR_STSACK_STRING + 1
-LAST_BUFFER_TYPE= DBR_CLASS_NAME
-
-#/*
-# * type checking macros -- return non-zero if condition is true, zero otherwise
-# */
-def dbf_type_is_valid(dbftype):
-    return dbftype >= 0 and dbftype <= LAST_TYPE
-
-
-def dbr_type_is_valid(dbrtype):
-    return dbrtype >= 0 and dbrtype <= LAST_BUFFER_TYPE
-
-
-def dbr_type_is_plain(dbrtype):
-    return dbrtype >= DBR_STRING and dbrtype <= DBR_DOUBLE
-
-
-def dbr_type_is_STS(dbrtype):
-    return dbrtype >= DBR_STS_STRING and dbrtype <= DBR_STS_DOUBLE
-
-
-def dbr_type_is_TIME(dbrtype):
-    return dbrtype >= DBR_TIME_STRING and dbrtype <= DBR_TIME_DOUBLE
-
-
-def dbr_type_is_GR(dbrtype):
-    return dbrtype >= DBR_GR_STRING and dbrtype <= DBR_GR_DOUBLE
-
-
-def dbr_type_is_CTRL(dbrtype):
-    return dbrtype >= DBR_CTRL_STRING and dbrtype <= DBR_CTRL_DOUBLE
-
-
-def dbr_type_is_STRING(dbrtype):
-    return ( dbr_type_is_valid(dbrtype) and
-             dbrtype % (LAST_TYPE + 1) == DBR_STRING )
-
-
-def dbr_type_is_SHORT(dbrtype):
-    return ( dbr_type_is_valid(dbrtype) and
-             dbrtype % (LAST_TYPE + 1) == DBR_SHORT )
-
-
-def dbr_type_is_FLOAT(dbrtype):
-    return ( dbr_type_is_valid(dbrtype) and
-             dbrtype % (LAST_TYPE + 1) == DBR_FLOAT )
-
-def dbr_type_is_ENUM(dbrtype):
-    return ( dbr_type_is_valid(dbrtype) and
-             dbrtype % (LAST_TYPE + 1) == DBR_ENUM )
-
-
-def dbr_type_is_CHAR(dbrtype):
-    return ( dbr_type_is_valid(dbrtype) and
-             dbrtype % (LAST_TYPE + 1) == DBR_CHAR )
-
-
-def dbr_type_is_LONG(dbrtype):
-    return ( dbr_type_is_valid(dbrtype) and
-             dbrtype % (LAST_TYPE + 1) == DBR_LONG )
-
-
-def dbr_type_is_DOUBLE(dbrtype):
-    return ( dbr_type_is_valid(dbrtype) and
-             dbrtype % (LAST_TYPE + 1) == DBR_DOUBLE )
-
-
-#/*
-# * type conversion macros
-# */
-def dbf_type_to_DBR(dbftype):
-    if dbf_type_is_valid(dbftype):
-        return dbftype
-    else:
-        return -1
-
-
-def dbf_type_to_DBR_STS(dbftype):
-    if dbf_type_is_valid(dbftype):
-        return dbftype + LAST_TYPE + 1
-    else:
-        return -1
-
-
-def dbf_type_to_DBR_TIME(dbftype):
-    if dbf_type_is_valid(dbftype):
-        return dbftype + 2 * (LAST_TYPE + 1)
-    else:
-        return -1
-
-
-def dbf_type_to_DBR_GR(dbftype):
-    if dbf_type_is_valid(dbftype):
-        return dbftype + 3 * (LAST_TYPE + 1)
-    else:
-        return -1
-
-
-def dbf_type_to_DBR_CTRL(dbftype):
-    if dbf_type_is_valid(dbftype):
-        return dbftype + 4 * (LAST_TYPE + 1)
-    else:
-        return -1
-
-
-class DBR(IntEnum):
-    """
-    Enum redefined from DBR_XXX macros.
-    """
-    INVALID     = TYPENOTCONN
-    STRING      = DBR_STRING
-    INT         = DBR_INT
-    SHORT       = DBR_SHORT
-    FLOAT       = DBR_FLOAT
-    ENUM        = DBR_ENUM
-    CHAR        = DBR_CHAR
-    LONG        = DBR_LONG
-    DOUBLE      = DBR_DOUBLE
-    STS_STRING  = DBR_STS_STRING
-    STS_SHORT   = DBR_STS_SHORT
-    STS_INT     = DBR_STS_INT
-    STS_FLOAT   = DBR_STS_FLOAT
-    STS_ENUM    = DBR_STS_ENUM
-    STS_CHAR    = DBR_STS_CHAR
-    STS_LONG    = DBR_STS_LONG
-    STS_DOUBLE  = DBR_STS_DOUBLE
-    TIME_STRING = DBR_TIME_STRING
-    TIME_INT    = DBR_TIME_INT
-    TIME_SHORT  = DBR_TIME_SHORT
-    TIME_FLOAT  = DBR_TIME_FLOAT
-    TIME_ENUM   = DBR_TIME_ENUM
-    TIME_CHAR   = DBR_TIME_CHAR
-    TIME_LONG   = DBR_TIME_LONG
-    TIME_DOUBLE = DBR_TIME_DOUBLE
-    GR_STRING   = DBR_GR_STRING
-    GR_SHORT    = DBR_GR_SHORT
-    GR_INT      = DBR_GR_INT
-    GR_FLOAT    = DBR_GR_FLOAT
-    GR_ENUM     = DBR_GR_ENUM
-    GR_CHAR     = DBR_GR_CHAR
-    GR_LONG     = DBR_GR_LONG
-    GR_DOUBLE   = DBR_GR_DOUBLE
-    CTRL_STRING = DBR_CTRL_STRING
-    CTRL_SHORT  = DBR_CTRL_SHORT
-    CTRL_INT    = DBR_CTRL_INT
-    CTRL_FLOAT  = DBR_CTRL_FLOAT
-    CTRL_ENUM   = DBR_CTRL_ENUM
-    CTRL_CHAR   = DBR_CTRL_CHAR
-    CTRL_LONG   = DBR_CTRL_LONG
-    CTRL_DOUBLE = DBR_CTRL_DOUBLE
-    PUT_ACKT    = DBR_PUT_ACKT
-    PUT_ACKS    = DBR_PUT_ACKS
-    STSACK_STRING=DBR_STSACK_STRING
-    CLASS_NAME  = DBR_CLASS_NAME
-
-    def isSTRING(self):
-        return dbr_type_is_STRING(self.value)
-
-    def isSHORT(self):
-        return dbr_type_is_SHORT(self.value)
-
-    def isFLOAT(self):
-        return dbr_type_is_FLOAT(self.value)
-
-    def isENUM(self):
-        return dbr_type_is_ENUM(self.value)
-
-    def isCHAR(self):
-        return dbr_type_is_CHAR(self.value)
-
-    def isLONG(self):
-        return dbr_type_is_LONG(self.value)
-
-    def isDOUBLE(self):
-        return dbr_type_is_DOUBLE(self.value)
-
-    def isPlain(self):
-        return dbr_type_is_plain(self.value)
-
-    def isSTS(self):
-        return dbr_type_is_STS(self.value)
-
-    def isTIME(self):
-        return dbr_type_is_TIME(self.value)
-
-    def isGR(self):
-        return dbr_type_is_GR(self.value)
-
-    def isCTRL(self):
-        return dbr_type_is_CTRL(self.value)
-
-
-class DBF(IntEnum):
-    """
-    Enum redefined from DBF_XXX macros.
-    """
-    INVALID = TYPENOTCONN
-    STRING  = DBF_STRING
-    INT     = DBF_INT
-    SHORT   = DBF_SHORT
-    FLOAT   = DBF_FLOAT
-    ENUM    = DBF_ENUM
-    CHAR    = DBF_CHAR
-    LONG    = DBF_LONG
-    DOUBLE  = DBF_DOUBLE
-
-    def toSTS(self):
-        return DBR(dbf_type_to_DBR_STS(self.value))
-
-    def toTIME(self):
-        return DBR(dbf_type_to_DBR_TIME(self.value))
-
-    def toGR(self):
-        return DBR(dbf_type_to_DBR_GR(self.value))
-
-    def toCTRL(self):
-        return DBR(dbf_type_to_DBR_GR(self.value))
+        return to_string(ffi.string(libca.ca_message(self.value)))
 
 
 # epicsTime.h
 #/* The EPICS Epoch is 00:00:00 Jan 1, 1990 UTC */
 POSIX_TIME_AT_EPICS_EPOCH = 631152000
 
-
-# alarm.h
-
-#/* ALARM SEVERITIES - must match menuAlarmSevr.dbd */
-
-NO_ALARM     = 0
-MINOR_ALARM  = 1
-MAJOR_ALARM  = 2
-INVALID_ALARM= 3
 
 class AlarmSeverity(IntEnum):
     """
@@ -581,34 +276,10 @@ class AlarmSeverity(IntEnum):
 
     """
     # None is a Python keyword
-    No      =  NO_ALARM
-    Minor   =  MINOR_ALARM
-    Major   =  MAJOR_ALARM
-    Invalid =  INVALID_ALARM
-
-
-#NO_ALARM         =  0
-READ_ALARM       =  1
-WRITE_ALARM      =  2
-HIHI_ALARM       =  3
-HIGH_ALARM       =  4
-LOLO_ALARM       =  5
-LOW_ALARM        =  6
-STATE_ALARM      =  7
-COS_ALARM        =  8
-COMM_ALARM       =  9
-TIMEOUT_ALARM    = 10
-HW_LIMIT_ALARM   = 11
-CALC_ALARM       = 12
-SCAN_ALARM       = 13
-LINK_ALARM       = 14
-SOFT_ALARM       = 15
-BAD_SUB_ALARM    = 16
-UDF_ALARM        = 17
-DISABLE_ALARM    = 18
-SIMM_ALARM       = 19
-READ_ACCESS_ALARM= 20
-WRITE_ACCESS_ALARM=21
+    No      =  libca.epicsSevNone
+    Minor   =  libca.epicsSevMinor
+    Major   =  libca.epicsSevMajor
+    Invalid =  libca.epicsSevInvalid
 
 
 class AlarmCondition(IntEnum):
@@ -623,25 +294,25 @@ class AlarmCondition(IntEnum):
 
     """
     # None is Python keyword
-    No        =  NO_ALARM
-    Read      =  READ_ALARM
-    Write     =  WRITE_ALARM
-    HiHi      =  HIHI_ALARM
-    High      =  HIGH_ALARM
-    LoLo      =  LOLO_ALARM
-    Low       =  LOW_ALARM
-    State     =  STATE_ALARM
-    Cos       =  COS_ALARM
-    Comm      =  COMM_ALARM
-    Timeout   =  TIMEOUT_ALARM
-    HwLimit   =  HW_LIMIT_ALARM
-    Calc      =  CALC_ALARM
-    Scan      =  SCAN_ALARM
-    Link      =  LINK_ALARM
-    Soft      =  SOFT_ALARM
-    BadSub    =  BAD_SUB_ALARM
-    UDF       =  UDF_ALARM
-    Disable   =  DISABLE_ALARM
-    Simm      =  SIMM_ALARM
-    ReadAccess=  READ_ACCESS_ALARM
-    WriteAccess= WRITE_ACCESS_ALARM
+    No        =  libca.epicsAlarmNone
+    Read      =  libca.epicsAlarmRead
+    Write     =  libca.epicsAlarmWrite
+    HiHi      =  libca.epicsAlarmHiHi
+    High      =  libca.epicsAlarmHigh
+    LoLo      =  libca.epicsAlarmLoLo
+    Low       =  libca.epicsAlarmLow
+    State     =  libca.epicsAlarmState
+    Cos       =  libca.epicsAlarmCos
+    Comm      =  libca.epicsAlarmComm
+    Timeout   =  libca.epicsAlarmTimeout
+    HwLimit   =  libca.epicsAlarmHwLimit
+    Calc      =  libca.epicsAlarmCalc
+    Scan      =  libca.epicsAlarmScan
+    Link      =  libca.epicsAlarmLink
+    Soft      =  libca.epicsAlarmSoft
+    BadSub    =  libca.epicsAlarmBadSub
+    UDF       =  libca.epicsAlarmUDF
+    Disable   =  libca.epicsAlarmDisable
+    Simm      =  libca.epicsAlarmSimm
+    ReadAccess=  libca.epicsAlarmReadAccess
+    WriteAccess= libca.epicsAlarmWriteAccess

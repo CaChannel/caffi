@@ -718,7 +718,7 @@ class CaChannel:
 
     def host_name(self):
         """Host name that hosts the process variable."""
-        return ca.name(self._chid)
+        return ca.host_name(self._chid)
 
 
     def read_access(self):

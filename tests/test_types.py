@@ -26,7 +26,7 @@ check_status(status)
 
 # put
 for name, chid in pvs.items():
-    if ca.field_type(chid) == ca.DBF_STRING:
+    if ca.field_type(chid) == ca.DBF.STRING:
         ca.put(chid, [b'1',b'2',b'3', b'4'])
     else:
         ca.put(chid, [1, 2, 3, 4])

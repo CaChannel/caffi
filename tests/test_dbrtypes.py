@@ -20,7 +20,7 @@ check_status(status)
 # DBF_DOUBLE can be read by any DBR types
 for dbrtype in ca.DBR:
     # these are not for valid types for ca get
-    if dbrtype in [ca.DBR.INVALID, ca.DBR.PUT_ACKS, ca.DBR_PUT_ACKT] :
+    if dbrtype in [ca.DBR.INVALID, ca.DBR.PUT_ACKS, ca.DBR.PUT_ACKT] :
         continue
 
     status, dbrvalue = ca.get(chid, dbrtype)
