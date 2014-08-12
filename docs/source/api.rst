@@ -61,6 +61,10 @@ Module :mod:`caffi.dbr`
 
 .. module:: caffi.dbr
 
+.. autoclass:: DBF
+
+.. autoclass:: DBR
+
 .. autoclass:: DBRValue
 
     .. automethod:: get
@@ -74,10 +78,6 @@ Module :mod:`caffi.constants`
 .. automodule:: caffi.constants
 
 .. autoclass:: ChannelState
-
-.. autoclass:: DBR
-
-.. autoclass:: DBF
 
 .. autoclass:: CA_OP
 
