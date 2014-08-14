@@ -65,8 +65,8 @@ Even though as same as possible, there are subtle differences:
     C Macros                Python Enum
     ======================  ============
     *ECA_XXX*               :class:`caffi.constants.ECA`
-    *DBF_XXX*               :class:`caffi.constants.DBF`
-    *DBR_XXX*               :class:`caffi.constants.DBR`
+    *DBF_XXX*               :class:`caffi.dbr.DBF`
+    *DBR_XXX*               :class:`caffi.dbr.DBR`
     *CA_OP_XXX*             :class:`caffi.constants.CA_OP`
     *cs_xxx*                :class:`caffi.constants.ChannelState`
     *XXX_ALARM* (severity)  :class:`caffi.constants.AlarmSeverity`
@@ -406,14 +406,14 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
 
     :param chid: Channel identifier
     :param value: A scalar or array value to be written to the channel
-    :param dbrtype: The external type of the supplied value to be written.
+    :param dbrtype: :class:`caffi.dbr.DBR`. The external type of the supplied value to be written.
                     Conversion will occur if this does not match the native type.
                     Default is the native type.
     :param count:   Element count to be read from the specified channel.
                     If *callback* is specified, a count of zero means use the current element count from the server.
     :param callback: User supplied callback function to be run when requested operation completes.
     :param args: User supplied variable retained and then passed back to user supplied function above
-    :return: (:class:`constants.ECA`, :class:`caffi.dbr.DBRValue`)
+    :return: (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
     :rtype: tuple
 
     When no *callback* is specified the returned channel value can't be assumed to be stable
@@ -520,7 +520,7 @@ def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
 
     :param chid: Channel identifier
     :param value: A scalar or array value to be written to the channel
-    :param dbrtype: The external type of the supplied value to be written.
+    :param dbrtype: :class:`caffi.dbr.DBR`. The external type of the supplied value to be written.
                     Conversion will occur if this does not match the native type.
                     Default is the native type.
     :param count: Element count to be written to the channel. Default is native element count. But it can be reduced to
@@ -842,6 +842,7 @@ def field_type(chid):
     """
     :param chid: channel identifier
     :return: the native type in the server of the process variable.
+    :rtype: :class:`caffi.dbr.DBF`
     """
     return DBF(libca.ca_field_type(chid))
 
@@ -907,7 +908,7 @@ def sg_create():
     """
     Create a synchronous group and return an identifier for it.
 
-    :return: Status code, Synchronous group identifier
+    :return: (:class:`caffi.constants.ECA`, Synchronous group identifier)
     :rtype: tuple
 
     A synchronous group can be used to guarantee that a set of channel access requests have completed.
@@ -996,8 +997,7 @@ def sg_put(gid, chid, value, dbrtype=None, count=None):
     :param gid: Synchronous group identifier
     :param chid: Channel identifier
     :param value: The value or array of values to write
-    :param dbrtype: The type of supplied value. Conversion will occur if it does not match the native type.
-                    Specify one from the set of DBR_XXXX in db_access.h.
+    :param dbrtype: :class:`caffi.dbr.DBR`. The type of supplied value. Conversion will occur if it does not match the native type.
     :param count: The element count to be written to the specified channel.
     :return:
                 - ECA.NORMAL - Normal successful completion
@@ -1027,10 +1027,9 @@ def sg_get(gid, chid, dbrtype=None, count=None):
 
     :param gid: Identifier of the synchronous group.
     :param chid: Channel identifier
-    :param dbrtype: External type of returned value. Conversion will occur if this does not match native type.
-                    Specify one from the set of DBR_XXXX in db_access.h
+    :param dbrtype: :class:`caffi.dbr.DBR`. External type of returned value. Conversion will occur if this does not match native type.
     :param count: Element count to be read from the specified channel.
-    :return: (:class:`constants.ECA`, :class:`caffi.dbr.DBRValue`)
+    :return: (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
     :rtype: tuple
 
     The values returned by :func:`sg_get` should not be referenced by your program
