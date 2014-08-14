@@ -37,7 +37,6 @@ Example
 
 ::
 
-    import sys
     import caffi.ca as ca
 
     context = ca.create_context()
@@ -48,10 +47,13 @@ Example
     status = ca.pend_io(3)
     assert status == ca.ECA.NORMAL
 
+    status = ca.put(chid, 123)
+    status = ca.flush_io()
+
     status, value = ca.get(chid)
     assert status == ca.ECA.NORMAL
 
     status = ca.pend_io(3)
     assert status == ca.ECA.NORMAL
 
-    print(value.get())
+    assert value.get() == 123
