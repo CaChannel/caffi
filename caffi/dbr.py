@@ -398,7 +398,7 @@ def format_plain_value(valueType, count, cvalue):
         cvalue = ffi.cast(valueType+'[%d]'%count, cvalue)
 
         if has_numpy:
-            value = numpy.frombuffer(ffi.buffer(cvalue), dtype=ctype2dtype[valueType])
+            value = numpy.frombuffer(ffi.buffer(cvalue), dtype=ctype2dtype[valueType]).copy()
         else:
             value = list(cvalue)
 
