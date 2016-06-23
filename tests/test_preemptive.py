@@ -21,7 +21,7 @@ check_status(status)
 status = ca.pend_io(2)
 check_status(status)
 
-def monitor(epics_arg, user_arg):
+def monitor(epics_arg):
     print(epics_arg['value'])
 
 status, evid = ca.create_subscription(chid, monitor)

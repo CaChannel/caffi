@@ -24,7 +24,7 @@ print("  readable:", ca.read_access(chid))
 print("  writable:", ca.write_access(chid))
 
 # create one subscription
-def event1(epics_arg, user_arg):
+def event1(epics_arg):
     print('event1')
     print('    ', epics_arg)
 
@@ -32,7 +32,7 @@ status, evid1 = ca.create_subscription(chid, event1)
 assert status == ca.ECA.NORMAL
 
 # create another subscription
-def event2(epics_arg, user_arg):
+def event2(epics_arg):
     print('event2')
     print('    ', epics_arg)
 

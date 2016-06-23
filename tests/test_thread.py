@@ -31,10 +31,10 @@ check_status(status)
 
 ca.flush_io()
 
-def monitor(epics_arg, user_arg):
+def monitor(epics_arg):
     print(epics_arg['value']['stamp'], epics_arg['value']['value'])
 
-ca.create_subscription(chid, monitor, dbrtype=ca.DBR.TIME_DOUBLE)
+ca.create_subscription(chid, monitor, chtype=ca.DBR.TIME_DOUBLE)
 
 def thread_one():
     status = ca.attach_context(ctx)

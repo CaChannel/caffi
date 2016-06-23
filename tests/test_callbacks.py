@@ -8,37 +8,32 @@ def check_status(status):
         print(ca.message(status))
         sys.exit(1)
 
-def exceptionCB(epicsArgs, userArgs):
+def exceptionCB(epicsArgs):
     print('exception callback')
     print('    ', epicsArgs)
-    print('    ', userArgs)
 
 
-def connectCB(epicsArgs, userArgs):
+def connectCB(epicsArgs):
     print('connect callback')
     print('    ', epicsArgs)
-    print('    ', userArgs)
 
 
-def putCB(epicsArgs, userArgs):
+def putCB(epicsArgs):
     print('put callback')
     print('    ', epicsArgs)
-    print('    ', userArgs)
 
 
-def getCB(epicsArgs, userArgs):
+def getCB(epicsArgs):
     print('get callback')
     print('    ', epicsArgs)
-    print('    ', userArgs)
 
 
-def monitorCB(epicsArgs, userArgs):
+def monitorCB(epicsArgs):
     print('monitor callback')
     print('    ', epicsArgs)
-    print('    ', userArgs)
 
 
-def accessCB(epicsArgs, userArgs):
+def accessCB(epicsArgs):
     print('access rights callback')
     print(epicsArgs)
 
@@ -62,19 +57,19 @@ status = ca.replace_access_rights_event(chid, accessCB)
 check_status(status)
 
 # monitor callback
-status, evid = ca.create_subscription(chid, monitorCB, (1, 2, 3))
+status, evid = ca.create_subscription(chid, monitorCB)
 check_status(status)
 
 # push these requests to server
 ca.flush_io()
 
 # put callback
-status = ca.put(chid, [60, 50, 40], callback=putCB, args=(1, 2, 3))
+status = ca.put(chid, [60, 50, 40], callback=putCB)
 check_status(status)
 ca.flush_io()
 
 # get callback, the dbrvalue is dummy since callback is used
-status, dbrvalue = ca.get(chid, callback=getCB, args=(1, 2, 3))
+status, dbrvalue = ca.get(chid, callback=getCB)
 check_status(status)
 ca.flush_io()
 
