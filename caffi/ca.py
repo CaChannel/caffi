@@ -1051,4 +1051,4 @@ def sg_get(gid, chid, dbrtype=None, count=None):
 
     cvalue = ffi.new('char[]', dbr_size_n(dbrtype, count))
     status = libca.ca_sg_array_get(gid, dbrtype, count, chid, cvalue)
-    return status, DBRValue(dbrtype, count, cvalue)
+    return ECA(status), DBRValue(dbrtype, count, cvalue)
