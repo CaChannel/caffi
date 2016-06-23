@@ -21,7 +21,7 @@ Even though as same as possible, there are subtle differences:
     Its Python counterpart,
     ::
 
-        put(chid, value, dbrType=None, count=None, callback=None, args=())
+        put(chid, value, chtype=None, count=None, callback=None)
 
     Only two arguments are mandatory, which are the channel identifier and the value to write.
     The others are made optional and have reasonable defaults.
@@ -34,16 +34,12 @@ Even though as same as possible, there are subtle differences:
     In Python counterpart, the callback signature is
     ::
 
-        def callback(epicsArgs, userArgs):
+        def callback(epicsArgs):
 
     *epicsArgs* is a dict converted from `xxx_handler_args`.
-    *userArgs* is a tuple supplied by user when the callback is registered.
 
   - C functions normally return status code to indicate success or failure. The Python counterparts follow
     this but have exceptions:
-
-    - C function `ca_test_io` and `ca_sg_test` return status code ECA.IODONE/ECA.IOINPROGRESS.
-      The Python counterparts return True/False.
 
     - The get functions in C require a user supplied memory pointer passed as argument. In Python the function
       :func:`get` and :func:`sg_get` returns a tuple of form (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
@@ -91,6 +87,7 @@ __exception_callback = None
 from ._ca import *
 from .constants import *
 from .dbr import *
+from .macros import *
 
 __all__ =['add_exception_event', 'create_context', 'attach_context', 'destroy_context', 'show_context',
           'create_channel', 'clear_channel', 'get', 'put', 'create_subscription',
@@ -126,12 +123,12 @@ def _exception_callback(carg):
     }
     if __exception_callback != carg.usr:
         return
-    user_callback, user_arg = ffi.from_handle(carg.usr)
+    user_callback = ffi.from_handle(carg.usr)
     if callable(user_callback):
-        user_callback(epics_arg, user_arg)
+        user_callback(epics_arg)
 
 
-def add_exception_event(callback=None, args=()):
+def add_exception_event(callback=None):
     """
     Replace the currently installed CA context global exception handler call back.
 
@@ -139,7 +136,6 @@ def add_exception_event(callback=None, args=()):
                         Passing None causes the default exception handler to be reinstalled.
                         The first argument is a dict including the following fields: *chid*, *type*,
                         *count*, *addr*, *stat*, *op*, *ctx*, *file*, *lineNo*.
-    :param arg:         User variable retained and passed back to user function above as the second argument.
 
     :return: ECA.NORMAL
 
@@ -158,7 +154,7 @@ def add_exception_event(callback=None, args=()):
     # keep a reference to the returned pointer of (callback, args),
     # otherwise it will be garbage collected
     global __exception_callback
-    __exception_callback = ffi.new_handle((callback, args))
+    __exception_callback = ffi.new_handle(callback)
     status = libca.ca_add_exception_event(_exception_callback, __exception_callback)
     return ECA(status)
 
@@ -248,15 +244,15 @@ def show_context(context=None, level=0):
 def _connect_callback(carg):
     epics_arg = {
         'chid'  : carg.chid,
-        'up'    : carg.op == CA_OP.CONN_UP
+        'op'    : CA_OP(carg.op)
     }
 
-    user_callback, user_arg = ffi.from_handle(libca.ca_puser(carg.chid))
+    user_callback = ffi.from_handle(libca.ca_puser(carg.chid))
     if callable(user_callback):
-        user_callback(epics_arg, user_arg)
+        user_callback(epics_arg)
 
 
-def create_channel(name, callback=None, args=(), priority=CA_PRIORITY.DEFAULT):
+def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
     """
     This function creates a CA channel.
 
@@ -264,8 +260,6 @@ def create_channel(name, callback=None, args=(), priority=CA_PRIORITY.DEFAULT):
     :param callable callback:    Optional user's call back function to be run when the connection state changes.
                         Casual users of channel access may decide to leave it None
                         if they do not need to have a call back function run in response to each connection state change event.
-    :param tuple args:        The value is retained in storage associated with the specified channel.
-                        Casual users of channel access may wish to leave it empty.
     :param int priority:    The priority level for dispatch within the server or network,
                         with 0 specifying the lowest dispatch priority and 99 the highest.
                         This parameter currently does not impact dispatch priorities within the client,
@@ -315,7 +309,7 @@ def create_channel(name, callback=None, args=(), priority=CA_PRIORITY.DEFAULT):
 
     if callable(callback):
         connect_callback = _connect_callback
-        user_connect_callback = ffi.new_handle((callback, args))
+        user_connect_callback = ffi.new_handle(callback)
     else:
         connect_callback = ffi.NULL
         user_connect_callback = ffi.NULL
@@ -341,12 +335,12 @@ def _access_rights_callback(arg):
     if arg.chid in __channels:
         return
 
-    user_callback, user_arg = ffi.from_handle(__channels[arg.chid]['access_rights_callback'])
+    user_callback = ffi.from_handle(__channels[arg.chid]['access_rights_callback'])
     if callable(user_callback):
-        user_callback(epics_arg, user_arg)
+        user_callback(epics_arg)
 
 
-def replace_access_rights_event(chid, callback=None, args=()):
+def replace_access_rights_event(chid, callback=None):
     """
     Install or replace the access rights state change callback handler for the specified channel.
 
@@ -369,7 +363,7 @@ def replace_access_rights_event(chid, callback=None, args=()):
         return ECA.BADCHID
 
     if callable(callback):
-        user_access_rights_callback = ffi.new_handle((callback, args))
+        user_access_rights_callback = ffi.new_handle(callback)
     else:
         user_access_rights_callback = ffi.NULL
 
@@ -394,25 +388,24 @@ def _get_callback(arg):
     if arg.chid not in __channels or arg.usr not in __channels[arg.chid]['callbacks']:
         return
 
-    user_callback, user_arg = ffi.from_handle(arg.usr)
+    user_callback = ffi.from_handle(arg.usr)
     __channels[arg.chid]['callbacks'].remove(arg.usr)
     if callable(user_callback):
-        user_callback(epics_arg, user_arg)
+        user_callback(epics_arg)
 
 
-def get(chid, dbrtype=None, count=None, callback=None, args=()):
+def get(chid, chtype=None, count=None, callback=None):
     """
     Read a scalar or array value from a process variable.
 
     :param chid: Channel identifier
     :param value: A scalar or array value to be written to the channel
-    :param dbrtype: :class:`caffi.dbr.DBR`. The external type of the supplied value to be written.
+    :param chtype: :class:`caffi.dbr.DBR`. The external type of the supplied value to be written.
                     Conversion will occur if this does not match the native type.
                     Default is the native type.
     :param count:   Element count to be read from the specified channel.
                     If *callback* is specified, a count of zero means use the current element count from the server.
     :param callback: User supplied callback function to be run when requested operation completes.
-    :param args: User supplied variable retained and then passed back to user supplied function above
     :return: (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
     :rtype: tuple
 
@@ -438,24 +431,24 @@ def get(chid, dbrtype=None, count=None, callback=None, args=()):
     if chid not in __channels:
         return ECA.BADCHID, DBRValue()
 
-    if dbrtype is None:
-        dbrtype = field_type(chid)
-    if dbrtype == DBR.INVALID:
+    if chtype is None:
+        chtype = field_type(chid)
+    if chtype == DBR.INVALID:
         return ECA.BADTYPE, DBRValue()
 
-    if count is None or count < 0:
+    if count is None or count < 0 or count > libca.ca_element_count(chid):
         count = libca.ca_element_count(chid)
 
     if callable(callback):
-        get_callback = ffi.new_handle((callback, args))
-        status = libca.ca_array_get_callback(dbrtype, count, chid, _get_callback, get_callback)
+        get_callback = ffi.new_handle(callback)
+        status = libca.ca_array_get_callback(chtype, count, chid, _get_callback, get_callback)
         if status == ECA.NORMAL:
             __channels[chid]['callbacks'].add(get_callback)
         return ECA(status), DBRValue()
     else:
-        value = ffi.new('char[]', dbr_size_n(dbrtype, count))
-        status = libca.ca_array_get(dbrtype, count, chid, value)
-        return ECA(status), DBRValue(dbrtype, count, value)
+        value = ffi.new('char[]', dbr_size_n(chtype, count))
+        status = libca.ca_array_get(chtype, count, chid, value)
+        return ECA(status), DBRValue(chtype, count, value)
 
 
 @ffi.callback('void(struct event_handler_args)')
@@ -472,19 +465,19 @@ def _put_callback(arg):
     if arg.chid not in __channels or arg.usr not in __channels[arg.chid]['callbacks']:
         return
 
-    user_callback, user_arg = ffi.from_handle(arg.usr)
+    user_callback = ffi.from_handle(arg.usr)
     __channels[arg.chid]['callbacks'].remove(arg.usr)
     if callable(user_callback):
-        user_callback(epics_arg, user_arg)
+        user_callback(epics_arg)
 
 
-def _setup_put(chid, value, dbrtype=None, count=None):
+def _setup_put(chid, value, chtype=None, count=None):
     """
     Setup the C value for ca put. This is used by both :func:`put` and :func:`sg_put`.
-    Return (dbrtype, count, c_value) tuple.
+    Return (chtype, count, c_value) tuple.
     """
-    if dbrtype is None:
-        dbrtype = field_type(chid)
+    if chtype is None:
+        chtype = field_type(chid)
 
     element_count = libca.ca_element_count(chid)
     if count is None or count < 0:
@@ -497,36 +490,37 @@ def _setup_put(chid, value, dbrtype=None, count=None):
         value_count = 1
     else:
         # string type is also a sequence but it is counted as one if DBR_STRING type
-        if isinstance(value, basestring) and dbrtype == DBR.STRING:
-            value_count = 1
+        if isinstance(value, basestring):
             # convert to bytes
             value = to_bytes(value)
-
+            if chtype == DBR.STRING:
+                value_count = 1
+            else:
+                value = [ord(x) for x in value] + [0]
     # setup c value
     if value_count == 1:
-        cvalue = ffi.new(DBR_TYPE_STRING[dbrtype]+'*', value)
+        cvalue = ffi.new(DBR_TYPE_STRING[chtype] + '*', value)
     else:
-        cvalue = ffi.new(DBR_TYPE_STRING[dbrtype]+'[]', value)
+        cvalue = ffi.new(DBR_TYPE_STRING[chtype] + '[]', value)
 
     # the actual count requested is the minimum of all three
     count = min(count, element_count, value_count)
 
-    return (dbrtype, count, cvalue)
+    return (chtype, count, cvalue)
 
 
-def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
+def put(chid, value, chtype=None, count=None, callback=None):
     """
     Write a scalar or array value to a process variable.
 
     :param chid: Channel identifier
     :param value: A scalar or array value to be written to the channel
-    :param dbrtype: :class:`caffi.dbr.DBR`. The external type of the supplied value to be written.
+    :param chtype: :class:`caffi.dbr.DBR`. The external type of the supplied value to be written.
                     Conversion will occur if this does not match the native type.
                     Default is the native type.
     :param count: Element count to be written to the channel. Default is native element count. But it can be reduced to
                   match the length of user supplied value.
     :param callback: User supplied callback function to be run when requested operation completes.
-    :param args: User supplied variable retained and then passed back to user supplied function above
     :return:
                 - ECA.NORMAL - Normal successful completion
                 - ECA.BADCHID - Corrupted CHID
@@ -558,14 +552,14 @@ def put(chid, value, dbrtype=None, count=None, callback=None, args=()):
     if chid not in __channels:
         return ECA.BADCHID
 
-    dbrtype, count, cvalue = _setup_put(chid, value, dbrtype, count)
+    chtype, count, cvalue = _setup_put(chid, value, chtype, count)
 
     if callback == None or not callable(callback):
-        status = libca.ca_array_put(dbrtype, count, chid, cvalue)
+        status = libca.ca_array_put(chtype, count, chid, cvalue)
     else:
-        put_callback = ffi.new_handle((callback,args,))
+        put_callback = ffi.new_handle(callback)
         __channels[chid]['callbacks'].add(put_callback)
-        status = libca.ca_array_put_callback(dbrtype, count, chid, cvalue, _put_callback, put_callback)
+        status = libca.ca_array_put_callback(chtype, count, chid, cvalue, _put_callback, put_callback)
 
     return ECA(status)
 
@@ -584,20 +578,19 @@ def _event_callback(arg):
     # Then don't try to call from_handle, that is undefined and may crash.
     if arg.chid not in __channels or arg.usr not in __channels[arg.chid]['monitors'].values():
         return
-    user_callback, user_arg = ffi.from_handle(arg.usr)
+    user_callback = ffi.from_handle(arg.usr)
     if (callable(user_callback)):
-        user_callback(epics_arg, user_arg)
+        user_callback(epics_arg)
 
 
-def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=DBE.VALUE|DBE.ALARM):
+def create_subscription(chid, callback, chtype=None, count=None, mask=DBE.VALUE|DBE.ALARM):
     """
     Register a state change subscription and specify a call back function to be invoked
     whenever the process variable undergoes significant state changes.
 
     :param chid: Channel identifier
     :param callback: User supplied callback function to be run when requested operation completes.
-    :param args: User supplied variable retained and then passed back to user supplied function above
-    :param dbrtype: The external type of the supplied value to be written.
+    :param chtype: The external type of the supplied value to be written.
                     Conversion will occur if this does not match the native type.
                     Default is the native type.
     :param count:   Element count to be written to the channel. Default is native element count.
@@ -643,9 +636,9 @@ def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=
     if chid not in __channels:
         return ECA.BADCHID, ffi.NULL
 
-    if dbrtype is None:
-        dbrtype = field_type(chid)
-    if dbrtype == DBR.INVALID:
+    if chtype is None:
+        chtype = field_type(chid)
+    if chtype == DBR.INVALID:
         return ECA.BADTYPE, ffi.NULL
 
     element_count = libca.ca_element_count(chid)
@@ -654,14 +647,14 @@ def create_subscription(chid, callback, args=(), dbrtype=None, count=None, mask=
 
     pevid = ffi.new('evid *')
 
-    monitor_callback = ffi.new_handle((callback,args,))
+    monitor_callback = ffi.new_handle(callback)
 
     # - ECA.NORMAL - Normal successful completion
     # - ECA.BADCHID - Corrupted CHID
     # - ECA.BADTYPE - Invalid DBR_XXXX type
     # - ECA.ALLOCMEM - Unable to allocate memory
     # - ECA.ADDFAIL - A local database event add failed
-    status = libca.ca_create_subscription(dbrtype, count, chid, mask, _event_callback, monitor_callback, pevid)
+    status = libca.ca_create_subscription(chtype, count, chid, mask, _event_callback, monitor_callback, pevid)
     evid = pevid[0]
 
     if status == ECA.NORMAL and evid != ffi.NULL:
@@ -817,10 +810,12 @@ def test_io():
     are connected. It will report the status of outstanding get requests issued, and channels created without connection callback function,
     after the last call to ca_pend_io() or CA context initialization whichever is later.
 
-    :return: True if All IO operations completed
-
+    :return:
+            - ECA_IODONE - All IO operations completed
+            - ECA_IOINPROGRESS - IO operations still in progress
     """
-    return (libca.ca_test_io() == ECA.IODONE)
+    status =  libca.ca_test_io()
+    return ECA(status)
 
 
 def flush_io():
@@ -971,9 +966,12 @@ def sg_test(gid):
     Test to see if all requests made within a synchronous group have completed.
 
     :param gid: Identifier of the synchronous group.
-    :return: True if all IO operations are completed
+    :return:
+                - ECA.IODONE - IO operations completed
+                - ECA.IOINPROGRESS - Some IO operations still in progress
     """
-    return libca.ca_sg_test(gid) == ECA.IODONE
+    status = libca.ca_sg_test(gid)
+    return ECA(status)
 
 
 def sg_reset(gid):
@@ -990,14 +988,14 @@ def sg_reset(gid):
     return ECA(status)
 
 
-def sg_put(gid, chid, value, dbrtype=None, count=None):
+def sg_put(gid, chid, value, chtype=None, count=None):
     """
     Write a value, or array of values, to a channel and increment the outstanding request count of a synchronous group.
 
     :param gid: Synchronous group identifier
     :param chid: Channel identifier
     :param value: The value or array of values to write
-    :param dbrtype: :class:`caffi.dbr.DBR`. The type of supplied value. Conversion will occur if it does not match the native type.
+    :param chtype: :class:`caffi.dbr.DBR`. The type of supplied value. Conversion will occur if it does not match the native type.
     :param count: The element count to be written to the specified channel.
     :return:
                 - ECA.NORMAL - Normal successful completion
@@ -1014,20 +1012,20 @@ def sg_put(gid, chid, value, dbrtype=None, count=None):
 
     If a connection is lost and then resumed outstanding puts are not reissued.
     """
-    dbrtype, count, cvalue = _setup_put(chid, value, dbrtype, count)
+    chtype, count, cvalue = _setup_put(chid, value, chtype, count)
 
-    status = libca.ca_sg_array_put(gid, dbrtype, count, chid, cvalue)
+    status = libca.ca_sg_array_put(gid, chtype, count, chid, cvalue)
 
     return ECA(status)
 
 
-def sg_get(gid, chid, dbrtype=None, count=None):
+def sg_get(gid, chid, chtype=None, count=None):
     """
     Read a value from a channel and increment the outstanding request count of a synchronous group.
 
     :param gid: Identifier of the synchronous group.
     :param chid: Channel identifier
-    :param dbrtype: :class:`caffi.dbr.DBR`. External type of returned value. Conversion will occur if this does not match native type.
+    :param chtype: :class:`caffi.dbr.DBR`. External type of returned value. Conversion will occur if this does not match native type.
     :param count: Element count to be read from the specified channel.
     :return: (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
     :rtype: tuple
@@ -1046,9 +1044,9 @@ def sg_get(gid, chid, dbrtype=None, count=None):
     if count is None or count < 0:
         count = libca.ca_element_count(chid)
 
-    if dbrtype is None:
-        dbrtype = libca.ca_field_type(chid)
+    if chtype is None:
+        chtype = libca.ca_field_type(chid)
 
-    cvalue = ffi.new('char[]', dbr_size_n(dbrtype, count))
-    status = libca.ca_sg_array_get(gid, dbrtype, count, chid, cvalue)
-    return ECA(status), DBRValue(dbrtype, count, cvalue)
+    cvalue = ffi.new('char[]', dbr_size_n(chtype, count))
+    status = libca.ca_sg_array_get(gid, chtype, count, chid, cvalue)
+    return ECA(status), DBRValue(chtype, count, cvalue)
