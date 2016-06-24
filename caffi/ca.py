@@ -89,9 +89,11 @@ from .constants import *
 from .dbr import *
 from .macros import *
 
-__all__ =['add_exception_event', 'create_context', 'attach_context', 'destroy_context', 'show_context',
-          'create_channel', 'clear_channel', 'get', 'put', 'create_subscription',
-          'pend_event', 'pend_io', 'poll', 'pend', 'test_io',
+__all__ =['create_context', 'current_context', 'attach_context', 'destroy_context', 'show_context',
+          'add_exception_event', 'replace_access_rights_event', 'add_exception_event',
+          'create_channel', 'clear_channel', 'get', 'put', 'create_subscription', 'clear_subscription',
+          'field_type', 'element_count', 'name', 'state', 'host_name', 'read_access', 'write_access',
+          'pend_event', 'pend_io', 'poll', 'pend', 'flush_io', 'test_io', 'message',
           'sg_create', 'sg_delete', 'sg_get', 'sg_put', 'sg_reset', 'sg_block', 'sg_test']
 
 
@@ -498,8 +500,13 @@ def _setup_put(chid, value, chtype=None, count=None):
             value = to_bytes(value)
             if chtype == DBR.STRING:
                 value_count = 1
+            elif chtype == DBR.ENUM:
+                chtype = DBR.STRING
+                value_count = 1
             else:
-                value = [ord(x) for x in value] + [0]
+                # append null character
+                value += b'\x00'
+                value_count = len(value)
     # setup c value
     if value_count == 1:
         cvalue = ffi.new(DBR_TYPE_STRING[chtype] + '*', value)

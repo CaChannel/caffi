@@ -214,7 +214,8 @@ def dbf_type_to_text(dbftype):
         text = ffi.string(libca.dbf_text_invalid)
 
     return to_string(text)
-
+# alias
+dbf_text = dbf_type_to_text
 
 def dbf_text_to_type(text):
     for dbftype in range(0, LAST_TYPE + 2):
@@ -225,7 +226,6 @@ def dbf_text_to_type(text):
 
     return dbftype
 
-
 def dbr_type_to_text(dbrtype):
     if dbrtype >= 0 and dbrtype <= LAST_BUFFER_TYPE:
         text = ffi.string(libca.dbr_text[dbrtype])
@@ -233,7 +233,8 @@ def dbr_type_to_text(dbrtype):
         text = ffi.string(libca.dbr_text_invalid)
 
     return to_string(text)
-
+# alias
+dbr_text = dbr_type_to_text
 
 def dbr_text_to_type(text):
     for dbrtype in range(0, LAST_BUFFER_TYPE + 1):
@@ -367,3 +368,36 @@ SIMM_ALARM = libca.epicsAlarmSimm
 READ_ACCESS_ALARM = libca.epicsAlarmReadAccess
 WRITE_ACCESS_ALARM = libca.epicsAlarmWriteAccess
 
+def epicsAlarmSeverityStrings(severity):
+    return ["NO_ALARM",
+            "MINOR",
+            "MAJOR",
+            "INVALID"][severity]
+
+alarmSeverityString = epicsAlarmSeverityStrings
+
+def epicsAlarmConditionStrings(status):
+    return ["NO_ALARM",
+            "READ",
+            "WRITE",
+            "HIHI",
+            "HIGH",
+            "LOLO",
+            "LOW",
+            "STATE",
+            "COS",
+            "COMM",
+            "TIMEOUT",
+            "HWLIMIT",
+            "CALC",
+            "SCAN",
+            "LINK",
+            "SOFT",
+            "BAD_SUB",
+            "UDF",
+            "DISABLE",
+            "SIMM",
+            "READ_ACCESS",
+            "WRITE_ACCESS"][status]
+
+alarmStatusString = epicsAlarmConditionStrings
