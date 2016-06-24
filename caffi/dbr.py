@@ -153,7 +153,7 @@ def format_dbr_sts(cvalue, value):
 
 def format_dbr_time(cvalue, value):
     timestamp_posix = cvalue.stamp.secPastEpoch + POSIX_TIME_AT_EPICS_EPOCH + cvalue.stamp.nsec / 1e9
-    value['stamp'] = datetime.fromtimestamp(timestamp_posix)
+    value['stamp'] = timestamp_posix
 
 
 def format_dbr_gr(cvalue, value):
