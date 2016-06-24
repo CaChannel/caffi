@@ -375,26 +375,27 @@ def replace_access_rights_event(chid, callback=None):
 
 @ffi.callback('void(struct event_handler_args)')
 def _get_callback(arg):
-    epics_arg = {
-        'chid'  : arg.chid,
-        'type'  : DBR(arg.type),
-        'count' : arg.count,
-        'status': ECA(arg.status),
-        'value' : format_dbr(arg.type, arg.count, arg.dbr)
-    }
     # If chid or the callback object is not in cache, it well indicates
     # that the python object has been garbage collected.
     # Then don't try to call from_handle, that is undefined and may crash.
     if arg.chid not in __channels or arg.usr not in __channels[arg.chid]['callbacks']:
         return
 
-    user_callback = ffi.from_handle(arg.usr)
+    user_callback, use_numpy = ffi.from_handle(arg.usr)
     __channels[arg.chid]['callbacks'].remove(arg.usr)
+
+    epics_arg = {
+        'chid'  : arg.chid,
+        'type'  : DBR(arg.type),
+        'count' : arg.count,
+        'status': ECA(arg.status),
+        'value' : format_dbr(arg.type, arg.count, arg.dbr, use_numpy)
+    }
     if callable(user_callback):
         user_callback(epics_arg)
 
 
-def get(chid, chtype=None, count=None, callback=None):
+def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
     """
     Read a scalar or array value from a process variable.
 
@@ -406,6 +407,7 @@ def get(chid, chtype=None, count=None, callback=None):
     :param count:   Element count to be read from the specified channel.
                     If *callback* is specified, a count of zero means use the current element count from the server.
     :param callback: User supplied callback function to be run when requested operation completes.
+    :param bool use_numpy: whether to format numeric waveform as numpy array
     :return: (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
     :rtype: tuple
 
@@ -441,7 +443,7 @@ def get(chid, chtype=None, count=None, callback=None):
         count = native_count
 
     if callable(callback):
-        get_callback = ffi.new_handle(callback)
+        get_callback = ffi.new_handle((callback, use_numpy))
         status = libca.ca_array_get_callback(chtype, count, chid, _get_callback, get_callback)
         if status == ECA.NORMAL:
             __channels[chid]['callbacks'].add(get_callback)
@@ -449,7 +451,7 @@ def get(chid, chtype=None, count=None, callback=None):
     else:
         value = ffi.new('char[]', dbr_size_n(chtype, count))
         status = libca.ca_array_get(chtype, count, chid, value)
-        return ECA(status), DBRValue(chtype, count, value)
+        return ECA(status), DBRValue(chtype, count, value, use_numpy)
 
 
 @ffi.callback('void(struct event_handler_args)')
@@ -567,24 +569,26 @@ def put(chid, value, chtype=None, count=None, callback=None):
 
 @ffi.callback('void(struct event_handler_args)')
 def _event_callback(arg):
-    epics_arg = {
-        'chid'  : arg.chid,
-        'type'  : DBR(arg.type),
-        'count' : arg.count,
-        'status': ECA(arg.status),
-        'value' : format_dbr(arg.type, arg.count, arg.dbr)
-    }
     # If chid or the callback object is not in cache, it well indicates
     # that the python object has been garbage collected.
     # Then don't try to call from_handle, that is undefined and may crash.
     if arg.chid not in __channels or arg.usr not in __channels[arg.chid]['monitors'].values():
         return
-    user_callback = ffi.from_handle(arg.usr)
+
+    user_callback, use_numpy = ffi.from_handle(arg.usr)
+
+    epics_arg = {
+        'chid'  : arg.chid,
+        'type'  : DBR(arg.type),
+        'count' : arg.count,
+        'status': ECA(arg.status),
+        'value' : format_dbr(arg.type, arg.count, arg.dbr, use_numpy)
+    }
     if (callable(user_callback)):
         user_callback(epics_arg)
 
 
-def create_subscription(chid, callback, chtype=None, count=None, mask=DBE.VALUE|DBE.ALARM):
+def create_subscription(chid, callback, chtype=None, count=None, mask=DBE.VALUE|DBE.ALARM, use_numpy=False):
     """
     Register a state change subscription and specify a call back function to be invoked
     whenever the process variable undergoes significant state changes.
@@ -602,6 +606,7 @@ def create_subscription(chid, callback, chtype=None, count=None, mask=DBE.VALUE|
                     - DBE_ARCHIVE (or DBE_LOG) - Trigger events when the channel value exceeds the archival dead band
                     - DBE_ALARM - Trigger events when the channel alarm state changes
                     - DBE_PROPERTY - Trigger events when a channel property changes.
+    :param bool use_numpy: whether to format numeric waveform as numpy array
 
     :return: (:class:`caffi.constants.ECA`, Event identifier)
     :rtype: tuple
@@ -649,7 +654,7 @@ def create_subscription(chid, callback, chtype=None, count=None, mask=DBE.VALUE|
 
     pevid = ffi.new('evid *')
 
-    monitor_callback = ffi.new_handle(callback)
+    monitor_callback = ffi.new_handle((callback,use_numpy))
 
     # - ECA.NORMAL - Normal successful completion
     # - ECA.BADCHID - Corrupted CHID
@@ -1021,7 +1026,7 @@ def sg_put(gid, chid, value, chtype=None, count=None):
     return ECA(status)
 
 
-def sg_get(gid, chid, chtype=None, count=None):
+def sg_get(gid, chid, chtype=None, count=None, use_numpy=False):
     """
     Read a value from a channel and increment the outstanding request count of a synchronous group.
 
@@ -1029,6 +1034,7 @@ def sg_get(gid, chid, chtype=None, count=None):
     :param chid: Channel identifier
     :param chtype: :class:`caffi.dbr.DBR`. External type of returned value. Conversion will occur if this does not match native type.
     :param count: Element count to be read from the specified channel.
+    :param bool use_numpy: whether to format numeric waveform as numpy array
     :return: (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
     :rtype: tuple
 
@@ -1052,4 +1058,4 @@ def sg_get(gid, chid, chtype=None, count=None):
 
     cvalue = ffi.new('char[]', dbr_size_n(chtype, count))
     status = libca.ca_sg_array_get(gid, chtype, count, chid, cvalue)
-    return ECA(status), DBRValue(chtype, count, cvalue)
+    return ECA(status), DBRValue(chtype, count, cvalue, use_numpy)

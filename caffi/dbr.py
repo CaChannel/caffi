@@ -177,13 +177,13 @@ def format_dbr_enum(cvalue, value):
     value['strs'] = tuple(to_string(ffi.string(cstr)) for cstr in cvalue.strs[0:no_str])
 
 
-def format_plain_value(valueType, count, cvalue):
+def format_plain_value(valueType, count, cvalue, use_numpy):
     if count == 1:
         value = ffi.cast(valueType+'*', cvalue)[0]
     else:
         cvalue = ffi.cast(valueType+'[%d]'%count, cvalue)
 
-        if has_numpy:
+        if has_numpy and use_numpy:
             value = numpy.frombuffer(ffi.buffer(cvalue), dtype=ctype2dtype[valueType]).copy()
         else:
             value = list(cvalue)
@@ -200,7 +200,7 @@ def format_string_value(count, dbrValue):
             value.append(to_string(ffi.string(cvalue[i])))
     return value
 
-def format_dbr(dbrType, count, dbrValue):
+def format_dbr(dbrType, count, dbrValue, use_numpy):
     """
     Convert the specified dbr data structure to Python dict
 
@@ -214,22 +214,22 @@ def format_dbr(dbrType, count, dbrValue):
         value = format_string_value(count, dbrValue)
 
     elif dbrType == DBR_INT:
-        value = format_plain_value('dbr_int_t', count, dbrValue)
+        value = format_plain_value('dbr_int_t', count, dbrValue, use_numpy)
 
     elif dbrType == DBR_FLOAT:
-        value = format_plain_value('dbr_float_t', count, dbrValue)
+        value = format_plain_value('dbr_float_t', count, dbrValue, use_numpy)
 
     elif dbrType == DBR_ENUM:
-        value = format_plain_value('dbr_enum_t', count, dbrValue)
+        value = format_plain_value('dbr_enum_t', count, dbrValue, use_numpy)
 
     elif dbrType == DBR_CHAR:
-        value = format_plain_value('dbr_char_t', count, dbrValue)
+        value = format_plain_value('dbr_char_t', count, dbrValue, use_numpy)
 
     elif dbrType == DBR_LONG:
-        value = format_plain_value('dbr_long_t', count, dbrValue)
+        value = format_plain_value('dbr_long_t', count, dbrValue, use_numpy)
 
     elif dbrType == DBR_DOUBLE:
-        value = format_plain_value('dbr_double_t', count, dbrValue)
+        value = format_plain_value('dbr_double_t', count, dbrValue, use_numpy)
 
     elif dbrType == DBR_STS_STRING or dbrType == DBR_GR_STRING or dbrType == DBR_CTRL_STRING:
         value = {}
@@ -241,37 +241,37 @@ def format_dbr(dbrType, count, dbrValue):
         value = {}
         cvalue = ffi.cast('struct dbr_sts_int*', dbrValue)
         format_dbr_sts(cvalue, value)
-        value['value'] = format_plain_value('dbr_int_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_int_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_STS_FLOAT:
         value = {}
         cvalue = ffi.cast('struct dbr_sts_float*', dbrValue)
         format_dbr_sts(cvalue, value)
-        value['value'] = format_plain_value('dbr_float_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_float_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_STS_ENUM:
         value = {}
         cvalue = ffi.cast('struct dbr_sts_enum*', dbrValue)
         format_dbr_sts(cvalue, value)
-        value['value'] = format_plain_value('dbr_enum_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_enum_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_STS_CHAR:
         value = {}
         cvalue = ffi.cast('struct dbr_sts_char*', dbrValue)
         format_dbr_sts(cvalue, value)
-        value['value'] = format_plain_value('dbr_char_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_char_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_STS_LONG:
         value = {}
         cvalue = ffi.cast('struct dbr_sts_long*', dbrValue)
         format_dbr_sts(cvalue, value)
-        value['value'] = format_plain_value('dbr_long_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_long_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_STS_DOUBLE:
         value = {}
         cvalue = ffi.cast('struct dbr_sts_double*', dbrValue)
         format_dbr_sts(cvalue, value)
-        value['value'] = format_plain_value('dbr_double_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_double_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_TIME_STRING:
         value = {}
@@ -285,49 +285,49 @@ def format_dbr(dbrType, count, dbrValue):
         cvalue = ffi.cast('struct dbr_time_int*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_time(cvalue, value)
-        value['value'] = format_plain_value('dbr_int_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_int_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_TIME_FLOAT:
         value = {}
         cvalue = ffi.cast('struct dbr_time_float*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_time(cvalue, value)
-        value['value'] = format_plain_value('dbr_float_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_float_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_TIME_ENUM:
         value = {}
         cvalue = ffi.cast('struct dbr_time_enum*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_time(cvalue, value)
-        value['value'] = format_plain_value('dbr_enum_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_enum_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_TIME_CHAR:
         value = {}
         cvalue = ffi.cast('struct dbr_time_char*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_time(cvalue, value)
-        value['value'] = format_plain_value('dbr_char_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_char_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_TIME_LONG:
         value = {}
         cvalue = ffi.cast('struct dbr_time_long*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_time(cvalue, value)
-        value['value'] = format_plain_value('dbr_long_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_long_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_TIME_DOUBLE:
         value = {}
         cvalue = ffi.cast('struct dbr_time_double*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_time(cvalue, value)
-        value['value'] = format_plain_value('dbr_double_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_double_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_GR_INT:
         value = {}
         cvalue = ffi.cast('struct dbr_gr_int*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_gr(cvalue, value)
-        value['value'] = format_plain_value('dbr_int_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_int_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_GR_FLOAT:
         value = {}
@@ -335,28 +335,28 @@ def format_dbr(dbrType, count, dbrValue):
         format_dbr_sts(cvalue, value)
         format_dbr_gr(cvalue, value)
         value['precision'] = cvalue.precision
-        value['value'] = format_plain_value('dbr_float_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_float_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_GR_ENUM:
         value = {}
         cvalue = ffi.cast('struct dbr_gr_enum*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_enum(cvalue, value)
-        value['value'] = format_plain_value('dbr_enum_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_enum_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_GR_CHAR:
         value = {}
         cvalue = ffi.cast('struct dbr_gr_char*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_gr(cvalue, value)
-        value['value'] = format_plain_value('dbr_char_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_char_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_GR_LONG:
         value = {}
         cvalue = ffi.cast('struct dbr_gr_long*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_gr(cvalue, value)
-        value['value'] = format_plain_value('dbr_long_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_long_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_GR_DOUBLE:
         value = {}
@@ -364,7 +364,7 @@ def format_dbr(dbrType, count, dbrValue):
         format_dbr_sts(cvalue, value)
         format_dbr_gr(cvalue, value)
         value['precision'] = cvalue.precision
-        value['value'] = format_plain_value('dbr_double_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_double_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_CTRL_INT:
         value = {}
@@ -372,7 +372,7 @@ def format_dbr(dbrType, count, dbrValue):
         format_dbr_sts(cvalue, value)
         format_dbr_gr(cvalue, value)
         format_dbr_ctrl(cvalue, value)
-        value['value'] = format_plain_value('dbr_int_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_int_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_CTRL_FLOAT:
         value = {}
@@ -381,14 +381,14 @@ def format_dbr(dbrType, count, dbrValue):
         format_dbr_gr(cvalue, value)
         value['precision'] = cvalue.precision
         format_dbr_ctrl(cvalue, value)
-        value['value'] = format_plain_value('dbr_float_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_float_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_CTRL_ENUM:
         value = {}
         cvalue = ffi.cast('struct dbr_ctrl_enum*', dbrValue)
         format_dbr_sts(cvalue, value)
         format_dbr_enum(cvalue, value)
-        value['value'] = format_plain_value('dbr_enum_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_enum_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_CTRL_CHAR:
         value = {}
@@ -396,7 +396,7 @@ def format_dbr(dbrType, count, dbrValue):
         format_dbr_sts(cvalue, value)
         format_dbr_gr(cvalue, value)
         format_dbr_ctrl(cvalue, value)
-        value['value'] = format_plain_value('dbr_char_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_char_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_CTRL_LONG:
         value = {}
@@ -404,7 +404,7 @@ def format_dbr(dbrType, count, dbrValue):
         format_dbr_sts(cvalue, value)
         format_dbr_gr(cvalue, value)
         format_dbr_ctrl(cvalue, value)
-        value['value'] = format_plain_value('dbr_long_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_long_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_CTRL_DOUBLE:
         value = {}
@@ -413,7 +413,7 @@ def format_dbr(dbrType, count, dbrValue):
         format_dbr_gr(cvalue, value)
         value['precision'] = cvalue.precision
         format_dbr_ctrl(cvalue, value)
-        value['value'] = format_plain_value('dbr_double_t', count, dbr_value_ptr(cvalue, dbrType))
+        value['value'] = format_plain_value('dbr_double_t', count, dbr_value_ptr(cvalue, dbrType), use_numpy)
 
     elif dbrType == DBR_CLASS_NAME:
         value = format_string_value(count, dbrValue)
@@ -438,6 +438,7 @@ class DBRValue(object):
     :param dbrtype: The external type of the supplied *cvalue*
     :param count: Element count of the supplied *cvalue*
     :param cvalue: Pointer to the structure of *dbrtype* with *count* element
+    :param bool use_numpy: whether to format numeric waveform as numpy array
 
     An convenient object to represent the value returned by :func:`caffi.ca.get` and :func:`caffi.ca.sg_get`.
     It holds the reference to the memory allocated by the get functions,
@@ -447,12 +448,13 @@ class DBRValue(object):
     call :meth:`get` to get the returned values.
 
     """
-    def __init__(self, dbrtype=DBR.INVALID, count=0, cvalue=ffi.NULL):
+    def __init__(self, dbrtype=DBR.INVALID, count=0, cvalue=ffi.NULL, use_numpy=False):
         """
         """
         self.dbrtype = dbrtype
         self.count = count
         self.cvalue = cvalue
+        self.use_numpy = use_numpy
 
     def get(self):
         """
@@ -460,4 +462,4 @@ class DBRValue(object):
 
         .. note:: This method should be called unless the get request has succeeded.
         """
-        return format_dbr(self.dbrtype, self.count, self.cvalue)
+        return format_dbr(self.dbrtype, self.count, self.cvalue, self.use_numpy)
