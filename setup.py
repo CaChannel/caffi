@@ -12,7 +12,7 @@ except ImportError:
 long_description = open('README').read()
 
 setup (name = 'caffi',
-       version = '0.99',
+       version = '1.0.0a',
        description = """Channel Access Foreign Function Interface""",
        long_description = long_description,
        author      = "Xiaoqiang Wang",
