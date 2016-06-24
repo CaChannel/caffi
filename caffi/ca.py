@@ -91,7 +91,7 @@ from .macros import *
 
 __all__ =['add_exception_event', 'create_context', 'attach_context', 'destroy_context', 'show_context',
           'create_channel', 'clear_channel', 'get', 'put', 'create_subscription',
-          'pend_event', 'pend_io', 'poll', 'pend', 'test_io'
+          'pend_event', 'pend_io', 'poll', 'pend', 'test_io',
           'sg_create', 'sg_delete', 'sg_get', 'sg_put', 'sg_reset', 'sg_block', 'sg_test']
 
 
