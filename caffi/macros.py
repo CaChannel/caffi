@@ -3,6 +3,7 @@ The macros defined in C header files, *cadef.h*, *caeventmask.h*, *caerr.h*
 
 """
 from ._ca import libca, ffi
+from .compat import to_string, to_bytes
 
 cs_never_conn = libca.cs_never_conn
 cs_prev_conn = libca.cs_prev_conn
@@ -219,7 +220,7 @@ dbf_text = dbf_type_to_text
 
 def dbf_text_to_type(text):
     for dbftype in range(0, LAST_TYPE + 2):
-        if text == ffi.string(libca.dbf_text[dbftype+1]):
+        if to_bytes(text) == ffi.string(libca.dbf_text[dbftype+1]):
             break
     else:
         dbftype = -1
@@ -238,7 +239,7 @@ dbr_text = dbr_type_to_text
 
 def dbr_text_to_type(text):
     for dbrtype in range(0, LAST_BUFFER_TYPE + 1):
-        if text == ffi.string(libca.dbr_text[dbrtype]):
+        if to_bytes(text) == ffi.string(libca.dbr_text[dbrtype]):
             break
     else:
         dbrtype = -1
