@@ -504,9 +504,12 @@ def _setup_put(chid, value, chtype=None, count=None):
                 chtype = DBR.STRING
                 value_count = 1
             else:
-                # append null character
-                value += b'\x00'
+                value = [x for x in bytearray(value)] + [0]
                 value_count = len(value)
+
+        if value_count == 1 and chtype != DBR_STRING:
+            value = value[0]
+
     # setup c value
     if value_count == 1:
         cvalue = ffi.new(DBR_TYPE_STRING[chtype] + '*', value)
