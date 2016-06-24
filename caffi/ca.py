@@ -436,8 +436,9 @@ def get(chid, chtype=None, count=None, callback=None):
     if chtype == DBR.INVALID:
         return ECA.BADTYPE, DBRValue()
 
-    if count is None or count < 0 or count > libca.ca_element_count(chid):
-        count = libca.ca_element_count(chid)
+    native_count = element_count(chid)
+    if count is None or count <= 0 or count > native_count:
+        count = native_count
 
     if callable(callback):
         get_callback = ffi.new_handle(callback)
@@ -479,9 +480,9 @@ def _setup_put(chid, value, chtype=None, count=None):
     if chtype is None:
         chtype = field_type(chid)
 
-    element_count = libca.ca_element_count(chid)
-    if count is None or count < 0:
-        count = element_count
+    native_count = element_count(chid)
+    if count is None or count <= 0 or count > native_count:
+        count = native_count
 
     # treat single value and sequence differently to create c type value
     try:
@@ -504,7 +505,7 @@ def _setup_put(chid, value, chtype=None, count=None):
         cvalue = ffi.new(DBR_TYPE_STRING[chtype] + '[]', value)
 
     # the actual count requested is the minimum of all three
-    count = min(count, element_count, value_count)
+    count = min(count, native_count, value_count)
 
     return (chtype, count, cvalue)
 
@@ -641,9 +642,10 @@ def create_subscription(chid, callback, chtype=None, count=None, mask=DBE.VALUE|
     if chtype == DBR.INVALID:
         return ECA.BADTYPE, ffi.NULL
 
-    element_count = libca.ca_element_count(chid)
-    if count is None or count < 0 or count > element_count:
-        count = element_count
+    # count = 0 is valid for subscription. It means only the number of changes elements.
+    native_count = element_count(chid)
+    if count is None or count < 0 or count > native_count:
+        count = native_count
 
     pevid = ffi.new('evid *')
 
@@ -1041,8 +1043,9 @@ def sg_get(gid, chid, chtype=None, count=None):
 
     If a connection is lost and then resumed outstanding gets are not reissued.
     """
-    if count is None or count < 0:
-        count = libca.ca_element_count(chid)
+    native_count = element_count(chid)
+    if count is None or count <= 0 or count > native_count:
+        count = native_count
 
     if chtype is None:
         chtype = libca.ca_field_type(chid)
