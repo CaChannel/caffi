@@ -1,5 +1,16 @@
 This folder includes the EPICS base dynamic libraries built under host arch, linux-x86, linux-x86_64, win32-x86, windows-x64, darwin-x86.
 
+Build Notes:
+1. On Scientific Linux 6, EPICS is built without readline support
+        configure/os/CONFIG_SITE.Common.linux-x86
+        configure/os/CONFIG_SITE.Common.linux-x86_64
+   and without SHRLIB_VERSION
+        configure/CONFIG_BASE
+2. On Windows, EPICS calling convention changes from __stdcall to __cdecl (shareLib.h).
+3. On macOS, the libraries include both 32 and 64-bit architecture
+        configure/os/CONFIG_SITE.Common.darwin-x86
+
+
 These libraries are themselves licensed under EPICS Open License.
 ================================================================================
 Copyright (c) 1991-2011 UChicago Argonne LLC.
