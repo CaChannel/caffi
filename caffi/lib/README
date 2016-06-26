@@ -6,9 +6,19 @@ Build Notes:
         configure/os/CONFIG_SITE.Common.linux-x86_64
    and without SHRLIB_VERSION
         configure/CONFIG_BASE
+   Change the RPATH
+        $ chrpath -r '${ORIGIN}' libca.so
 2. On Windows, EPICS calling convention changes from __stdcall to __cdecl (shareLib.h).
 3. On macOS, the libraries include both 32 and 64-bit architecture
         configure/os/CONFIG_SITE.Common.darwin-x86
+   and change library name and rpath
+        $ chmod +w libca.dylib libCom.dylib
+        $ install_name_tool -id libCom.dylib libCom.dylib
+        $ install_name_tool -id libca.dylib libca.dylib
+        $ otool -L libca.dylib # to display libCom.dylib path
+        $ install_name_tool -change /Users/wang/epics/base-3.14.12.5/lib/darwin-x86/libCom.3.14.12.dylib @loader_path/libCom.dylib libca.dylib
+        $ chmod -w libca.dylib libCom.dylib
+
 
 
 These libraries are themselves licensed under EPICS Open License.
