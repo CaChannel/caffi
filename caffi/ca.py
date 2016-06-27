@@ -316,11 +316,12 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
         connect_callback = ffi.NULL
         user_connect_callback = ffi.NULL
     status = libca.ca_create_channel(name, connect_callback, user_connect_callback, priority, pchid)
+    if (status != ECA_NORMAL):
+        return ECA(status), None
     chid = pchid[0]
-    if chid != ffi.NULL:
-        __channels[chid] = {'callbacks':set(), 'monitors' : {}}
-        if user_connect_callback != ffi.NULL:
-            __channels[chid]['callbacks'].add(user_connect_callback)
+    __channels[chid] = {'callbacks':set(), 'monitors' : {}}
+    if user_connect_callback != ffi.NULL:
+        __channels[chid]['callbacks'].add(user_connect_callback)
     return ECA(status), chid
 
 
@@ -433,12 +434,12 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
 
     """
     if chid not in __channels:
-        return ECA.BADCHID, DBRValue()
+        return ECA.BADCHID, None
 
     if chtype is None:
         chtype = field_type(chid)
     if chtype == DBR.INVALID:
-        return ECA.BADTYPE, DBRValue()
+        return ECA.BADTYPE, None
 
     native_count = element_count(chid)
     if count is None or count <= 0 or count > native_count:
@@ -449,7 +450,7 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
         status = libca.ca_array_get_callback(chtype, count, chid, _get_callback, get_callback)
         if status == ECA.NORMAL:
             __channels[chid]['callbacks'].add(get_callback)
-        return ECA(status), DBRValue()
+        return ECA(status), None
     else:
         value = ffi.new('char[]', dbr_size_n(chtype, count))
         status = libca.ca_array_get(chtype, count, chid, value)
@@ -650,12 +651,12 @@ def create_subscription(chid, callback, chtype=None, count=None, mask=DBE.VALUE|
 
     """
     if chid not in __channels:
-        return ECA.BADCHID, ffi.NULL
+        return ECA.BADCHID, None
 
     if chtype is None:
         chtype = field_type(chid)
     if chtype == DBR.INVALID:
-        return ECA.BADTYPE, ffi.NULL
+        return ECA.BADTYPE, None
 
     # count = 0 is valid for subscription. It means only the number of changes elements.
     native_count = element_count(chid)
@@ -672,10 +673,11 @@ def create_subscription(chid, callback, chtype=None, count=None, mask=DBE.VALUE|
     # - ECA.ALLOCMEM - Unable to allocate memory
     # - ECA.ADDFAIL - A local database event add failed
     status = libca.ca_create_subscription(chtype, count, chid, mask, _event_callback, monitor_callback, pevid)
-    evid = pevid[0]
+    if status != ECA_NORMAL:
+        return ECA(status), None
 
-    if status == ECA.NORMAL and evid != ffi.NULL:
-        __channels[chid]['monitors'][evid] = monitor_callback
+    evid = pevid[0]
+    __channels[chid]['monitors'][evid] = monitor_callback
 
     return ECA(status), evid
 
@@ -935,8 +937,11 @@ def sg_create():
     """
     pgid = ffi.new('CA_SYNC_GID *')
     status = libca.ca_sg_create(pgid)
-    gid = pgid[0]
-    return ECA(status), gid
+    if status != ECA_NORMAL:
+        return ECA(status), None
+    else:
+        gid = pgid[0]
+        return ECA(status), gid
 
 
 def sg_delete(gid):
@@ -1068,4 +1073,7 @@ def sg_get(gid, chid, chtype=None, count=None, use_numpy=False):
 
     cvalue = ffi.new('char[]', dbr_size_n(chtype, count))
     status = libca.ca_sg_array_get(gid, chtype, count, chid, cvalue)
-    return ECA(status), DBRValue(chtype, count, cvalue, use_numpy)
+    if status != ECA_NORMAL:
+        return ECA(status), None
+    else:
+        return ECA(status), DBRValue(chtype, count, cvalue, use_numpy)
