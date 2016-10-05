@@ -9,7 +9,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-long_description = open('README').read()
+long_description = open('README.rst').read()
 
 setup (name = 'caffi',
        version = '1.0.0a2',
