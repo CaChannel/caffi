@@ -2,7 +2,7 @@ caffi
 =====
 
 caffi is the Channel Access Foreign Function Interface.
-It uses CFFI to call EPICS channel access library.
+It uses `CFFI <https://pypi.python.org/pypi/cffi>`_ to call EPICS channel access library.
 
 It is the goal of this package to provide direct low level
 interface to channel access, alike the C API.
@@ -22,7 +22,7 @@ Either use *pip*,
 or checkout source code from the git repository,
 ::
 
-    $ git clone http://bitbucket.org/xwang/caffi
+    $ git clone https://github.com/CaChannel/caffi.git
     $ cd caffi
     $ python setup.py install
 
