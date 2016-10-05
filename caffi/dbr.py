@@ -1,6 +1,5 @@
 __all__ = ['DBF', 'DBR', 'DBRValue', 'format_dbr']
 
-from datetime import datetime
 from enum import IntEnum
 
 # convert epics ca types to numpy data types
