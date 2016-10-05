@@ -1,0 +1,28 @@
+package:
+  name: caffi
+  version: "1.0.0b1"
+
+source:
+  path: ..
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - cffi >=0.8
+    - enum34
+
+  run:
+    - python
+    - cffi >=0.8
+    - enum34
+
+test:
+  imports:
+    - caffi
+
+about:
+  home: https://github.com/CaChannel/caffi/
+  license: BSD License
+  summary: 'Channel Access Foreign Function Interface'
+
