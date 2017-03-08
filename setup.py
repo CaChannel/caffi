@@ -3,6 +3,7 @@
 """
 setup.py file for caffi
 """
+import imp
 # Use setuptools to include build_sphinx, upload/sphinx commands
 try:
     from setuptools import setup
@@ -11,8 +12,10 @@ except ImportError:
 
 long_description = open('README.rst').read()
 
+_version = imp.load_source('_version','caffi/_version.py')
+
 setup (name = 'caffi',
-       version = '1.0.0b1',
+       version = _version.__version__,
        description = """Channel Access Foreign Function Interface""",
        long_description = long_description,
        author      = "Xiaoqiang Wang",
