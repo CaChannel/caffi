@@ -513,8 +513,12 @@ def _setup_put(chid, value, chtype=None, count=None):
 
     # setup c value
     if value_count == 1:
+        if chtype == DBR.STRING:
+            value = to_bytes(value)
         cvalue = ffi.new(DBR_TYPE_STRING[chtype] + '*', value)
     else:
+        if chtype == DBR.STRING:
+            value = [to_bytes(x) for x in value]
         cvalue = ffi.new(DBR_TYPE_STRING[chtype] + '[]', value)
 
     # the actual count requested is the minimum of all three
