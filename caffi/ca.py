@@ -572,7 +572,7 @@ def put(chid, value, chtype=None, count=None, callback=None):
 
     chtype, count, cvalue = _setup_put(chid, value, chtype, count)
 
-    if callback == None or not callable(callback):
+    if callback is None or not callable(callback):
         status = libca.ca_array_put(chtype, count, chid, cvalue)
     else:
         put_callback = ffi.new_handle(callback)
