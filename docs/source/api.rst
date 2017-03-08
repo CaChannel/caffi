@@ -54,6 +54,7 @@ Synchronous
 Misc
 ----
 .. autofunction:: add_exception_event
+.. autofunction:: replace_access_rights_event
 
 
 Module :mod:`caffi.dbr`
