@@ -1,0 +1,28 @@
+language: python
+
+python:
+  - "2.6"
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+
+install:
+  - pip install twine;
+  - pip install -e .
+  - python setup.py sdist bdist_wheel;
+
+script:
+  - python -c "import caffi.ca"
+
+after_success:
+  - if [[ ! -z "$TRAVIS_TAG" ]]; then
+      echo [distutils]                > ~/.pypirc;
+      echo index-servers = mypypi    >> ~/.pypirc;
+      echo [mypypi]                  >> ~/.pypirc;
+      echo repository=$PYPI_URL      >> ~/.pypirc;
+      echo username=$PYPI_USER       >> ~/.pypirc;
+      echo password=$PYPI_PASSWORD   >> ~/.pypirc;
+      twine upload -r mypypi dist/caffi-*.tar.gz;
+      twine upload -r mypypi dist/caffi-*.whl;
+    fi
