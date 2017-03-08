@@ -1,6 +1,6 @@
 package:
   name: caffi
-  version: "1.0.0b1"
+  version: "1.0.0b2"
 
 source:
   path: ..
@@ -16,6 +16,9 @@ requirements:
     - python
     - cffi >=0.8
     - enum34
+
+build:
+  binary_relocation: False
 
 test:
   imports:
