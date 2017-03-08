@@ -55,3 +55,14 @@ check_status(status)
 # dump value
 for name, value in vals.items():
     print(name, value.get())
+
+# delete synchronous group
+ca.sg_delete(gid)
+
+# close channels
+for name, chid in pvs.items():
+    ca.clear_channel(chid)
+ca.flush_io()
+
+# destroy context
+ca.destroy_context()

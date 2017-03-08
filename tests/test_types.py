@@ -46,3 +46,12 @@ check_status(status)
 # dump value
 for name, value in vals.items():
     print(name, ca.field_type(pvs[name]), value.get())
+
+# clear channels
+for name, chid in pvs.items():
+    ca.clear_channel(chid)
+
+ca.flush_io()
+
+# destroy context
+ca.destroy_context()

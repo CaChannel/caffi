@@ -35,3 +35,6 @@ for dbrtype in ca.DBR:
         print('    ', dbrvalue.get())
 
 ca.clear_channel(chid)
+
+# destroy context
+ca.destroy_context()

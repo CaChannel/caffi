@@ -34,7 +34,7 @@ ca.flush_io()
 def monitor(epics_arg):
     print(epics_arg['value']['stamp'], epics_arg['value']['value'])
 
-ca.create_subscription(chid, monitor, chtype=ca.DBR.TIME_DOUBLE)
+status, evid = ca.create_subscription(chid, monitor, chtype=ca.DBR.TIME_DOUBLE)
 
 def thread_one():
     status = ca.attach_context(ctx)
@@ -71,3 +71,14 @@ tid2.join()
 
 # wait for the last monitor to arrive
 time.sleep(1)
+
+# clear subscription
+ca.clear_subscription(evid)
+
+# clear channel
+ca.clear_channel(chid)
+
+ca.flush_io()
+
+# destroy context
+ca.destroy_context()

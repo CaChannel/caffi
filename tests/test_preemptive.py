@@ -34,3 +34,6 @@ time.sleep(5)
 ca.clear_subscription(evid)
 ca.clear_channel(chid)
 ca.flush_io()
+
+# destroy context
+ca.destroy_context()
