@@ -2,7 +2,8 @@
 The is the low level access to EPICS channel access library. It maps the corresponding C API to Python functions.
 Even though as same as possible, there are subtle differences:
 
-  - The `ca_` prefix of the C function name has been removed, e.g. C function `ca_create_channel` is now Python function :func:`create_channel`.
+  - The `ca_` prefix of the C function name has been removed, e.g. C function `ca_create_channel` is now
+    Python function :func:`create_channel`.
 
   - The order of the argument might have been altered to allow default arguments, thus more pythonic.
     Take C function `array_put_callback` for example,
@@ -72,55 +73,53 @@ Even though as same as possible, there are subtle differences:
     This makes it convenient when interactively examine the code value. e.g.
     ::
 
-        >>> ca.pend_io(2)
+        >>> pend_io(2)
         <ECA.NORMAL: 1>
 
 """
 from __future__ import (print_function, absolute_import)
 
 from .compat import *
-
-# globals
-__channels = {}
-__exception_callback = None
-
 from ._ca import *
 from .constants import *
 from .dbr import *
 from .macros import *
 
-__all__ =['create_context', 'current_context', 'attach_context', 'destroy_context', 'show_context',
-          'add_exception_event', 'replace_access_rights_event', 'add_exception_event',
-          'create_channel', 'clear_channel', 'get', 'put', 'create_subscription', 'clear_subscription',
-          'field_type', 'element_count', 'name', 'state', 'host_name', 'read_access', 'write_access',
-          'pend_event', 'pend_io', 'poll', 'pend', 'flush_io', 'test_io', 'message',
-          'sg_create', 'sg_delete', 'sg_get', 'sg_put', 'sg_reset', 'sg_block', 'sg_test']
+__all__ = ['create_context', 'current_context', 'attach_context', 'destroy_context', 'show_context',
+           'add_exception_event', 'replace_access_rights_event', 'add_exception_event',
+           'create_channel', 'clear_channel', 'get', 'put', 'create_subscription', 'clear_subscription',
+           'field_type', 'element_count', 'name', 'state', 'host_name', 'read_access', 'write_access',
+           'pend_event', 'pend_io', 'poll', 'pend', 'flush_io', 'test_io', 'message',
+           'sg_create', 'sg_delete', 'sg_get', 'sg_put', 'sg_reset', 'sg_block', 'sg_test']
 
+# globals
+__channels = {}
+__exception_callback = None
 
 DBR_TYPE_STRING = {
-    DBR.STRING : 'dbr_string_t',
-    DBR.INT:     'dbr_int_t',
-    DBR.FLOAT:   'dbr_float_t',
-    DBR.CHAR:    'dbr_char_t',
-    DBR.ENUM:    'dbr_enum_t',
-    DBR.LONG:    'dbr_long_t',
-    DBR.DOUBLE:  'dbr_double_t',
-    DBR.PUT_ACKT:'dbr_put_ackt_t',
-    DBR.PUT_ACKS:'dbr_put_acks_t',
+    DBR.STRING:   'dbr_string_t',
+    DBR.INT:      'dbr_int_t',
+    DBR.FLOAT:    'dbr_float_t',
+    DBR.CHAR:     'dbr_char_t',
+    DBR.ENUM:     'dbr_enum_t',
+    DBR.LONG:     'dbr_long_t',
+    DBR.DOUBLE:   'dbr_double_t',
+    DBR.PUT_ACKT: 'dbr_put_ackt_t',
+    DBR.PUT_ACKS: 'dbr_put_acks_t',
 }
 
 
 @ffi.callback('void(*)(struct exception_handler_args)')
 def _exception_callback(carg):
     epics_arg = {
-        'chid'  : carg.chid,
-        'type'  : DBR(carg.type),
-        'count' : carg.count,
-        'addr'  : carg.addr,
-        'stat'  : ECA(carg.stat),
-        'op'    : CA_OP(carg.op),
-        'ctx'   : carg.ctx,
-        'file'  : to_string(ffi.string(carg.pFile)),
+        'chid':   carg.chid,
+        'type':   DBR(carg.type),
+        'count':  carg.count,
+        'addr':   carg.addr,
+        'stat':   ECA(carg.stat),
+        'op':     CA_OP(carg.op),
+        'ctx':    carg.ctx,
+        'file':   to_string(ffi.string(carg.pFile)),
         'lineNo': carg.lineNo
     }
     if __exception_callback != carg.usr:
@@ -136,9 +135,9 @@ def add_exception_event(callback=None):
 
     :param callback:    User callback function to be executed when an exceptions occur.
                         Passing None causes the default exception handler to be reinstalled.
-                        The first argument is a dict including the following fields: *chid*, *type*,
+                        The argument is a dict including the following fields: *chid*, *type*,
                         *count*, *addr*, *stat*, *op*, *ctx*, *file*, *lineNo*.
-
+    :type callback:     callable, None
     :return: ECA.NORMAL
 
     When an error occurs in the server asynchronous to the clients thread then information about this type of error
@@ -167,7 +166,8 @@ def create_context(preemptive_callback=True):
     :return:
                 - ECA.NORMAL - Normal successful completion
                 - ECA.ALLOCMEM - Failed, unable to allocate space in pool
-                - ECA.NOTTHREADED - Current thread is already a member of a non-preemptive callback CA context (possibly created implicitly)
+                - ECA.NOTTHREADED - Current thread is already a member of a non-preemptive callback CA context
+                                    (possibly created implicitly)
 
     This function, or :func:`attach_context`, should be called once from each thread prior to
     making any of the other Channel Access calls. If one of the above is not called before
@@ -180,9 +180,9 @@ def create_context(preemptive_callback=True):
 
     """
     if preemptive_callback:
-        status =  libca.ca_context_create(libca.ca_enable_preemptive_callback)
+        status = libca.ca_context_create(libca.ca_enable_preemptive_callback)
     else:
-        status= libca.ca_context_create(libca.ca_disable_preemptive_callback)
+        status = libca.ca_context_create(libca.ca_disable_preemptive_callback)
 
     return ECA(status)
 
@@ -192,7 +192,8 @@ def destroy_context():
     Shut down the calling thread's channel access client context and free any resources allocated.
     Detach the calling thread from any CA client context.
 
-    Any user-created threads that have attached themselves to the CA context must stop using it prior to its being destroyed.
+    Any user-created threads that have attached themselves to the CA context must stop using it
+    prior to its being destroyed.
 
     On many OS that execute programs in a process based environment the resources used by the client library
     such as sockets and allocated memory are automatically released by the system when the process exits and
@@ -204,7 +205,7 @@ def destroy_context():
 
 def attach_context(context):
     """
-    :param context: The CA context to join with.
+    :param cdata context: The CA context to join with.
     :return:
                 - ECA.NORMAL - Normal successful completion
                 - ECA.NOTTHREADED - Context is not preemptive so cannot be joined
@@ -212,9 +213,10 @@ def attach_context(context):
 
     The calling thread becomes a member of the specified CA context.
     If context is non preemptive, then additional threads are not allowed to join the CA context
-    because allowing other threads to join implies that CA callbacks will be called preemptively from more than one thread.
+    because allowing other threads to join implies that CA callbacks will be called preemptively
+    from more than one thread.
     """
-    status =  libca.ca_attach_context(context)
+    status = libca.ca_attach_context(context)
     return ECA(status)
 
 
@@ -232,8 +234,8 @@ def show_context(context=None, level=0):
     """
     Prints information about the client context including, at higher interest levels, status for each channel.
 
-    :param context: The CA context to examine. Default is the calling threads CA context.
-    :param level: The interest level. Increasing level produces increasing detail.
+    :param cdata context: The CA context to examine. Default is the calling threads CA context.
+    :param int level:     The interest level. Increasing level produces increasing detail.
 
     """
     if context is None:
@@ -245,8 +247,8 @@ def show_context(context=None, level=0):
 @ffi.callback('void(*)(struct connection_handler_args)')
 def _connect_callback(carg):
     epics_arg = {
-        'chid'  : carg.chid,
-        'op'    : CA_OP(carg.op)
+        'chid': carg.chid,
+        'op':   CA_OP(carg.op)
     }
 
     user_callback = ffi.from_handle(libca.ca_puser(carg.chid))
@@ -258,20 +260,24 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
     """
     This function creates a CA channel.
 
-    :param str name:        Process variable name string.
-    :param callable callback:    Optional user's call back function to be run when the connection state changes.
-                        Casual users of channel access may decide to leave it None
-                        if they do not need to have a call back function run in response to each connection state change event.
-    :param int priority:    The priority level for dispatch within the server or network,
+    :param name:        Process variable name string.
+    :param callback:    Optional user's call back function to be run when the connection state changes.
+                        Casual users of channel access may decide to leave it None if they do not need to
+                        have a call back function run in response to each connection state change event.
+    :param priority:    The priority level for dispatch within the server or network,
                         with 0 specifying the lowest dispatch priority and 99 the highest.
                         This parameter currently does not impact dispatch priorities within the client,
                         but this might change in the future.
-                        The abstract priority range specified is mapped into an operating system specific range of priorities within the server.
+                        The abstract priority range specified is mapped into an operating system specific
+                        range of priorities within the server.
                         This parameter is ignored if the server is running on a network or operating system
                         that does not have native support for prioritized delivery or execution respectively.
                         Specifying many different priorities within the same program can increase resource consumption
-                        in the client and the server because an independent virtual circuit, and associated data structures,
-                        is created for each priority that is used on a particular server.
+                        in the client and the server because an independent virtual circuit, and associated
+                        data structures, is created for each priority that is used on a particular server.
+    :type name:         str
+    :type callback:     callable, None
+    :type priority:     int, CA_PRIORITY
     :return:            (:class:`caffi.constants.ECA`, the channel identifier).
     :rtype:             tuple
 
@@ -282,25 +288,27 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
     If successful, the routine returns a channel identifier.
     This identifier can be used with any channel access call that operates on a channel.
 
-    The circuit may be initially connected or disconnected depending on the state of the network and the location of the channel.
-    A channel will only enter a connected state after the server's address is determined,
-    and only if channel access successfully establishes a virtual circuit through the network to the server.
-    Channel access routines that send a request to a server will return *ECA.DISCONNCHID* if the channel is currently disconnected.
+    The circuit may be initially connected or disconnected depending on the state of the network
+    and the location of the channel. A channel will only enter a connected state
+    after the server's address is determined, and only if channel access successfully establishes a virtual circuit
+    through the network to the server. Channel access routines that send a request to a server
+    will return *ECA.DISCONNCHID* if the channel is currently disconnected.
 
     There are two ways to obtain asynchronous notification when a channel enters a connected state.
 
     - The first and simplest method requires that you call ca_pend_io(), and wait for successful completion,
       prior to using a channel that was created without specifying call back function.
 
-    - The second method requires that you register a connection handler by supplying a valid connection callback function pointer.
-      This connection handler is called whenever the connection state of the channel changes.
-      If you have installed a connection handler then :func:`pend_io` will not block waiting for the channel to enter a connected state.
+    - The second method requires that you register a connection handler
+      by supplying a valid connection callback function pointer. This connection handler is called whenever
+      the connection state of the channel changes. If you have installed a connection handler
+      then :func:`pend_io` will not block waiting for the channel to enter a connected state.
 
     The function :func:`state` can be used to test the connection state of a channel.
     Valid connections may be isolated from invalid ones with this function :func:`pend_io` times out.
 
-    Due to the inherently transient nature of network connections
-    the order of connection call backs relative to the order that :func:`create_channel` calls are made by the application
+    Due to the inherently transient nature of network connections the order of connection call backs
+    relative to the order that :func:`create_channel` calls are made by the application
     can't be guaranteed, and application programs may need to be prepared for a connected channel to
     enter a disconnected state at any time.
 
@@ -316,10 +324,10 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
         connect_callback = ffi.NULL
         user_connect_callback = ffi.NULL
     status = libca.ca_create_channel(name, connect_callback, user_connect_callback, priority, pchid)
-    if (status != ECA_NORMAL):
+    if status != ECA_NORMAL:
         return ECA(status), None
     chid = pchid[0]
-    __channels[chid] = {'callbacks':set(), 'monitors' : {}}
+    __channels[chid] = {'callbacks': set(), 'monitors': {}}
     if user_connect_callback != ffi.NULL:
         __channels[chid]['callbacks'].add(user_connect_callback)
     return ECA(status), chid
@@ -349,9 +357,10 @@ def replace_access_rights_event(chid, callback=None):
     """
     Install or replace the access rights state change callback handler for the specified channel.
 
-    :param chid: The channel identifier
-    :param callable callback: User supplied call back function. Passing None uninstalls the
-                              current handler.
+    :param chid:     The channel identifier
+    :param callback: User supplied call back function. Passing None uninstalls the current handler.
+    :type chid:      cdata
+    :type callback:  callable, None
     :return:
                 - ECA.NORMAL
 
@@ -390,11 +399,11 @@ def _get_callback(arg):
     __channels[arg.chid]['callbacks'].remove(arg.usr)
 
     epics_arg = {
-        'chid'  : arg.chid,
-        'type'  : DBR(arg.type),
-        'count' : arg.count,
+        'chid':   arg.chid,
+        'type':   DBR(arg.type),
+        'count':  arg.count,
         'status': ECA(arg.status),
-        'value' : format_dbr(arg.type, arg.count, arg.dbr, use_numpy)
+        'value':  format_dbr(arg.type, arg.count, arg.dbr, use_numpy)
     }
     if callable(user_callback):
         user_callback(epics_arg)
@@ -404,17 +413,21 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
     """
     Read a scalar or array value from a process variable.
 
-    :param chid: Channel identifier
-    :param value: A scalar or array value to be written to the channel
-    :param chtype: :class:`caffi.dbr.DBR`. The external type of the supplied value to be written.
-                    Conversion will occur if this does not match the native type.
-                    Default is the native type.
-    :param count:   Element count to be read from the specified channel.
-                    If *callback* is specified, a count of zero means use the current element count from the server.
-    :param callback: User supplied callback function to be run when requested operation completes.
-    :param bool use_numpy: whether to format numeric waveform as numpy array
-    :return: (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
-    :rtype: tuple
+    :param chid:      Channel identifier
+    :param chtype:    The external type of the supplied value to be written.
+                      Conversion will occur if this does not match the native type.
+                      Default is the native type.
+    :param count:     Element count to be read from the specified channel.
+                      If *callback* is specified, a count of zero means use the current element count from the server.
+    :param callback:  User supplied callback function to be run when requested operation completes.
+    :param use_numpy: whether to format numeric waveform as numpy array
+    :type chid:       cdata
+    :type chtype:     int, :class:`caffi.dbr.DBR`, None
+    :type count:      int, None
+    :type callback:   callable, None
+    :type use_numpy:  bool
+    :return:          (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
+    :rtype:           tuple
 
     When no *callback* is specified the returned channel value can't be assumed to be stable
     in the application supplied buffer until after *ECA.NORMAL* is returned from :func:`pend_io`.
@@ -462,9 +475,9 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
 @ffi.callback('void(struct event_handler_args)')
 def _put_callback(arg):
     epics_arg = {
-        'chid'  : arg.chid,
-        'type'  : DBR(arg.type),
-        'count' : arg.count,
+        'chid':   arg.chid,
+        'type':   DBR(arg.type),
+        'count':  arg.count,
         'status': ECA(arg.status)
     }
     # If chid or the callback object is not in cache, it well indicates
@@ -526,21 +539,26 @@ def _setup_put(chid, value, chtype=None, count=None):
     # the actual count requested is the minimum of all three
     count = min(count, native_count, value_count)
 
-    return (chtype, count, cvalue)
+    return chtype, count, cvalue
 
 
 def put(chid, value, chtype=None, count=None, callback=None):
     """
     Write a scalar or array value to a process variable.
 
-    :param chid: Channel identifier
-    :param value: A scalar or array value to be written to the channel
-    :param chtype: :class:`caffi.dbr.DBR`. The external type of the supplied value to be written.
-                    Conversion will occur if this does not match the native type.
-                    Default is the native type.
-    :param count: Element count to be written to the channel. Default is native element count. But it can be reduced to
-                  match the length of user supplied value.
+    :param chid:     Channel identifier
+    :param value:    A scalar or array value to be written to the channel
+    :param chtype:   The external type of the supplied value to be written.
+                     Conversion will occur if this does not match the native type.
+                     Default is the native type.
+    :param count:    Element count to be written to the channel. Default is native element count.
+                     But it can be reduced to match the length of user supplied value.
     :param callback: User supplied callback function to be run when requested operation completes.
+    :type chid:      cdata
+    :type value:     int, float, bytes, str, tuple, list, array
+    :type chtype:    int, :class:`caffi.dbr.DBR`, None
+    :type count:     int, None
+    :type callback:  callable, None
     :return:
                 - ECA.NORMAL - Normal successful completion
                 - ECA.BADCHID - Corrupted CHID
@@ -551,8 +569,8 @@ def put(chid, value, chtype=None, count=None, callback=None):
                 - ECA.ALLOCMEM - Unable to allocate memory
                 - ECA.DISCONN - Channel is disconnected
 
-    When invoked without callback the client will receive no response unless the request can not be fulfilled in the server.
-    If unsuccessful an exception handler is run on the client side.
+    When invoked without callback the client will receive no response unless the request
+    can not be fulfilled in the server. If unsuccessful an exception handler is run on the client side.
 
     When invoked with callback the user supplied asynchronous call back is called only
     after the initiated write operation, and all actions resulting from the initiating write operation, complete.
@@ -566,8 +584,9 @@ def put(chid, value, chtype=None, count=None, callback=None):
 
     All of these functions return *ECA.DISCONN* if the channel is currently disconnected.
 
-    All put requests are accumulated (buffered) and not forwarded to the IOC until one of :func:`flush_io`, :func:`pend_io`,
-    or :func:`pend_event` are called. This allows several requests to be efficiently combined into one message.
+    All put requests are accumulated (buffered) and not forwarded to the IOC until
+    one of :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
+    This allows several requests to be efficiently combined into one message.
     """
     if chid not in __channels:
         return ECA.BADCHID
@@ -595,17 +614,17 @@ def _event_callback(arg):
     user_callback, use_numpy = ffi.from_handle(arg.usr)
 
     epics_arg = {
-        'chid'  : arg.chid,
-        'type'  : DBR(arg.type),
-        'count' : arg.count,
+        'chid':   arg.chid,
+        'type':   DBR(arg.type),
+        'count':  arg.count,
         'status': ECA(arg.status),
-        'value' : format_dbr(arg.type, arg.count, arg.dbr, use_numpy)
+        'value':  format_dbr(arg.type, arg.count, arg.dbr, use_numpy)
     }
-    if (callable(user_callback)):
+    if callable(user_callback):
         user_callback(epics_arg)
 
 
-def create_subscription(chid, callback, chtype=None, count=None, mask=DBE.VALUE|DBE.ALARM, use_numpy=False):
+def create_subscription(chid, callback, chtype=None, count=None, mask=None, use_numpy=False):
     """
     Register a state change subscription and specify a call back function to be invoked
     whenever the process variable undergoes significant state changes.
@@ -669,9 +688,12 @@ def create_subscription(chid, callback, chtype=None, count=None, mask=DBE.VALUE|
     if count is None or count < 0 or count > native_count:
         count = native_count
 
+    if mask is None:
+        mask = DBE.VALUE | DBE.ALARM
+
     pevid = ffi.new('evid *')
 
-    monitor_callback = ffi.new_handle((callback,use_numpy))
+    monitor_callback = ffi.new_handle((callback, use_numpy))
 
     # - ECA.NORMAL - Normal successful completion
     # - ECA.BADCHID - Corrupted CHID
@@ -692,7 +714,7 @@ def clear_subscription(evid):
     """
     Cancel a subscription.
 
-    :param evid: event id returned by :meth:`create_subscription`
+    :param cdata evid: event id returned by :meth:`create_subscription`
     :return:
                 - ECA.NORMAL - Normal successful completion
                 - ECA.BADCHID - Corrupted CHID
@@ -715,7 +737,7 @@ def clear_channel(chid):
     """
     Shutdown and reclaim resources associated with a channel created by ca_create_channel().
 
-    :param chid: Channel identifier
+    :param cdata chid: Channel identifier
     :return:
                 - ECA.NORMAL - Normal successful completion
                 - ECA.BADCHID - Corrupted CHID
@@ -731,7 +753,7 @@ def clear_channel(chid):
     """
     # clear all subscriptions for this channel
     for evid in list(__channels[chid]['monitors']):
-        status = clear_subscription(evid)
+        clear_subscription(evid)
 
     status = libca.ca_clear_channel(chid)
 
@@ -746,7 +768,7 @@ def pend_event(timeout):
     """
     The send buffer is flushed and CA background activity is processed for *timeout* seconds.
 
-    :param timeout: The duration to block in this routine in seconds. A timeout of zero seconds blocks forever.
+    :param float timeout: The duration to block in this routine in seconds. A timeout of zero seconds blocks forever.
     :return:
                 - ECA.TIMEOUT - The operation timed out
                 - ECA.EVDISALLOW - Function inappropriate for use within a call back handler
@@ -781,7 +803,7 @@ def pend_io(timeout):
     This function flushes the send buffer and then blocks until outstanding get requests *without* callback complete,
     and until channels created *without* callback connect for the first time.
 
-    :param timeout: Specifies the time out interval. A timeout interval of zero specifies forever.
+    :param float timeout: Specifies the time out interval. A timeout interval of zero specifies forever.
     :return:
                 - ECA.NORMAL - Normal successful completion
                 - ECA.TIMEOUT - Selected IO requests didn't complete before specified timeout
@@ -831,15 +853,16 @@ def pend(timeout, early):
 
 def test_io():
     """
-    This function tests to see if all get requests are complete and channels created without a connection callback function
-    are connected. It will report the status of outstanding get requests issued, and channels created without connection callback function,
+    This function tests to see if all get requests are complete and channels created without
+    a connection callback function are connected. It will report the status of outstanding get requests issued,
+    and channels created without connection callback function,
     after the last call to ca_pend_io() or CA context initialization whichever is later.
 
     :return:
             - ECA_IODONE - All IO operations completed
             - ECA_IOINPROGRESS - IO operations still in progress
     """
-    status =  libca.ca_test_io()
+    status = libca.ca_test_io()
     return ECA(status)
 
 
@@ -854,13 +877,13 @@ def flush_io():
     in parallel with labor performed in the server.
     Outstanding requests are also sent whenever the buffer which holds them becomes full.
     """
-    status =  libca.ca_flush_io()
+    status = libca.ca_flush_io()
     return ECA(status)
 
 
 def field_type(chid):
     """
-    :param chid: channel identifier
+    :param cdata chid: channel identifier
     :return: the native type in the server of the process variable.
     :rtype: :class:`caffi.dbr.DBF`
     """
@@ -869,7 +892,7 @@ def field_type(chid):
 
 def element_count(chid):
     """
-    :param chid: channel identifier
+    :param cdata chid: channel identifier
     :return: the maximum array element count in the server for the specified IO channel.
     """
     return libca.ca_element_count(chid)
@@ -877,7 +900,7 @@ def element_count(chid):
 
 def name(chid):
     """
-    :param chid: channel identifier
+    :param cdata chid: channel identifier
     :return: the name provided when the supplied channel id was created.
     """
     return to_string(ffi.string(libca.ca_name(chid)))
@@ -885,14 +908,16 @@ def name(chid):
 
 def state(chid):
     """
-    :param chid: channel identifier
-    :return:
+    :param cdata chid: channel identifier
+    :return: the connection state
+    :rtype: :class:`caffi.constants.ChannelState`
     """
     return ChannelState(libca.ca_state(chid))
 
 
 def message(status):
     """
+    :param int status: CA status code
     :return: a message corresponding to a user specified CA status code.
     """
     return to_string(ffi.string(libca.ca_message(status)))
@@ -913,7 +938,7 @@ def read_access(chid):
     :param chid: channel identifier
     :return: True if the client currently has read access to the specified channel and False otherwise.
     """
-    return (libca.ca_read_access(chid) == 1)
+    return libca.ca_read_access(chid) == 1
 
 
 def write_access(chid):
@@ -921,7 +946,7 @@ def write_access(chid):
     :param chid: channel identifier
     :return: True if the client currently has write access to the specified channel and False otherwise.
     """
-    return (libca.ca_write_access(chid) == 1)
+    return libca.ca_write_access(chid) == 1
 
 
 def sg_create():
@@ -938,7 +963,8 @@ def sg_create():
     The routine :func:`sg_reset` is used to discard knowledge of old requests which have timed out and
     in all likelihood will never be satisfied.
 
-    Any number of asynchronous groups can have application requested operations outstanding within them at any given time.
+    Any number of asynchronous groups can have application requested operations outstanding
+    within them at any given time.
 
     """
     pgid = ffi.new('CA_SYNC_GID *')
@@ -954,7 +980,7 @@ def sg_delete(gid):
     """
     Deletes a synchronous group.
 
-    :param gid: Identifier of the synchronous group to be deleted.
+    :param int gid: Identifier of the synchronous group to be deleted.
     :return:
                 - ECA.NORMAL - Normal successful completion
                 - ECA.BADSYNCGRP - Invalid synchronous group
@@ -971,14 +997,15 @@ def sg_block(gid, timeout):
     Operations can be reissued followed by another :func:`sg_block`.
     This routine will only block on outstanding queries issued after the last call to :func:`sg_block`,
     :func:`sg_reset`, or :func:`sg_create` whichever occurs later in time.
-    If no queries are outstanding then :func:`sg_block` will return immediately without processing any pending channel access activities.
+    If no queries are outstanding then :func:`sg_block` will return immediately
+    without processing any pending channel access activities.
 
     Values written into your program's variables by a channel access synchronous group request should not be
     referenced by your program until ECA.NORMAL has been received from :func:`sg_block`.
     This routine will process pending channel access background activity while it is waiting.
 
-    :param gid: Identifier of the synchronous group.
-    :param timeout: Specifies the time out interval. A timeout interval of zero specifies forever.
+    :param int gid:       Identifier of the synchronous group.
+    :param float timeout: Specifies the time out interval. A timeout interval of zero specifies forever.
     :return:
                 - ECA.NORMAL - Normal successful completion
                 - ECA.TIMEOUT - The operation timed out
@@ -993,7 +1020,7 @@ def sg_test(gid):
     """
     Test to see if all requests made within a synchronous group have completed.
 
-    :param gid: Identifier of the synchronous group.
+    :param int gid: Identifier of the synchronous group.
     :return:
                 - ECA.IODONE - IO operations completed
                 - ECA.IOINPROGRESS - Some IO operations still in progress
@@ -1007,7 +1034,7 @@ def sg_reset(gid):
     Reset the number of outstanding requests within the specified synchronous group to zero so that
     :func:`sg_test` will return True and :func:`sg_block` will not block unless additional subsequent requests are made.
 
-    :param gid: Identifier of the synchronous group.
+    :param int gid: Identifier of the synchronous group.
     :return:
                 - ECA.NORMAL - Normal successful completion
                 - ECA.BADSYNCGRP - Invalid synchronous group
@@ -1020,11 +1047,16 @@ def sg_put(gid, chid, value, chtype=None, count=None):
     """
     Write a value, or array of values, to a channel and increment the outstanding request count of a synchronous group.
 
-    :param gid: Synchronous group identifier
-    :param chid: Channel identifier
-    :param value: The value or array of values to write
-    :param chtype: :class:`caffi.dbr.DBR`. The type of supplied value. Conversion will occur if it does not match the native type.
-    :param count: The element count to be written to the specified channel.
+    :param gid:    Synchronous group identifier
+    :param chid:   Channel identifier
+    :param value:  The value or array of values to write
+    :param chtype: The type of supplied value.
+                   Conversion will occur if it does not match the native type.
+    :param count:  The element count to be written to the specified channel.
+    :type gid:     int
+    :type chid:    cdata
+    :type value:   int, float, bytes, str, tuple, list, array
+    :type chtype:  int, :class:`caffi.dbr.DBR`
     :return:
                 - ECA.NORMAL - Normal successful completion
                 - ECA.BADSYNCGRP - Invalid synchronous group
@@ -1051,11 +1083,16 @@ def sg_get(gid, chid, chtype=None, count=None, use_numpy=False):
     """
     Read a value from a channel and increment the outstanding request count of a synchronous group.
 
-    :param gid: Identifier of the synchronous group.
-    :param chid: Channel identifier
-    :param chtype: :class:`caffi.dbr.DBR`. External type of returned value. Conversion will occur if this does not match native type.
-    :param count: Element count to be read from the specified channel.
-    :param bool use_numpy: whether to format numeric waveform as numpy array
+    :param gid:       Identifier of the synchronous group.
+    :param chid:      Channel identifier
+    :param chtype:    External type of returned value.
+                      Conversion will occur if this does not match native type.
+    :param count:     Element count to be read from the specified channel.
+    :param use_numpy: whether to format numeric waveform as numpy array
+    :type gid:        int
+    :type chid:       cdata
+    :type chtype:     int, :class:`caffi.dbr.DBR`, None
+    :type count:      int, None
     :return: (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
     :rtype: tuple
 

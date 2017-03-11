@@ -1,6 +1,10 @@
+import os
+import platform
+import sys
+from cffi import FFI
+
 __all__ = ['ffi', 'libca']
 
-from cffi import FFI
 ffi = FFI()
 
 # cadef.h
@@ -1116,11 +1120,6 @@ const char   *dbr_text[];
 const short  dbr_text_dim;
 const char   *dbr_text_invalid;
 """)
-
-
-import os
-import platform
-import sys
 
 
 def get_libca():

@@ -1,20 +1,19 @@
-__all__ = ['DBF', 'DBR', 'DBRValue', 'format_dbr']
-
 from enum import IntEnum
 
 # convert epics ca types to numpy data types
 try:
     import numpy
     ctype2dtype = {
-        'dbr_int_t'    : numpy.int16,
-        'dbr_float_t'  : numpy.float32,
-        'dbr_char_t'   : numpy.uint8,
-        'dbr_enum_t'   : numpy.uint16,
-        'dbr_long_t'   : numpy.int32,
-        'dbr_double_t' : numpy.float64,
+        'dbr_int_t':    numpy.int16,
+        'dbr_float_t':  numpy.float32,
+        'dbr_char_t':   numpy.uint8,
+        'dbr_enum_t':   numpy.uint16,
+        'dbr_long_t':   numpy.int32,
+        'dbr_double_t': numpy.float64,
     }
     has_numpy = True
 except ImportError:
+    numpy = None
     has_numpy = False
 
 from .constants import AlarmCondition, AlarmSeverity
@@ -22,9 +21,12 @@ from .compat import to_string
 from .macros import *
 from .ca import ffi, libca
 
-#/*
-# * ptr to value given a pointer to the structure and the DBR type
-# */
+__all__ = ['DBF', 'DBR', 'DBRValue', 'format_dbr']
+
+
+#
+# ptr to value given a pointer to the structure and the DBR type
+#
 def dbr_value_ptr(PDBR, DBR_TYPE):
     return ffi.cast('char*', PDBR) + libca.dbr_value_offset[DBR_TYPE]
 
@@ -190,6 +192,7 @@ def format_plain_value(valueType, count, cvalue, use_numpy):
 
     return value
 
+
 def format_string_value(count, dbrValue):
     cvalue = ffi.cast('dbr_string_t*', dbrValue)
     if count == 1:
@@ -199,6 +202,7 @@ def format_string_value(count, dbrValue):
         for i in range(count):
             value.append(to_string(ffi.string(cvalue[i])))
     return value
+
 
 def format_dbr(dbrType, count, dbrValue, use_numpy):
     """
@@ -460,6 +464,6 @@ class DBRValue(object):
         """
         :return: Value for plain DBR_XXXX type or a dict for DBR_STS_XXXX etc.
 
-        .. note:: This method should be called unless the get request has succeeded.
+        .. note:: This method should be called only if the get request has succeeded.
         """
         return format_dbr(self.dbrtype, self.count, self.cvalue, self.use_numpy)

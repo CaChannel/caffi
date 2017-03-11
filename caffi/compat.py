@@ -1,13 +1,15 @@
 """
 Compatible layer for Python 2 and 3
 """
+import sys
+
 __all__ = ['basestring', 'to_bytes', 'to_string']
 
-import sys
 if sys.hexversion >= 0x03000000:
     basestring = (str, bytes)
 else:
     basestring = str
+
 
 def to_bytes(str_val):
     if isinstance(str_val, bytes):

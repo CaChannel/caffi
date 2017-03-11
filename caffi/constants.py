@@ -3,14 +3,14 @@ The macros defined macros.py are exported as IntEnum.
 
 """
 from enum import IntEnum
+from .ca import ffi, libca
+from .compat import to_string
+from .macros import *
 
 __all__ = ['ChannelState', 'CA_OP', 'CA_PRIORITY',
            'CA_K', 'ECA', 'DBE',
            'AlarmSeverity', 'AlarmCondition']
 
-from .ca import ffi, libca
-from .compat import to_string
-from .macros import *
 
 class ChannelState(IntEnum):
     """
@@ -74,6 +74,7 @@ class DBE(IntEnum):
     LOG         = DBE_LOG
     ALARM       = DBE_ALARM
     PROPERTY    = DBE_PROPERTY
+
 
 class CA_K(IntEnum):
     """
