@@ -325,7 +325,7 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
     return ECA(status), chid
 
 
-@ffi.callback('void(struct access_rights_handler_args)')
+@ffi.callback('void(*)(struct access_rights_handler_args)')
 def _access_rights_callback(arg):
     epics_arg = {
         'chid': arg.chid,
@@ -335,12 +335,14 @@ def _access_rights_callback(arg):
     # If chid is not in cache, it well indicates
     # that the python object has been garbage collected.
     # Then don't try to call from_handle, that is undefined and may crash.
-    if arg.chid in __channels:
+    if arg.chid not in __channels:
         return
 
-    user_callback = ffi.from_handle(__channels[arg.chid]['access_rights_callback'])
-    if callable(user_callback):
-        user_callback(epics_arg)
+    handle = __channels[arg.chid]['access_rights_callback']
+    if handle != ffi.NULL:
+        user_callback = ffi.from_handle(handle)
+        if callable(user_callback):
+            user_callback(epics_arg)
 
 
 def replace_access_rights_event(chid, callback=None):
