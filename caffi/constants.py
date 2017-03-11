@@ -15,10 +15,11 @@ class ChannelState(IntEnum):
     """
     Enum redefined from C enum channel_state
     """
-    NEVER_CONN = cs_never_conn
-    PREV_CONN  = cs_prev_conn
-    CONN       = cs_conn
-    CLOSED     = cs_closed
+    NEVER_CONN  = cs_never_conn
+    PREV_CONN   = cs_prev_conn
+    CONN        = cs_conn
+    CLOSED      = cs_closed
+    NEVER_SEARCH= cs_never_search
 
 
 class CA_OP(IntEnum):

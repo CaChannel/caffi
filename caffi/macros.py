@@ -9,6 +9,7 @@ cs_never_conn = libca.cs_never_conn
 cs_prev_conn = libca.cs_prev_conn
 cs_conn = libca.cs_conn
 cs_closed = libca.cs_closed
+cs_never_search = 4
 
 CA_OP_GET = libca.CA_OP_GET
 CA_OP_PUT = libca.CA_OP_PUT
