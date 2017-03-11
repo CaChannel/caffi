@@ -328,9 +328,9 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
 @ffi.callback('void(struct access_rights_handler_args)')
 def _access_rights_callback(arg):
     epics_arg = {
-        'chid'  : arg.chid,
-        'read'  : arg.ar.access & 0x01 == 0x01,
-        'write' : arg.ar.access & 0x02 == 0x02
+        'chid': arg.chid,
+        'read_access': arg.ar.access & 0x01 == 0x01,
+        'write_access': arg.ar.access & 0x02 == 0x02
     }
     # If chid is not in cache, it well indicates
     # that the python object has been garbage collected.
