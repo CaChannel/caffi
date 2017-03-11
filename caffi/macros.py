@@ -2,37 +2,39 @@
 The macros defined in C header files, *cadef.h*, *caeventmask.h*, *caerr.h*
 
 """
-from ._ca import libca, ffi
-from .compat import to_string, to_bytes
+from ._ca import libca as _libca
+from ._ca import ffi as _ffi
 
-cs_never_conn = libca.cs_never_conn
-cs_prev_conn = libca.cs_prev_conn
-cs_conn = libca.cs_conn
-cs_closed = libca.cs_closed
+from . import compat as _compat
+
+cs_never_conn = _libca.cs_never_conn
+cs_prev_conn = _libca.cs_prev_conn
+cs_conn = _libca.cs_conn
+cs_closed = _libca.cs_closed
 cs_never_search = 4
 
-CA_OP_GET = libca.CA_OP_GET
-CA_OP_PUT = libca.CA_OP_PUT
-CA_OP_CREATE_CHANNEL = libca.CA_OP_CREATE_CHANNEL
-CA_OP_ADD_EVENT = libca.CA_OP_ADD_EVENT
-CA_OP_CLEAR_EVENT = libca.CA_OP_CLEAR_EVENT
-CA_OP_OTHER = libca.CA_OP_OTHER
-CA_OP_CONN_UP = libca.CA_OP_CONN_UP
-CA_OP_CONN_DOWN = libca.CA_OP_CONN_DOWN
+CA_OP_GET = _libca.CA_OP_GET
+CA_OP_PUT = _libca.CA_OP_PUT
+CA_OP_CREATE_CHANNEL = _libca.CA_OP_CREATE_CHANNEL
+CA_OP_ADD_EVENT = _libca.CA_OP_ADD_EVENT
+CA_OP_CLEAR_EVENT = _libca.CA_OP_CLEAR_EVENT
+CA_OP_OTHER = _libca.CA_OP_OTHER
+CA_OP_CONN_UP = _libca.CA_OP_CONN_UP
+CA_OP_CONN_DOWN = _libca.CA_OP_CONN_DOWN
 
-CA_PRIORITY_MAX = libca.CA_PRIORITY_MAX
-CA_PRIORITY_MIN = libca.CA_PRIORITY_MIN
-CA_PRIORITY_DEFAULT = libca.CA_PRIORITY_DEFAULT
+CA_PRIORITY_MAX = _libca.CA_PRIORITY_MAX
+CA_PRIORITY_MIN = _libca.CA_PRIORITY_MIN
+CA_PRIORITY_DEFAULT = _libca.CA_PRIORITY_DEFAULT
 
-CA_PRIORITY_DB_LINKS = libca.CA_PRIORITY_DB_LINKS
-CA_PRIORITY_ARCHIVE = libca.CA_PRIORITY_ARCHIVE
-CA_PRIORITY_OPI = libca.CA_PRIORITY_OPI
+CA_PRIORITY_DB_LINKS = _libca.CA_PRIORITY_DB_LINKS
+CA_PRIORITY_ARCHIVE = _libca.CA_PRIORITY_ARCHIVE
+CA_PRIORITY_OPI = _libca.CA_PRIORITY_OPI
 
-DBE_VALUE = libca.DBE_VALUE
-DBE_ARCHIVE = libca.DBE_ARCHIVE
-DBE_LOG = libca.DBE_LOG
-DBE_ALARM = libca.DBE_ALARM
-DBE_PROPERTY = libca.DBE_PROPERTY
+DBE_VALUE = _libca.DBE_VALUE
+DBE_ARCHIVE = _libca.DBE_ARCHIVE
+DBE_LOG = _libca.DBE_LOG
+DBE_ALARM = _libca.DBE_ALARM
+DBE_PROPERTY = _libca.DBE_PROPERTY
 
 # db_access.h
 TYPENOTCONN = -1 #/* the channel's native type when disconnected   */
@@ -165,9 +167,9 @@ def dbr_type_is_DOUBLE(dbrtype):
 # */
 def dbr_size_n(TYPE,COUNT):
     if COUNT <=0:
-        return libca.dbr_size[TYPE]
+        return _libca.dbr_size[TYPE]
     else:
-        return libca.dbr_size[TYPE] + (COUNT-1) * libca.dbr_value_size[TYPE]
+        return _libca.dbr_size[TYPE] + (COUNT-1) * _libca.dbr_value_size[TYPE]
 
 #/*
 # * type conversion macros
@@ -211,17 +213,17 @@ def dbf_type_to_DBR_CTRL(dbftype):
 # */
 def dbf_type_to_text(dbftype):
     if dbftype >= -1 and dbftype <= LAST_TYPE + 1:
-        text = ffi.string(libca.dbf_text[dbftype + 1])
+        text = _ffi.string(_libca.dbf_text[dbftype + 1])
     else:
-        text = ffi.string(libca.dbf_text_invalid)
+        text = _ffi.string(_libca.dbf_text_invalid)
 
-    return to_string(text)
+    return _compat.to_string(text)
 # alias
 dbf_text = dbf_type_to_text
 
 def dbf_text_to_type(text):
     for dbftype in range(0, LAST_TYPE + 2):
-        if to_bytes(text) == ffi.string(libca.dbf_text[dbftype+1]):
+        if _compat.to_bytes(text) == _ffi.string(_libca.dbf_text[dbftype+1]):
             break
     else:
         dbftype = -1
@@ -230,17 +232,17 @@ def dbf_text_to_type(text):
 
 def dbr_type_to_text(dbrtype):
     if dbrtype >= 0 and dbrtype <= LAST_BUFFER_TYPE:
-        text = ffi.string(libca.dbr_text[dbrtype])
+        text = _ffi.string(_libca.dbr_text[dbrtype])
     else:
-        text = ffi.string(libca.dbr_text_invalid)
+        text = _ffi.string(_libca.dbr_text_invalid)
 
-    return to_string(text)
+    return _compat.to_string(text)
 # alias
 dbr_text = dbr_type_to_text
 
 def dbr_text_to_type(text):
     for dbrtype in range(0, LAST_BUFFER_TYPE + 1):
-        if to_bytes(text) == ffi.string(libca.dbr_text[dbrtype]):
+        if _compat.to_bytes(text) == _ffi.string(_libca.dbr_text[dbrtype]):
             break
     else:
         dbrtype = -1
@@ -343,32 +345,32 @@ ECA_UNRESPTMO       = 480
 POSIX_TIME_AT_EPICS_EPOCH = 631152000
 
 # alarm.h
-NO_ALARM = libca.epicsSevNone
-MINOR_ALARM = libca.epicsSevMinor
-MAJOR_ALARM = libca.epicsSevMajor
-INVALID_ALARM = libca.epicsSevInvalid
+NO_ALARM = _libca.epicsSevNone
+MINOR_ALARM = _libca.epicsSevMinor
+MAJOR_ALARM = _libca.epicsSevMajor
+INVALID_ALARM = _libca.epicsSevInvalid
 
-READ_ALARM = libca.epicsAlarmRead
-WRITE_ALARM = libca.epicsAlarmWrite
-HIHI_ALARM = libca.epicsAlarmHiHi
-HIGH_ALARM = libca.epicsAlarmHigh
-LOLO_ALARM = libca.epicsAlarmLoLo
-LOW_ALARM  = libca.epicsAlarmLow
-STATE_ALARM = libca.epicsAlarmState
-COS_ALARM = libca.epicsAlarmCos
-COMM_ALARM = libca.epicsAlarmComm
-TIMEOUT_ALARM = libca.epicsAlarmTimeout
-HW_LIMIT_ALARM = libca.epicsAlarmHwLimit
-CALC_ALARM = libca.epicsAlarmCalc
-SCAN_ALARM = libca.epicsAlarmScan
-LINK_ALARM = libca.epicsAlarmLink
-SOFT_ALARM  = libca.epicsAlarmSoft
-BAD_SUB_ALARM = libca.epicsAlarmBadSub
-UDF_ALARM = libca.epicsAlarmUDF
-DISABLE_ALARM = libca.epicsAlarmDisable
-SIMM_ALARM = libca.epicsAlarmSimm
-READ_ACCESS_ALARM = libca.epicsAlarmReadAccess
-WRITE_ACCESS_ALARM = libca.epicsAlarmWriteAccess
+READ_ALARM = _libca.epicsAlarmRead
+WRITE_ALARM = _libca.epicsAlarmWrite
+HIHI_ALARM = _libca.epicsAlarmHiHi
+HIGH_ALARM = _libca.epicsAlarmHigh
+LOLO_ALARM = _libca.epicsAlarmLoLo
+LOW_ALARM  = _libca.epicsAlarmLow
+STATE_ALARM = _libca.epicsAlarmState
+COS_ALARM = _libca.epicsAlarmCos
+COMM_ALARM = _libca.epicsAlarmComm
+TIMEOUT_ALARM = _libca.epicsAlarmTimeout
+HW_LIMIT_ALARM = _libca.epicsAlarmHwLimit
+CALC_ALARM = _libca.epicsAlarmCalc
+SCAN_ALARM = _libca.epicsAlarmScan
+LINK_ALARM = _libca.epicsAlarmLink
+SOFT_ALARM  = _libca.epicsAlarmSoft
+BAD_SUB_ALARM = _libca.epicsAlarmBadSub
+UDF_ALARM = _libca.epicsAlarmUDF
+DISABLE_ALARM = _libca.epicsAlarmDisable
+SIMM_ALARM = _libca.epicsAlarmSimm
+READ_ACCESS_ALARM = _libca.epicsAlarmReadAccess
+WRITE_ACCESS_ALARM = _libca.epicsAlarmWriteAccess
 
 def epicsAlarmSeverityStrings(severity):
     return ["NO_ALARM",
