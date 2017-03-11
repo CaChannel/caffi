@@ -20,6 +20,7 @@ except ImportError:
 from .constants import AlarmCondition, AlarmSeverity
 from .compat import to_string
 from .macros import *
+from .ca import ffi, libca
 
 #/*
 # * ptr to value given a pointer to the structure and the DBR type

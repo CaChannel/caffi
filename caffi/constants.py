@@ -8,6 +8,7 @@ __all__ = ['ChannelState', 'CA_OP', 'CA_PRIORITY',
            'CA_K', 'ECA', 'DBE',
            'AlarmSeverity', 'AlarmCondition']
 
+from .ca import ffi, libca
 from .compat import to_string
 from .macros import *
 
