@@ -100,7 +100,7 @@ class ECA(IntEnum):
     CONN            = ECA_CONN
     ALLOCMEM        = ECA_ALLOCMEM
     UKNCHAN         = ECA_UKNCHAN
-    UKFIELD         = ECA_UKFIELD
+    UKNFIELD        = ECA_UKNFIELD
     TOLARGE         = ECA_TOLARGE
     TIMEOUT         = ECA_TIMEOUT
     NOSUPPORT       = ECA_NOSUPPORT
@@ -150,8 +150,8 @@ class ECA(IntEnum):
     CHANDESTROY     = ECA_CHANDESTROY
     BADPRIORITY     = ECA_BADPRIORITY
     NOTTHREADED     = ECA_NOTTHREADED
-    # 16KARRAYCLIEN is an invalid variable name
-    ARRAYCLIEN      = ECA_16KARRAYCLIEN
+    # 16KARRAYCLIENT is an invalid variable name
+    ARRAYCLIENT     = ECA_16KARRAYCLIENT
     CONNSEQTMO      = ECA_CONNSEQTMO
     UNRESPTMO       = ECA_UNRESPTMO
 
