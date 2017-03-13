@@ -112,6 +112,11 @@ DBR_TYPE_STRING = {
 
 @ffi.callback('void(*)(struct exception_handler_args)')
 def _exception_callback(carg):
+    if carg.pFile == ffi.NULL:
+        file = ''
+    else:
+        file = to_string(ffi.string(carg.pFile))
+
     epics_arg = {
         'chid':   carg.chid,
         'type':   DBR(carg.type),
@@ -119,8 +124,8 @@ def _exception_callback(carg):
         'addr':   carg.addr,
         'stat':   ECA(carg.stat),
         'op':     CA_OP(carg.op),
-        'ctx':    carg.ctx,
-        'file':   to_string(ffi.string(carg.pFile)),
+        'ctx':    to_string(ffi.string(carg.ctx)),
+        'file':   file,
         'lineNo': carg.lineNo
     }
     if __exception_callback != carg.usr:
@@ -136,21 +141,36 @@ def add_exception_event(callback=None):
 
     :param callback:    User callback function to be executed when an exceptions occur.
                         Passing None causes the default exception handler to be reinstalled.
-                        The argument is a dict including the following fields: *chid*, *type*,
-                        *count*, *addr*, *stat*, *op*, *ctx*, *file*, *lineNo*.
+                        The argument is a dict including the following fields:
+
+                        ======  =============
+                        field   value
+                        ======  =============
+                        chid    channel identifier (may be NULL)
+                        type    type requested
+                        count   count requested
+                        addr    user's address to write results of CA_OP.GET (may be NULL)
+                        stat    status code, :class:`caffi.constants.ECA`
+                        op      operation, :class:`caffi.constants.CA_OP`
+                        ctx     a character string containing context info
+                        file    source file name (may be empty)
+                        lineNo  source file line number (may be zero)
+                        ======  =============
+
     :type callback:     callable, None
     :return: ECA.NORMAL
 
     When an error occurs in the server asynchronous to the clients thread then information about this type of error
     is passed from the server to the client in an exception message. When the client receives this exception message
     an exception handler callback is called.
+
     The default exception handler prints a diagnostic message on the client's standard out and
     terminates execution if the error condition is severe.
 
-    .. note::   Certain fields in first argument are not applicable in the context of some error messages.
+    .. note::   Certain fields are not applicable in the context of some error messages.
                 For instance, a failed get will supply the address in the client task
                 where the returned value was requested to be written.
-                For other failed operations the value of the addr field should not be used.
+                For other failed operations the value of the *addr* field should not be used.
 
     """
     # keep a reference to the returned pointer of (callback, args),
