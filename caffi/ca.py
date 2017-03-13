@@ -54,7 +54,7 @@ Even though as same as possible, there are subtle differences:
 
     - All the creation functions, :func:`create_channel`, :func:`create_subscription` and :func:`sg_create`
       return a tuple of the form (:class:`caffi.constants.ECA`, *object identifier*).
-      The object identifier can only be used if the first item is ECA.NORTMAL.
+      The object identifier can only be used if the first item is ECA.NORMAL.
 
   - In C the following macros definition are also accessible as :class:`enum.IntEnum` type:
 
@@ -62,6 +62,7 @@ Even though as same as possible, there are subtle differences:
     C Macros                Python Enum
     ======================  ============
     *ECA_XXX*               :class:`caffi.constants.ECA`
+    *DBE_XXX*               :class:`caffi.constants.DBE`
     *DBF_XXX*               :class:`caffi.dbr.DBF`
     *DBR_XXX*               :class:`caffi.dbr.DBR`
     *CA_OP_XXX*             :class:`caffi.constants.CA_OP`
@@ -164,9 +165,9 @@ def create_context(preemptive_callback=True):
     """
     :param bool preemptive_callback: enable preemptive callback
     :return:
-                - ECA.NORMAL - Normal successful completion
-                - ECA.ALLOCMEM - Failed, unable to allocate space in pool
-                - ECA.NOTTHREADED - Current thread is already a member of a non-preemptive callback CA context
+        - ECA.NORMAL - Normal successful completion
+        - ECA.ALLOCMEM - Failed, unable to allocate space in pool
+        - ECA.NOTTHREADED - Current thread is already a member of a non-preemptive callback CA context
                                     (possibly created implicitly)
 
     This function, or :func:`attach_context`, should be called once from each thread prior to
@@ -207,9 +208,9 @@ def attach_context(context):
     """
     :param cdata context: The CA context to join with.
     :return:
-                - ECA.NORMAL - Normal successful completion
-                - ECA.NOTTHREADED - Context is not preemptive so cannot be joined
-                - ECA.ISATTACHED - Thread already attached to a CA context
+        - ECA.NORMAL - Normal successful completion
+        - ECA.NOTTHREADED - Context is not preemptive so cannot be joined
+        - ECA.ISATTACHED - Thread already attached to a CA context
 
     The calling thread becomes a member of the specified CA context.
     If context is non preemptive, then additional threads are not allowed to join the CA context
@@ -234,9 +235,10 @@ def show_context(context=None, level=0):
     """
     Prints information about the client context including, at higher interest levels, status for each channel.
 
-    :param cdata context: The CA context to examine. Default is the calling threads CA context.
-    :param int level:     The interest level. Increasing level produces increasing detail.
-
+    :param context: The CA context to examine. Default is the calling threads CA context.
+    :param level:   The interest level. Increasing level produces increasing detail.
+    :type context:  cdata, None
+    :type level:    int
     """
     if context is None:
         libca.ca_client_status(level)
@@ -264,6 +266,16 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
     :param callback:    Optional user's call back function to be run when the connection state changes.
                         Casual users of channel access may decide to leave it None if they do not need to
                         have a call back function run in response to each connection state change event.
+                        The callback argument is a dict including the following fields:
+
+                        =====   =============
+                        field   value
+                        =====   =============
+                        chid    channel identifier
+                        op      - CA_OP.CONN_UP - connected
+                                - CA_OP.CONN_DOWN - disconnected
+                        =====   =============
+
     :param priority:    The priority level for dispatch within the server or network,
                         with 0 specifying the lowest dispatch priority and 99 the highest.
                         This parameter currently does not impact dispatch priorities within the client,
@@ -277,22 +289,23 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
                         data structures, is created for each priority that is used on a particular server.
     :type name:         str
     :type callback:     callable, None
-    :type priority:     int, CA_PRIORITY
-    :return:            (:class:`caffi.constants.ECA`, the channel identifier).
-    :rtype:             tuple
+    :type priority:     int, :class:`caffi.constants.CA_PRIORITY`
+    :return:            (status code, channel identifier)
+    :rtype:             (:class:`caffi.constants.ECA`, cdata)
 
     The CA client library will attempt to establish and maintain a virtual circuit between the caller's application
-    and a named process variable in a CA server.
-    Each call to ca_create_channel allocates resources in the CA client library and potentially also a CA server.
+    and a named process variable in a CA server. Each call to ca_create_channel allocates resources
+    in the CA client library and potentially also a CA server.
     The function :func:`clear_channel` is used to release these resources.
-    If successful, the routine returns a channel identifier.
-    This identifier can be used with any channel access call that operates on a channel.
+
+    If successful, the routine returns a channel identifier. This identifier can be used with any channel access call
+    that operates on a channel.
 
     The circuit may be initially connected or disconnected depending on the state of the network
     and the location of the channel. A channel will only enter a connected state
     after the server's address is determined, and only if channel access successfully establishes a virtual circuit
     through the network to the server. Channel access routines that send a request to a server
-    will return *ECA.DISCONNCHID* if the channel is currently disconnected.
+    will return ECA.DISCONNCHID if the channel is currently disconnected.
 
     There are two ways to obtain asynchronous notification when a channel enters a connected state.
 
@@ -359,6 +372,16 @@ def replace_access_rights_event(chid, callback=None):
 
     :param chid:     The channel identifier
     :param callback: User supplied call back function. Passing None uninstalls the current handler.
+                     The callback argument is a dict including the following fields:
+
+                     ============   =============
+                     field          value
+                     ============   =============
+                     chid           channel identifier
+                     read_access    True if with read access rights
+                     write_access   True if with write access rights
+                     ============   =============
+
     :type chid:      cdata
     :type callback:  callable, None
     :return:
@@ -420,6 +443,19 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
     :param count:     Element count to be read from the specified channel.
                       If *callback* is specified, a count of zero means use the current element count from the server.
     :param callback:  User supplied callback function to be run when requested operation completes.
+                      The callback argument is a dict including the following fields:
+
+                      ============   =============
+                      field          value
+                      ============   =============
+                      chid           channel identifier
+                      type           the type of the item returned, :class:`caffi.dbr.DBR`
+                      count          the element count of the item returned
+                      status         status code of the request from the server, :class:`caffi.constants.ECA`
+                      value          If *type* is a plain type, this is the PV's value. Otherwise it is a dict
+                                     containing the meta information associated with this *type*.
+                      ============   =============
+
     :param use_numpy: whether to format numeric waveform as numpy array
     :type chid:       cdata
     :type chtype:     int, :class:`caffi.dbr.DBR`, None
@@ -554,20 +590,31 @@ def put(chid, value, chtype=None, count=None, callback=None):
     :param count:    Element count to be written to the channel. Default is native element count.
                      But it can be reduced to match the length of user supplied value.
     :param callback: User supplied callback function to be run when requested operation completes.
+                     The callback argument is a dict including the following fields:
+
+                     ============   =============
+                     field          value
+                     ============   =============
+                     chid           channel identifier
+                     type           DBR.INVALID (-1)
+                     count          0
+                     status         status code of the request from the server, :class:`caffi.constants.ECA`
+                     ============   =============
+
     :type chid:      cdata
     :type value:     int, float, bytes, str, tuple, list, array
     :type chtype:    int, :class:`caffi.dbr.DBR`, None
     :type count:     int, None
     :type callback:  callable, None
     :return:
-                - ECA.NORMAL - Normal successful completion
-                - ECA.BADCHID - Corrupted CHID
-                - ECA.BADTYPE - Invalid DBR_XXXX type
-                - ECA.BADCOUNT - Requested count larger than native element count
-                - ECA.STRTOBIG - Unusually large string supplied
-                - ECA.NOWTACCESS - Write access denied
-                - ECA.ALLOCMEM - Unable to allocate memory
-                - ECA.DISCONN - Channel is disconnected
+        - ECA.NORMAL - Normal successful completion
+        - ECA.BADCHID - Corrupted CHID
+        - ECA.BADTYPE - Invalid DBR_XXXX type
+        - ECA.BADCOUNT - Requested count larger than native element count
+        - ECA.STRTOBIG - Unusually large string supplied
+        - ECA.NOWTACCESS - Write access denied
+        - ECA.ALLOCMEM - Unable to allocate memory
+        - ECA.DISCONN - Channel is disconnected
 
     When invoked without callback the client will receive no response unless the request
     can not be fulfilled in the server. If unsuccessful an exception handler is run on the client side.
@@ -629,23 +676,37 @@ def create_subscription(chid, callback, chtype=None, count=None, mask=None, use_
     Register a state change subscription and specify a call back function to be invoked
     whenever the process variable undergoes significant state changes.
 
-    :param chid: Channel identifier
-    :param callback: User supplied callback function to be run when requested operation completes.
-    :param chtype: The external type of the supplied value to be written.
-                    Conversion will occur if this does not match the native type.
-                    Default is the native type.
-    :param count:   Element count to be written to the channel. Default is native element count.
-    :param mask:    A mask with bits set for each of the event trigger types requested.
-                    The event trigger mask must be a bitwise or of one or more of the following constants.
+    :param chid:      Channel identifier
+    :param callback:  User supplied callback function to be run when requested operation completes.
+                      The callback argument is a dict including the following fields:
 
-                    - DBE_VALUE - Trigger events when the channel value exceeds the monitor dead band
-                    - DBE_ARCHIVE (or DBE_LOG) - Trigger events when the channel value exceeds the archival dead band
-                    - DBE_ALARM - Trigger events when the channel alarm state changes
-                    - DBE_PROPERTY - Trigger events when a channel property changes.
-    :param bool use_numpy: whether to format numeric waveform as numpy array
+                      ============   =============
+                      field          value
+                      ============   =============
+                      chid           channel identifier
+                      type           the type of the item returned, :class:`caffi.dbr.DBR`
+                      count          the element count of the item returned
+                      status         status code of the request from the server, :class:`caffi.constants.ECA`
+                      value          If *type* is a plain type, this is the PV's value. Otherwise it is a dict
+                                     containing the meta information associated with this *type*.
+                      ============   =============
 
-    :return: (:class:`caffi.constants.ECA`, Event identifier)
-    :rtype: tuple
+    :param chtype:    The external type of the supplied value to be written.
+                      Conversion will occur if this does not match the native type.
+                      Default is the native type.
+    :param count:     Element count to be written to the channel. Default is native element count.
+    :param mask:      A mask with bits set for each of the event trigger types requested.
+                      The event trigger mask must be a bitwise or of one or more of :class:`caffi.constants.DBE`.
+    :param use_numpy: whether to format numeric waveform as numpy array
+    :type chid:       cdata
+    :type callback:   callable
+    :type chtype:     :class:`caffi.constants.DBR`, None
+    :type count:      int, None
+    :type mask:       :class:`caffi.constants.DBE`, None
+    :type use_numpy:  bool
+
+    :return: (status code, event identifier)
+    :rtype: (:class:`caffi.constants.ECA`, cdata)
 
     A significant change can be a change in the process variable's value, alarm status, or alarm severity.
     In the process control function block database the deadband field determines

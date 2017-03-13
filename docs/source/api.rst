@@ -80,6 +80,10 @@ Module :mod:`caffi.constants`
 
 .. autoclass:: ChannelState
 
+.. autoclass:: DBE
+
+.. autoclass:: CA_PRIORITY
+
 .. autoclass:: CA_OP
 
 .. autoclass:: ECA

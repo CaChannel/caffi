@@ -55,19 +55,19 @@ class DBE(IntEnum):
     Enum redefined from DBE_XXX macros.
 
     DBE_VALUE
-    Trigger an event when a significant change in the channel's value
-    occurs. Relies on the monitor deadband field under DCT.
+        Trigger an event when a significant change in the channel's value
+        occurs. Relies on the monitor deadband field under DCT.
 
     DBE_ARCHIVE (DBE_LOG)
-    Trigger an event when an archive significant change in the channel's
-    valuue occurs. Relies on the archiver monitor deadband field under DCT.
+        Trigger an event when an archive significant change in the channel's
+        valuue occurs. Relies on the archiver monitor deadband field under DCT.
 
     DBE_ALARM
-    Trigger an event when the alarm state changes
+        Trigger an event when the alarm state changes
 
     DBE_PROPERTY
-    Trigger an event when a property change (control limit, graphical
-    limit, status string, enum string ...) occurs.
+        Trigger an event when a property change (control limit, graphical
+        limit, status string, enum string ...) occurs.
     """
     VALUE       = DBE_VALUE
     ARCHIVE     = DBE_ARCHIVE
@@ -91,6 +91,8 @@ class CA_K(IntEnum):
 class ECA(IntEnum):
     """
     Enum redefined from ECA_XXX status code
+
+    .. note:: The enum value corresponds to ECA_16KARRAYCLIENT is ARRAY16KCLIENT.
     """
     NORMAL          = ECA_NORMAL
     MAXIOC          = ECA_MAXIOC
