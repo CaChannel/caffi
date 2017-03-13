@@ -10,13 +10,15 @@ python:
 install:
   - pip install twine;
   - pip install -e .
-  - python setup.py sdist bdist_wheel;
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then
+      python setup.py sdist bdist_wheel;
+    fi
 
 script:
   - python -c "import caffi.ca"
 
 after_success:
-  - if [[ ! -z "$TRAVIS_TAG" ]]; then
+  - if [[ ! -z "$TRAVIS_TAG" && $TRAVIS_PYTHON_VERSION == '2.7' ]]; then
       echo [distutils]                > ~/.pypirc;
       echo index-servers = mypypi    >> ~/.pypirc;
       echo [mypypi]                  >> ~/.pypirc;
