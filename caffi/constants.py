@@ -16,25 +16,25 @@ class ChannelState(IntEnum):
     """
     Enum redefined from C enum channel_state
     """
-    NEVER_CONN  = cs_never_conn
-    PREV_CONN   = cs_prev_conn
-    CONN        = cs_conn
-    CLOSED      = cs_closed
-    NEVER_SEARCH= cs_never_search
+    NEVER_CONN  = cs_never_conn #: valid chid, IOC not found
+    PREV_CONN   = cs_prev_conn #: valid chid, IOC was found, but unavailable
+    CONN        = cs_conn #: valid chid, IOC was found, still available
+    CLOSED      = cs_closed #: channel deleted
+    NEVER_SEARCH= cs_never_search # invalid chid
 
 
 class CA_OP(IntEnum):
     """
     Enum redefined from C macros CA_OP_XXX
     """
-    GET             = CA_OP_GET
-    PUT             = CA_OP_PUT
-    CREATE_CHANNEL  = CA_OP_CREATE_CHANNEL
-    ADD_EVENT       = CA_OP_ADD_EVENT
-    CLEAR_EVENT     = CA_OP_CLEAR_EVENT
-    OTHER           = CA_OP_OTHER
-    CONN_UP         = CA_OP_CONN_UP
-    CONN_DOWN       = CA_OP_CONN_DOWN
+    GET             = CA_OP_GET #: get value
+    PUT             = CA_OP_PUT #: put value
+    CREATE_CHANNEL  = CA_OP_CREATE_CHANNEL #: create channel
+    ADD_EVENT       = CA_OP_ADD_EVENT #: subscribe
+    CLEAR_EVENT     = CA_OP_CLEAR_EVENT #: unsubscribe
+    OTHER           = CA_OP_OTHER #: other
+    CONN_UP         = CA_OP_CONN_UP #: connection established
+    CONN_DOWN       = CA_OP_CONN_DOWN #: connection lost
 
 
 class CA_PRIORITY(IntEnum):
@@ -53,26 +53,20 @@ class CA_PRIORITY(IntEnum):
 class DBE(IntEnum):
     """
     Enum redefined from DBE_XXX macros.
-
-    DBE_VALUE
-        Trigger an event when a significant change in the channel's value
-        occurs. Relies on the monitor deadband field under DCT.
-
-    DBE_ARCHIVE (DBE_LOG)
-        Trigger an event when an archive significant change in the channel's
-        valuue occurs. Relies on the archiver monitor deadband field under DCT.
-
-    DBE_ALARM
-        Trigger an event when the alarm state changes
-
-    DBE_PROPERTY
-        Trigger an event when a property change (control limit, graphical
-        limit, status string, enum string ...) occurs.
     """
+    #: Trigger an event when a significant change in the channel's value
+    #: occurs. Relies on the monitor deadband field under DCT.
     VALUE       = DBE_VALUE
+
+    #: Trigger an event when an archive significant change in the channel's
+    #: value occurs. Relies on the archiver monitor deadband field under DCT.
     ARCHIVE     = DBE_ARCHIVE
-    LOG         = DBE_LOG
+
+    #: Trigger an event when the alarm state changes
     ALARM       = DBE_ALARM
+
+    #: Trigger an event when a property change (control limit, graphical
+    #: limit, status string, enum string ...) occurs.
     PROPERTY    = DBE_PROPERTY
 
 
@@ -92,9 +86,10 @@ class ECA(IntEnum):
     """
     Enum redefined from ECA_XXX status code
 
-    .. note:: The enum value corresponds to ECA_16KARRAYCLIENT is ARRAY16KCLIENT.
+    .. note:: ARRAY16KCLIENT is used in place of ECA_16KARRAYCLIENT, while variable
+       name cannot start with a number.
     """
-    NORMAL          = ECA_NORMAL
+    NORMAL          = ECA_NORMAL #: Normal successful completion
     MAXIOC          = ECA_MAXIOC
     UKNHOST         = ECA_UKNHOST
     UKNSERV         = ECA_UKNSERV
@@ -104,7 +99,7 @@ class ECA(IntEnum):
     UKNCHAN         = ECA_UKNCHAN
     UKNFIELD        = ECA_UKNFIELD
     TOLARGE         = ECA_TOLARGE
-    TIMEOUT         = ECA_TIMEOUT
+    TIMEOUT         = ECA_TIMEOUT #: User specified timeout on IO operation expired
     NOSUPPORT       = ECA_NOSUPPORT
     STRTOBIG        = ECA_STRTOBIG
     DISCONNCHID     = ECA_DISCONNCHID
@@ -159,13 +154,14 @@ class ECA(IntEnum):
 
     def severity(self):
         """
-        Return the severity of the status code
+        :return: the severity of the status code
+        :rtype: :class:`CA_K`
         """
         return CA_K(CA_EXTRACT_MSG_SEVERITY(self.value))
 
     def message(self):
         """
-        Return the string representation of the status code
+        :return: the string representation of the status code
         """
         return to_string(ffi.string(libca.ca_message(self.value)))
 
@@ -180,6 +176,7 @@ class AlarmSeverity(IntEnum):
         epicsSevMinor -> AlarmSeverity.Minor
         ...
 
+    .. note:: *No* is used in place of *None*, which is Python keyword.
     """
     # None is a Python keyword
     No      =  NO_ALARM
@@ -198,8 +195,8 @@ class AlarmCondition(IntEnum):
         epicsAlarmRead -> AlarmCondition.Read
         ...
 
+    .. note:: *No* is used in place of *None*, which is Python keyword.
     """
-    # None is Python keyword
     No         = NO_ALARM
     Read       = READ_ALARM
     Write      = WRITE_ALARM

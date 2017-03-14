@@ -82,39 +82,75 @@ class DBR(IntEnum):
     CLASS_NAME  = DBR_CLASS_NAME
 
     def isSTRING(self):
+        """
+        :return: True if type is STRING or one of XXX_STRING
+        """
         return dbr_type_is_STRING(self.value)
 
     def isSHORT(self):
+        """
+        :return: True if type is SHORT or one of XXX_SHORT
+        """
         return dbr_type_is_SHORT(self.value)
 
     def isFLOAT(self):
+        """
+        :return: True if type is FLOAT or one of XXX_FLOAT
+        """
         return dbr_type_is_FLOAT(self.value)
 
     def isENUM(self):
+        """
+        :return: True if type is ENUM or one of XXX_ENUM
+        """
         return dbr_type_is_ENUM(self.value)
 
     def isCHAR(self):
+        """
+        :return: True if type is CHAR or one of XXX_CHAR
+        """
         return dbr_type_is_CHAR(self.value)
 
     def isLONG(self):
+        """
+        :return: True if type is LONG or one of XXX_LONG
+        """
         return dbr_type_is_LONG(self.value)
 
     def isDOUBLE(self):
+        """
+        :return: True if type is DOUBLE or one of XXX_DOUBLE
+        """
         return dbr_type_is_DOUBLE(self.value)
 
     def isPlain(self):
+        """
+        :return: True if type is one of STRING, SHORT, FLOAT, ENUM, CHAR, LONG, DOUBLE
+        """
         return dbr_type_is_plain(self.value)
 
     def isSTS(self):
+        """
+        :return: True if type is one of STS_XXX
+        """
         return dbr_type_is_STS(self.value)
 
     def isTIME(self):
+        """
+        :return: True if type is one of TIME_XXX
+        """
         return dbr_type_is_TIME(self.value)
 
     def isGR(self):
+        """
+        :return: True if type is one of GR_XXX
+        """
         return dbr_type_is_GR(self.value)
 
     def isCTRL(self):
+        """
+        :return: True if type is one of CTRL_XXX
+        """
         return dbr_type_is_CTRL(self.value)
 
 
@@ -122,26 +158,38 @@ class DBF(IntEnum):
     """
     Enum redefined from DBF_XXX macros.
     """
-    INVALID = TYPENOTCONN
-    STRING  = DBF_STRING
-    INT     = DBF_INT
-    SHORT   = DBF_SHORT
-    FLOAT   = DBF_FLOAT
-    ENUM    = DBF_ENUM
-    CHAR    = DBF_CHAR
-    LONG    = DBF_LONG
-    DOUBLE  = DBF_DOUBLE
+    INVALID = TYPENOTCONN #: the channel's native type when disconnected
+    STRING  = DBF_STRING #: array of 40 characters
+    INT     = DBF_INT #: int16
+    SHORT   = DBF_SHORT #: int16
+    FLOAT   = DBF_FLOAT #: float
+    ENUM    = DBF_ENUM #: uint16
+    CHAR    = DBF_CHAR #: uint8
+    LONG    = DBF_LONG #: int32
+    DOUBLE  = DBF_DOUBLE #: double
 
     def toSTS(self):
+        """
+        :return: DBR.STS_XXX
+        """
         return DBR(dbf_type_to_DBR_STS(self.value))
 
     def toTIME(self):
+        """
+        :return: DBR.TIME_XXX
+        """
         return DBR(dbf_type_to_DBR_TIME(self.value))
 
     def toGR(self):
+        """
+        :return: DBR.GR_XXX
+        """
         return DBR(dbf_type_to_DBR_GR(self.value))
 
     def toCTRL(self):
+        """
+        :return: DBR.CTRL_XXX
+        """
         return DBR(dbf_type_to_DBR_GR(self.value))
 
 

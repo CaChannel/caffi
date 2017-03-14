@@ -4,7 +4,7 @@ Module :mod:`caffi.ca`
 .. automodule:: caffi.ca
 
 Context
-----------
+-------
 .. autofunction:: create_context
 .. autofunction:: destroy_context
 .. autofunction:: attach_context
@@ -65,8 +65,27 @@ Module :mod:`caffi.dbr`
 .. module:: caffi.dbr
 
 .. autoclass:: DBF
+   :inherited-members:
+
+    .. automethod:: toSTS
+    .. automethod:: toTIME
+    .. automethod:: toGR
+    .. automethod:: toCTRL
 
 .. autoclass:: DBR
+
+    .. automethod:: isSTRING
+    .. automethod:: isSHORT
+    .. automethod:: isFLOAT
+    .. automethod:: isENUM
+    .. automethod:: isCHAR
+    .. automethod:: isLONG
+    .. automethod:: isDOUBLE
+    .. automethod:: isPlain
+    .. automethod:: isSTS
+    .. automethod:: isTIME
+    .. automethod:: isGR
+    .. automethod:: isCTRL
 
 .. autoclass:: DBRValue
 
@@ -81,14 +100,20 @@ Module :mod:`caffi.constants`
 .. automodule:: caffi.constants
 
 .. autoclass:: ChannelState
+   :inherited-members:
 
 .. autoclass:: DBE
+   :inherited-members:
 
 .. autoclass:: CA_PRIORITY
 
 .. autoclass:: CA_OP
+   :inherited-members:
 
 .. autoclass:: ECA
+   :inherited-members:
+
+   .. automethod:: message
 
 .. autoclass:: AlarmSeverity
 
