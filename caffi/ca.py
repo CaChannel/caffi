@@ -45,16 +45,16 @@ Even though as same as possible, there are subtle differences:
     - The get functions in C require a user supplied memory pointer passed as argument. In Python the function
       :func:`get` and :func:`sg_get` returns a tuple of form (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
 
-      The first item is the status code, which must be ECA.NORMAL, before using the second item.
+      The first item is the status code, which must be :data:`caffi.constants.ECA.NORMAL`, before using the second item.
 
       The second item holds the reference to the allocated memory. And the memory is not stable until a subsequent
-      call of :func:`pend_io` returns ECA.NORMAL. Then the value can be retrieved by calling
+      call of :func:`pend_io` returns :data:`caffi.constants.ECA.NORMAL`. Then the value can be retrieved by calling
       :meth:`caffi.dbr.DBRValue.get`.
 
 
     - All the creation functions, :func:`create_channel`, :func:`create_subscription` and :func:`sg_create`
       return a tuple of the form (:class:`caffi.constants.ECA`, *object identifier*).
-      The object identifier can only be used if the first item is ECA.NORMAL.
+      The object identifier can only be used if the first item is :data:`caffi.constants.ECA.NORMAL`.
 
   - In C the following macros definition are also accessible as :class:`enum.IntEnum` type:
 
@@ -182,7 +182,7 @@ def add_exception_event(callback=None):
                         ======  =============
 
     :type callback:     callable, None
-    :return: ECA.NORMAL
+    :return: ECA.NORMAL - Normal successful completion
 
     When an error occurs in the server asynchronous to the clients thread then information about this type of error
     is passed from the server to the client in an exception message. When the client receives this exception message
@@ -349,7 +349,7 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
     and the location of the channel. A channel will only enter a connected state
     after the server's address is determined, and only if channel access successfully establishes a virtual circuit
     through the network to the server. Channel access routines that send a request to a server
-    will return ECA.DISCONNCHID if the channel is currently disconnected.
+    will return :data:`caffi.constants.ECA.DISCONNCHID` if the channel is currently disconnected.
 
     There are two ways to obtain asynchronous notification when a channel enters a connected state.
 
@@ -429,7 +429,7 @@ def replace_access_rights_event(chid, callback=None):
     :type chid:      cdata
     :type callback:  callable, None
     :return:
-                - ECA.NORMAL
+        - ECA.NORMAL - Normal successful completion
 
     The callback handler is called in the following situations.
 
@@ -510,7 +510,7 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
     :rtype:           tuple
 
     When no *callback* is specified the returned channel value can't be assumed to be stable
-    in the application supplied buffer until after *ECA.NORMAL* is returned from :func:`pend_io`.
+    in the application supplied buffer until after :data:`caffi.constants.ECA.NORMAL` is returned from :func:`pend_io`.
     If a connection is lost outstanding ca get requests are not automatically reissued following reconnect.
 
     Call :meth:`caffi.dbr.DBRValue.get` to retrieve the value.
@@ -521,7 +521,7 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
     If the channel disconnects before a ca get callback request can be completed,
     then the clients call back function is called with failure status.
 
-    All of these functions return *ECA.DISCONN* if the channel is currently disconnected.
+    All of these functions return :data:`caffi.constants.ECA.DISCONN` if the channel is currently disconnected.
 
     All get requests are accumulated (buffered) and not forwarded to the IOC until one of
     :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
@@ -673,7 +673,7 @@ def put(chid, value, chtype=None, count=None, callback=None):
     before the disconnect. If a connection is lost and then resumed outstanding ca put requests are not automatically
     reissued following reconnect.
 
-    All of these functions return *ECA.DISCONN* if the channel is currently disconnected.
+    All of these functions return :data:`caffi.constants.ECA.DISCONN` if the channel is currently disconnected.
 
     All put requests are accumulated (buffered) and not forwarded to the IOC until
     one of :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
@@ -821,8 +821,8 @@ def clear_subscription(evid):
 
     :param cdata evid: event id returned by :meth:`create_subscription`
     :return:
-                - ECA.NORMAL - Normal successful completion
-                - ECA.BADCHID - Corrupted CHID
+        - ECA.NORMAL - Normal successful completion
+        - ECA.BADCHID - Corrupted CHID
 
     All cancel-subscription requests such as the above are accumulated (buffered) and not forwarded to the server
     until one of :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
@@ -844,8 +844,8 @@ def clear_channel(chid):
 
     :param cdata chid: Channel identifier
     :return:
-                - ECA.NORMAL - Normal successful completion
-                - ECA.BADCHID - Corrupted CHID
+        - ECA.NORMAL - Normal successful completion
+        - ECA.BADCHID - Corrupted CHID
 
     All remote operation requests such as the above are accumulated (buffered) and not forwarded to the IOC
     until one of :func:`flush_io`, :func:`pend_io` or :func:`pend_event` are called.
@@ -875,15 +875,15 @@ def pend_event(timeout):
 
     :param float timeout: The duration to block in this routine in seconds. A timeout of zero seconds blocks forever.
     :return:
-                - ECA.TIMEOUT - The operation timed out
-                - ECA.EVDISALLOW - Function inappropriate for use within a call back handler
+        - ECA.TIMEOUT - The operation timed out
+        - ECA.EVDISALLOW - Function inappropriate for use within a call back handler
 
 
     The :func:`pend_event` function will not return before the specified timeout expires and
     all unfinished channel access labor has been processed, and unlike :func:`pend_io`
     returning from the function does not indicate anything about the status of pending IO requests.
 
-    It return ECA.TIMEOUT when successful. This behavior probably isn't intuitive,
+    It return :data:`caffi.constants.ECA.TIMEOUT` when successful. This behavior probably isn't intuitive,
     but it is preserved to insure backwards compatibility.
 
     See also Thread Safety and Preemptive Callback to User Code.
@@ -910,17 +910,17 @@ def pend_io(timeout):
 
     :param float timeout: Specifies the time out interval. A timeout interval of zero specifies forever.
     :return:
-                - ECA.NORMAL - Normal successful completion
-                - ECA.TIMEOUT - Selected IO requests didn't complete before specified timeout
-                - ECA.EVDISALLOW - Function inappropriate for use within an event handler
+        - ECA.NORMAL - Normal successful completion
+        - ECA.TIMEOUT - Selected IO requests didn't complete before specified timeout
+        - ECA.EVDISALLOW - Function inappropriate for use within an event handler
 
-    If ECA.NORMAL is returned then it can be safely assumed that all outstanding get requests *without* callback
+    If :data:`caffi.constants.ECA.NORMAL` is returned then it can be safely assumed that all outstanding get requests *without* callback
     have completed successfully and channels created *without* callback have connected for the first time.
 
-    If ECA.TIMEOUT is returned then it must be assumed for all previous get requests and
+    If :data:`caffi.constants.ECA.TIMEOUT` is returned then it must be assumed for all previous get requests and
     properly qualified first time channel connects have failed.
 
-    If ECA.TIMEOUT is returned then get requests may be reissued followed by a subsequent call to :func:`pend_io`.
+    If :data:`caffi.constants.ECA.TIMEOUT` is returned then get requests may be reissued followed by a subsequent call to :func:`pend_io`.
     Specifically, the function will block only for outstanding get requests issued,
     and also any channels created *without* callback,
     after the last call to ca_pend_io() or ca client context creation whichever is later.
@@ -947,9 +947,9 @@ def pend(timeout, early):
     :param float timeout: Specifies the time out interval. A timeout interval of zero specifies forever.
     :param bool early: Call :func:`pend_io` if *early* is True otherwise :func:`pend_event` is called
     :return:
-                - ECA.NORMAL - Normal successful completion
-                - ECA.TIMEOUT - Selected IO requests didn't complete before specified timeout
-                - ECA.EVDISALLOW - Function inappropriate for use within an event handler
+        - ECA.NORMAL - Normal successful completion
+        - ECA.TIMEOUT - Selected IO requests didn't complete before specified timeout
+        - ECA.EVDISALLOW - Function inappropriate for use within an event handler
 
     """
     status = libca.ca_pend(timeout, early)
@@ -964,8 +964,8 @@ def test_io():
     after the last call to ca_pend_io() or CA context initialization whichever is later.
 
     :return:
-            - ECA_IODONE - All IO operations completed
-            - ECA_IOINPROGRESS - IO operations still in progress
+        - ECA.IODONE - All IO operations completed
+        - ECA.IOINPROGRESS - IO operations still in progress
     """
     status = libca.ca_test_io()
     return ECA(status)
@@ -976,7 +976,7 @@ def flush_io():
     Flush outstanding IO requests to the server.
 
     :return:
-                - ECA.NORMAL - Normal successful completion
+        - ECA.NORMAL - Normal successful completion
 
     This routine might be useful to users who need to flush requests prior to performing client side labor
     in parallel with labor performed in the server.
@@ -1087,8 +1087,8 @@ def sg_delete(gid):
 
     :param int gid: Identifier of the synchronous group to be deleted.
     :return:
-                - ECA.NORMAL - Normal successful completion
-                - ECA.BADSYNCGRP - Invalid synchronous group
+        - ECA.NORMAL - Normal successful completion
+        - ECA.BADSYNCGRP - Invalid synchronous group
     """
     status = libca.ca_sg_delete(gid)
     return ECA(status)
@@ -1098,7 +1098,7 @@ def sg_block(gid, timeout):
     """
     Flushes the send buffer and then waits until outstanding requests complete or the specified time out expires.
     At this time outstanding requests include calls to :func:`sg_get` and calls to :func:`sg_put`.
-    If ECA.TIMEOUT is returned then failure must be assumed for all outstanding queries.
+    If :data:`caffi.constants.ECA.TIMEOUT` is returned then failure must be assumed for all outstanding queries.
     Operations can be reissued followed by another :func:`sg_block`.
     This routine will only block on outstanding queries issued after the last call to :func:`sg_block`,
     :func:`sg_reset`, or :func:`sg_create` whichever occurs later in time.
@@ -1106,16 +1106,16 @@ def sg_block(gid, timeout):
     without processing any pending channel access activities.
 
     Values written into your program's variables by a channel access synchronous group request should not be
-    referenced by your program until ECA.NORMAL has been received from :func:`sg_block`.
+    referenced by your program until :data:`caffi.constants.ECA.NORMAL` has been received from :func:`sg_block`.
     This routine will process pending channel access background activity while it is waiting.
 
     :param int gid:       Identifier of the synchronous group.
     :param float timeout: Specifies the time out interval. A timeout interval of zero specifies forever.
     :return:
-                - ECA.NORMAL - Normal successful completion
-                - ECA.TIMEOUT - The operation timed out
-                - ECA.EVDISALLOW - Function inappropriate for use within an event handler
-                - ECA.BADSYNCGRP - Invalid synchronous group
+        - ECA.NORMAL - Normal successful completion
+        - ECA.TIMEOUT - The operation timed out
+        - ECA.EVDISALLOW - Function inappropriate for use within an event handler
+        - ECA.BADSYNCGRP - Invalid synchronous group
     """
     status = libca.ca_sg_block(gid, timeout)
     return ECA(status)
@@ -1127,8 +1127,8 @@ def sg_test(gid):
 
     :param int gid: Identifier of the synchronous group.
     :return:
-                - ECA.IODONE - IO operations completed
-                - ECA.IOINPROGRESS - Some IO operations still in progress
+        - ECA.IODONE - IO operations completed
+        - ECA.IOINPROGRESS - Some IO operations still in progress
     """
     status = libca.ca_sg_test(gid)
     return ECA(status)
@@ -1141,8 +1141,8 @@ def sg_reset(gid):
 
     :param int gid: Identifier of the synchronous group.
     :return:
-                - ECA.NORMAL - Normal successful completion
-                - ECA.BADSYNCGRP - Invalid synchronous group
+        - ECA.NORMAL - Normal successful completion
+        - ECA.BADSYNCGRP - Invalid synchronous group
     """
     status = libca.sg_reset(gid)
     return ECA(status)
@@ -1163,13 +1163,13 @@ def sg_put(gid, chid, value, chtype=None, count=None):
     :type value:   int, float, bytes, str, tuple, list, array
     :type chtype:  int, :class:`caffi.dbr.DBR`
     :return:
-                - ECA.NORMAL - Normal successful completion
-                - ECA.BADSYNCGRP - Invalid synchronous group
-                - ECA.BADCHID - Corrupted CHID
-                - ECA.BADTYPE - Invalid DBR_XXXX type
-                - ECA.BADCOUNT - Requested count larger than native element count
-                - ECA.STRTOBIG - Unusually large string supplied
-                - ECA.PUTFAIL - A local database put failed
+        - ECA.NORMAL - Normal successful completion
+        - ECA.BADSYNCGRP - Invalid synchronous group
+        - ECA.BADCHID - Corrupted CHID
+        - ECA.BADTYPE - Invalid DBR_XXXX type
+        - ECA.BADCOUNT - Requested count larger than native element count
+        - ECA.STRTOBIG - Unusually large string supplied
+        - ECA.PUTFAIL - A local database put failed
 
     All remote operation requests such as the above are accumulated (buffered) and not forwarded to the server
     until one of :func:`flush_io`, :func:`pend_io` or :func:`pend_event` are called.
@@ -1202,7 +1202,7 @@ def sg_get(gid, chid, chtype=None, count=None, use_numpy=False):
     :rtype: tuple
 
     The values returned by :func:`sg_get` should not be referenced by your program
-    until ECA.NORMAL has been received from ca_sg_block , or until :func:`sg_test` returns True.
+    until :data:`caffi.constants.ECA.NORMAL` has been received from ca_sg_block , or until :func:`sg_test` returns True.
 
     Call :meth:`caffi.dbr.DBRValue.get` to retrieve the value.
 

@@ -102,7 +102,7 @@ class ECA(IntEnum):
     TIMEOUT         = ECA_TIMEOUT #: User specified timeout on IO operation expired
     NOSUPPORT       = ECA_NOSUPPORT
     STRTOBIG        = ECA_STRTOBIG
-    DISCONNCHID     = ECA_DISCONNCHID
+    DISCONNCHID     = ECA_DISCONNCHID #: The request was ignored because the specified channel is disconnected
     BADTYPE         = ECA_BADTYPE
     CHIDNOTFOUND    = ECA_CHIDNOTFOUND
     CHIDRETRY       = ECA_CHIDRETRY
@@ -113,7 +113,7 @@ class ECA(IntEnum):
     ADDFAIL         = ECA_ADDFAIL
     BADCOUNT        = ECA_BADCOUNT
     BADSTR          = ECA_BADSTR
-    DISCONN         = ECA_DISCONN
+    DISCONN         = ECA_DISCONN #: Virtual circuit disconnect
     DBLCHNL         = ECA_DBLCHNL
     EVDISALLOW      = ECA_EVDISALLOW
     BUILDGET        = ECA_BUILDGET
