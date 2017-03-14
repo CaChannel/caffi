@@ -100,8 +100,8 @@ def test_dbrtype(dbrtype):
                 if dbrtype.isFLOAT() or dbrtype.isDOUBLE():
                     assert value['precision'] == 4
                 if dbrtype.isCTRL():
-                    assert value['upper_ctrl_limit'] == 20
-                    assert value['lower_ctrl_limit'] == lolo
+                    assert value['upper_ctrl_limit'] == 0
+                    assert value['lower_ctrl_limit'] == 0
 
 
 def teardown_module(module):
