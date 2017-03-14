@@ -13,7 +13,7 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then
       python setup.py sdist bdist_wheel;
     fi
-  - wget -O softIoc.tgz "https://drive.google.com/uc?export=download&id=0B71karoHGq-HRjJsZG1NUFdEYjA"
+  - wget -O softIoc.tgz "https://drive.google.com/uc?export=download&id=0B71karoHGq-HNHkxTEw4Tkh5MDA"
   - tar zxf softIoc.tgz
 
 script:
