@@ -13,9 +13,22 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then
       python setup.py sdist bdist_wheel;
     fi
+  - wget -O softIoc.tgz "https://drive.google.com/uc?export=download&id=0B71karoHGq-HRjJsZG1NUFdEYjA"
+  - tar zxf softIoc
 
 script:
-  - python -c "import caffi.ca"
+  - export EPICS_CA_AUTO_ADDR_LIST=NO
+  - export EPICS_CA_ADDR_LIST=localhost
+  - cd softIoc
+  - ./softIoc -D softIoc.dbd -S -d test.db &
+  - PID=$!
+  - cd ..
+  - py.test tests/test_preemptive.py
+  - py.test tests/test_callbacks.py
+  - py.test tests/test_put_types.py
+  - py.test tests/test_get_dbrtypes.py
+  - py.test tests/test_sg.py
+  - kill -9 $PID
 
 after_success:
   - if [[ ! -z "$TRAVIS_TAG" && $TRAVIS_PYTHON_VERSION == '2.7' ]]; then
