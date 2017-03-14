@@ -5,15 +5,8 @@ import caffi.ca as ca
 pvs = {}
 vals = {}
 
-# check for status code
-def check_status(status):
-    if status != ca.ECA.NORMAL:
-        print(ca.message(status))
-        sys.exit(1)
-
-
 status = ca.create_context(True)
-check_status(status)
+assert status == ca.ECA.NORMAL
 
 # create channels
 for name in ['cawaves', 'cawaveh', 'cawavef',  'cawavec', 'cawavel','cawave']:
@@ -23,23 +16,23 @@ for name in ['cawaves', 'cawaveh', 'cawavef',  'cawavec', 'cawavel','cawave']:
 
 # wait for connections
 status = ca.pend_io(3)
-check_status(status)
+assert status == ca.ECA.NORMAL
 
 # create synchronous group
 status, gid = ca.sg_create()
-check_status(status)
+assert status == ca.ECA.NORMAL
 
 # put
 for name, chid in pvs.items():
     if ca.field_type(chid) == ca.DBF.STRING:
-        ca.sg_put(gid, chid, [b'1',b'2',b'3', b'4'])
+        ca.sg_put(gid, chid, ['1', '2', '3', '4'])
     else:
         ca.sg_put(gid, chid, [1, 2, 3, 4])
 
 ca.flush_io()
 
 status = ca.sg_block(gid, 3)
-check_status(status)
+assert status == ca.ECA.NORMAL
 
 # get
 for name, chid in pvs.items():
@@ -50,7 +43,7 @@ ca.flush_io()
 
 # wait for get completion
 status = ca.sg_block(gid, 3)
-check_status(status)
+assert status == ca.ECA.NORMAL
 
 # dump value
 for name, value in vals.items():

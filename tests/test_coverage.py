@@ -1,9 +1,10 @@
 from __future__ import print_function
 import random
+from pprint import pprint
 
 import caffi.ca as ca
 
-# create context
+# create preemptive enabled context
 ca.create_context(True)
 
 # create channel
@@ -23,28 +24,27 @@ print("  count:", ca.element_count(chid))
 print("  readable:", ca.read_access(chid))
 print("  writable:", ca.write_access(chid))
 
-# create one subscription
+# create one subscription of plain type
 def event1(epics_arg):
-    print('event1')
-    print('    ', epics_arg)
+    pprint('event1 %s' % epics_arg['type'])
+    pprint(epics_arg, indent=4)
 
 status, evid1 = ca.create_subscription(chid, event1)
 assert status == ca.ECA.NORMAL
 
-# create another subscription
+# create another subscription if control type
 def event2(epics_arg):
-    print('event2')
-    print('    ', epics_arg)
+    pprint('event1 %s' % epics_arg['type'])
+    pprint(epics_arg, indent=4)
 
-status, evid2 = ca.create_subscription(chid, event2)
+status, evid2 = ca.create_subscription(chid, event2, chtype=ca.DBR_CTRL_DOUBLE)
 assert status == ca.ECA.NORMAL
 
 
-#
+# flush those requests
 ca.flush_io()
 
-#
-ca.pend(1, False)
+ca.pend_event(1)
 
 valput = random.random()
 
@@ -67,10 +67,7 @@ assert(valget == valput)
 # clear evid1
 ca.clear_subscription(evid1)
 
-# show the context
-ca.show_context(level=1)
-
-# clear the subscription
+# clear the channel
 ca.clear_channel(chid)
 
 #

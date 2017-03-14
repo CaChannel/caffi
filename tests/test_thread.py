@@ -1,33 +1,27 @@
 from __future__ import print_function
 import threading
 import time
-import sys
 import caffi.ca as ca
 
-# check for status code
-def check_status(status):
-    if status != ca.ECA.NORMAL:
-        print(ca.message(status))
-        sys.exit(1)
 
 # create explicitly a preemptive enabled context
 # so that it can attached in other threads
 status = ca.create_context(True)
-check_status(status)
+assert status == ca.ECA.NORMAL
 
 ctx = ca.current_context()
 
 # create channel
 status, chid = ca.create_channel('catest')
-check_status(status)
+assert status == ca.ECA.NORMAL
 
 # wait for connections
 status = ca.pend_io(3)
-check_status(status)
+assert status == ca.ECA.NORMAL
 
 # put
 status = ca.put(chid, 0)
-check_status(status)
+assert status == ca.ECA.NORMAL
 
 ca.flush_io()
 
@@ -70,7 +64,7 @@ tid1.join()
 tid2.join()
 
 # wait for the last monitor to arrive
-time.sleep(1)
+time.sleep(2)
 
 # clear subscription
 ca.clear_subscription(evid)
