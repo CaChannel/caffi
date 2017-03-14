@@ -914,13 +914,15 @@ def pend_io(timeout):
         - ECA.TIMEOUT - Selected IO requests didn't complete before specified timeout
         - ECA.EVDISALLOW - Function inappropriate for use within an event handler
 
-    If :data:`caffi.constants.ECA.NORMAL` is returned then it can be safely assumed that all outstanding get requests *without* callback
-    have completed successfully and channels created *without* callback have connected for the first time.
+    If :data:`caffi.constants.ECA.NORMAL` is returned then it can be safely assumed that
+    all outstanding get requests *without* callback have completed successfully and
+    channels created *without* callback have connected for the first time.
 
     If :data:`caffi.constants.ECA.TIMEOUT` is returned then it must be assumed for all previous get requests and
     properly qualified first time channel connects have failed.
 
-    If :data:`caffi.constants.ECA.TIMEOUT` is returned then get requests may be reissued followed by a subsequent call to :func:`pend_io`.
+    If :data:`caffi.constants.ECA.TIMEOUT` is returned then get requests may be reissued
+    followed by a subsequent call to :func:`pend_io`.
     Specifically, the function will block only for outstanding get requests issued,
     and also any channels created *without* callback,
     after the last call to ca_pend_io() or ca client context creation whichever is later.
