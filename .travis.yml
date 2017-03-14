@@ -14,7 +14,7 @@ install:
       python setup.py sdist bdist_wheel;
     fi
   - wget -O softIoc.tgz "https://drive.google.com/uc?export=download&id=0B71karoHGq-HRjJsZG1NUFdEYjA"
-  - tar zxf softIoc
+  - tar zxf softIoc.tgz
 
 script:
   - export EPICS_CA_AUTO_ADDR_LIST=NO
