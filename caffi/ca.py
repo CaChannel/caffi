@@ -74,8 +74,32 @@ Even though as same as possible, there are subtle differences:
     This makes it convenient when interactively examine the code value. e.g.
     ::
 
-        >>> pend_io(2)
+        >>> ca.create_context(True)
         <ECA.NORMAL: 1>
+        >>> status, chid = ca.create_channel('catest')
+        >>> ca.pend_io(2)
+        <ECA.NORMAL: 1>
+        >>> ca.name(chid)
+        'catest'
+        >>> ca.host_name(chid)
+        'localhost:5064'
+        >>> ca.field_type(chid)
+        <DBF.DOUBLE: 6>
+        >>> ca.element_count(chid)
+        1
+        >>> ca.read_access(chid)
+        True
+        >>> ca.write_access(chid)
+        True
+        >>> ca.put(chid, 10)
+        <ECA.NORMAL: 1>
+        >>> ca.flush_io()
+        <ECA.NORMAL: 1>
+        >>> status, dbrvalue = ca.get(chid)
+        >>> ca.pend_io(2)
+        <ECA.NORMAL: 1>
+        >>> dbrvalue.get()
+        10.0
 
 """
 from __future__ import (print_function, absolute_import)
