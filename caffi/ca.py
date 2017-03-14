@@ -87,7 +87,7 @@ from .dbr import *
 from .macros import *
 
 __all__ = ['create_context', 'current_context', 'attach_context', 'destroy_context', 'show_context',
-           'add_exception_event', 'replace_access_rights_event', 'add_exception_event',
+           'add_exception_event', 'replace_access_rights_event',
            'create_channel', 'clear_channel', 'get', 'put', 'create_subscription', 'clear_subscription',
            'field_type', 'element_count', 'name', 'state', 'host_name', 'read_access', 'write_access',
            'pend_event', 'pend_io', 'poll', 'pend', 'flush_io', 'test_io', 'message',
