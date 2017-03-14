@@ -24,6 +24,7 @@ print("  count:", ca.element_count(chid))
 print("  readable:", ca.read_access(chid))
 print("  writable:", ca.write_access(chid))
 
+
 # create one subscription of plain type
 def event1(epics_arg):
     pprint('event1 %s' % epics_arg['type'])
@@ -31,6 +32,7 @@ def event1(epics_arg):
 
 status, evid1 = ca.create_subscription(chid, event1)
 assert status == ca.ECA.NORMAL
+
 
 # create another subscription if control type
 def event2(epics_arg):
@@ -67,10 +69,13 @@ assert(valget == valput)
 # clear evid1
 ca.clear_subscription(evid1)
 
+# clear evid2
+ca.clear_subscription(evid2)
+
 # clear the channel
 ca.clear_channel(chid)
 
-#
+# flush those requests
 ca.flush_io()
 
 # destroy context
