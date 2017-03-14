@@ -27,7 +27,6 @@ script:
   - py.test tests/test_callbacks.py
   - py.test tests/test_put_types.py
   - py.test tests/test_get_dbrtypes.py
-  - py.test tests/test_sg.py
   - kill -9 $PID
 
 after_success:
