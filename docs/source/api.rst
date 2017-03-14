@@ -25,10 +25,12 @@ Operation
 
 Execution
 ---------
+.. autofunction:: pend
 .. autofunction:: pend_io
 .. autofunction:: pend_event
 .. autofunction:: poll
 .. autofunction:: flush_io
+.. autofunction:: test_io
 
 Information
 -----------
