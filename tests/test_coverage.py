@@ -34,7 +34,7 @@ assert status == ca.ECA.NORMAL
 
 # create another subscription if control type
 def event2(epics_arg):
-    pprint('event1 %s' % epics_arg['type'])
+    pprint('event2 %s' % epics_arg['type'])
     pprint(epics_arg, indent=4)
 
 status, evid2 = ca.create_subscription(chid, event2, chtype=ca.DBR_CTRL_DOUBLE)
