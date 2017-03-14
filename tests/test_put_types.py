@@ -1,13 +1,14 @@
 from __future__ import print_function
+import pytest
 import caffi.ca as ca
 
-# create preemptive enabled context
-status = ca.create_context(True)
-assert status == ca.ECA.NORMAL
+def setup_module(module):
+    # create preemptive enabled context
+    status = ca.create_context(True)
+    assert status == ca.ECA.NORMAL
 
-import pytest
 
-@pytest.mark.parametrize("name, input",[
+@pytest.mark.parametrize("name, input", [
     ('cawaves', ['1', '2', '3', '4']),
     ('cawaveh', [1, 2, 3, 4]),
     ('cawavef', [1, 2, 3, 4]),
@@ -42,5 +43,6 @@ def test_put_get(name, input):
 
     ca.clear_channel(chid)
 
-# destroy context
-ca.destroy_context()
+def teardown_module(module):
+    # destroy context
+    ca.destroy_context()
