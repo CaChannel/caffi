@@ -1,61 +1,74 @@
 from __future__ import print_function
-import sys
+import unittest
 import caffi.ca as ca
 
-pvs = {}
-vals = {}
 
-status = ca.create_context(True)
-assert status == ca.ECA.NORMAL
+class SyncGroupTest(unittest.TestCase):
+    def setUp(self):
+        self.pvs = {}
+        self.vals = {}
 
-# create channels
-for name in ['cawaves', 'cawaveh', 'cawavef',  'cawavec', 'cawavel','cawave']:
-    status, chid = ca.create_channel(name)
-    if status == ca.ECA.NORMAL:
-        pvs[name] = chid
+        # create channels
+        for name in ['cawaves', 'cawaveh', 'cawavef', 'cawavec', 'cawavel', 'cawave']:
+            status, chid = ca.create_channel(name)
+            self.assertEqual(status, ca.ECA.NORMAL)
+            self.pvs[name] = chid
 
-# wait for connections
-status = ca.pend_io(3)
-assert status == ca.ECA.NORMAL
+        # wait for connections
+        status = ca.pend_io(10)
+        assert status == ca.ECA.NORMAL
 
-# create synchronous group
-status, gid = ca.sg_create()
-assert status == ca.ECA.NORMAL
+        # create synchronous group
+        status, self.gid = ca.sg_create()
+        assert status == ca.ECA.NORMAL
 
-# put
-for name, chid in pvs.items():
-    if ca.field_type(chid) == ca.DBF.STRING:
-        ca.sg_put(gid, chid, ['1', '2', '3', '4'])
-    else:
-        ca.sg_put(gid, chid, [1, 2, 3, 4])
+    def test_put_get(self):
+        # put
+        for name, chid in self.pvs.items():
+            if ca.field_type(chid) == ca.DBF.STRING:
+                ca.sg_put(self.gid, chid, ['1', '2', '3', '4'])
+            else:
+                ca.sg_put(self.gid, chid, [1, 2, 3, 4])
 
-ca.flush_io()
+        ca.flush_io()
 
-status = ca.sg_block(gid, 3)
-assert status == ca.ECA.NORMAL
+        status = ca.sg_block(self.gid, 3)
+        assert status == ca.ECA.NORMAL
 
-# get
-for name, chid in pvs.items():
-    status, value = ca.sg_get(gid, chid)
-    if status == ca.ECA.NORMAL:
-        vals[name] = value
-ca.flush_io()
+        # get
+        for name, chid in self.pvs.items():
+            status, dbrvalue = ca.sg_get(self.gid, chid, count=4)
+            self.assertEqual(status, ca.ECA.NORMAL)
+            self.vals[name] = dbrvalue
 
-# wait for get completion
-status = ca.sg_block(gid, 3)
-assert status == ca.ECA.NORMAL
+        ca.flush_io()
 
-# dump value
-for name, value in vals.items():
-    print(name, value.get())
+        # wait for get completion
+        status = ca.sg_block(self.gid, 3)
+        assert status == ca.ECA.NORMAL
 
-# delete synchronous group
-ca.sg_delete(gid)
+        # compare read value with written values
+        for name, dbrvalue in self.vals.items():
+            chid = self.pvs[name]
+            element_count = ca.element_count(chid)
+            value = dbrvalue.get()
+            if ca.field_type(chid) == ca.DBF.STRING:
+                self.assertEqual(value, ['1', '2', '3', '4'][:element_count])
+            else:
+                self.assertEqual(value, [1, 2, 3, 4][:element_count])
 
-# close channels
-for name, chid in pvs.items():
-    ca.clear_channel(chid)
-ca.flush_io()
+    def tearDown(self):
+        # delete synchronous group
+        ca.sg_delete(self.gid)
 
-# destroy context
-ca.destroy_context()
+        # close channels
+        for name, chid in self.pvs.items():
+            ca.clear_channel(chid)
+
+        self.pvs.clear()
+        self.vals.clear()
+
+        ca.flush_io()
+
+if __name__ == '__main__':
+    unittest.main()
