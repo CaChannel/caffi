@@ -103,6 +103,8 @@ Even though as same as possible, there are subtle differences:
 
 """
 from __future__ import (print_function, absolute_import)
+import collections
+import numbers
 
 from .compat import *
 from ._ca import *
@@ -482,7 +484,7 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
 
     :param chid:      Channel identifier
     :param chtype:    The external type of the supplied value to be written.
-                      Conversion will occur if this does not match the native type.
+                      Conversion on the server will occur if this does not match the native type.
                       Default is the native type.
     :param count:     Element count to be read from the specified channel.
                       If *callback* is specified, a count of zero means use the current element count from the server.
@@ -584,13 +586,10 @@ def _setup_put(chid, value, chtype=None, count=None):
     if count is None or count <= 0 or count > native_count:
         count = native_count
 
-    # treat single value and sequence differently to create c type value
-    try:
-        value_count = len(value)
-    except TypeError:
+    if isinstance(value, numbers.Number):
         value_count = 1
-    else:
-        # string type is also a sequence but it is counted as one if DBR_STRING type
+    elif isinstance(value, collections.Sequence):
+        value_count = len(value)
         if isinstance(value, basestring):
             # convert to bytes
             value = to_bytes(value)
@@ -599,12 +598,17 @@ def _setup_put(chid, value, chtype=None, count=None):
             elif chtype == DBR.ENUM:
                 chtype = DBR.STRING
                 value_count = 1
-            else:
+            elif chtype == DBR.CHAR:
                 value = [x for x in bytearray(value)] + [0]
                 value_count = len(value)
+            else:
+                value = [float(value)]
+                value_count = 1
 
         if value_count == 1 and chtype != DBR_STRING:
             value = value[0]
+    else:
+        return chtype, count, None
 
     # setup c value
     if value_count == 1:
@@ -627,9 +631,19 @@ def put(chid, value, chtype=None, count=None, callback=None):
     Write a scalar or array value to a process variable.
 
     :param chid:     Channel identifier
-    :param value:    A scalar or array value to be written to the channel
+    :param value:    A scalar or array value to be written to the channel. If *value* is of string type, it will first
+                     be convert to bytes using UTF8 codec. And the following conversion may be involved:
+
+                     ============  =============
+                     request type  conversion
+                     ============  =============
+                     DBR.STRING    nothing
+                     DBR.ENUM      request type is changed to DBR.STRING
+                     DBR.CHAR      a list of byte integers
+                     Other types   a float number
+                     ============  =============
     :param chtype:   The external type of the supplied value to be written.
-                     Conversion will occur if this does not match the native type.
+                     Conversion on the server will occur if this does not match the native type.
                      Default is the native type.
     :param count:    Element count to be written to the channel. Default is native element count.
                      But it can be reduced to match the length of user supplied value.
@@ -678,11 +692,15 @@ def put(chid, value, chtype=None, count=None, callback=None):
     All put requests are accumulated (buffered) and not forwarded to the IOC until
     one of :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
     This allows several requests to be efficiently combined into one message.
+
     """
     if chid not in __channels:
         return ECA.BADCHID
 
     chtype, count, cvalue = _setup_put(chid, value, chtype, count)
+
+    if cvalue is None:
+        return ECA.BADTYPE
 
     if callback is None or not callable(callback):
         status = libca.ca_array_put(chtype, count, chid, cvalue)
@@ -1156,9 +1174,20 @@ def sg_put(gid, chid, value, chtype=None, count=None):
 
     :param gid:    Synchronous group identifier
     :param chid:   Channel identifier
-    :param value:  The value or array of values to write
+    :param value:  The value or array of values to write. If *value* is of string type, it will first
+                     be convert to bytes using UTF8 codec. And the following conversion may be involved:
+
+                     ============  =============
+                     request type  conversion
+                     ============  =============
+                     DBR.STRING    nothing
+                     DBR.ENUM      request type is changed to DBR.STRING
+                     DBR.CHAR      a list of byte integers
+                     Other types   a float number
+                     ============  =============
+
     :param chtype: The type of supplied value.
-                   Conversion will occur if it does not match the native type.
+                   Conversion on the server will occur if it does not match the native type.
     :param count:  The element count to be written to the specified channel.
     :type gid:     int
     :type chid:    cdata
@@ -1181,6 +1210,9 @@ def sg_put(gid, chid, value, chtype=None, count=None):
     """
     chtype, count, cvalue = _setup_put(chid, value, chtype, count)
 
+    if cvalue is None:
+        return ECA.BADTYPE
+
     status = libca.ca_sg_array_put(gid, chtype, count, chid, cvalue)
 
     return ECA(status)
@@ -1193,7 +1225,7 @@ def sg_get(gid, chid, chtype=None, count=None, use_numpy=False):
     :param gid:       Identifier of the synchronous group.
     :param chid:      Channel identifier
     :param chtype:    External type of returned value.
-                      Conversion will occur if this does not match native type.
+                      Conversion on the server will occur if this does not match native type.
     :param count:     Element count to be read from the specified channel.
     :param use_numpy: whether to format numeric waveform as numpy array
     :type gid:        int

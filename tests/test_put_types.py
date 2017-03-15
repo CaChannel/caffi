@@ -8,15 +8,26 @@ def setup_module(module):
     assert status == ca.ECA.NORMAL
 
 
-@pytest.mark.parametrize("name, input", [
-    ('cawaves', ['1', '2', '3', '4']),
-    ('cawaveh', [1, 2, 3, 4]),
-    ('cawavef', [1, 2, 3, 4]),
-    ('cawavec', [1, 2, 3, 4]),
-    ('cawavel', [1, 2, 3, 4]),
-    ('cawave',  [1, 2, 3, 4]),
-    ('cabo',    [1, 2, 3, 4])])
-def test_put_get(name, input):
+@pytest.mark.parametrize("name, input, expected", [
+    ('cawaves', ['1', '2', '3', '4'], ['1', '2', '3']),
+    ('cawaves', '1', ['1', '', '']),
+    ('cawaveh', [1, 2, 3, 4], None),
+    ('cawavef', [1, 2, 3, 4], None),
+    ('cawavec', [1, 2, 3, 4], None),
+    ('cawavel', [1, 2, 3, 4], None),
+    ('cawave',  [1, 2, 3, 4], None),
+    ('cawave',  1,            [1, 0, 0, 0]),
+    ('cawave',  '1.23',       [1.23, 0, 0, 0]),
+    ('cabo',    [1, 2, 3, 4], 1),
+    ('cabo',    'Done',       0),
+    ('catest',  1.23,         None),
+    ('catest',  [1, 2, 3, 4], 1),
+    ('catest',  '1.23',       1.23),
+    ('cawavec', '1.23',       [49, 46, 50, 51])])
+def test_put_get(name, input, expected):
+    if expected is None:
+        expected = input
+
     status, chid = ca.create_channel(name)
     assert status == ca.ECA.NORMAL
 
@@ -34,12 +45,7 @@ def test_put_get(name, input):
     status = ca.pend_io(10)
     assert status == ca.ECA.NORMAL
 
-    element_count = ca.element_count(chid)
-
-    if element_count == 1:
-        assert value.get() == input[0]
-    else:
-        assert value.get() == input[:element_count]
+    assert value.get() == expected
 
     ca.clear_channel(chid)
 
