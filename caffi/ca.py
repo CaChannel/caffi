@@ -407,7 +407,7 @@ def change_connection_event(chid, callback=None):
     """
     Change the connection event callback function.
 
-    :param name:        Process variable name string.
+    :param chid:        Channel identifier
     :param callback:    User's call back function to be run when the connection state changes. The callback receives
                         the same argument as :func:`create_channel`. This will replace the previous connection callback
                         function. If an invalid *callback* is given, no connection callback is used.
@@ -426,7 +426,6 @@ def change_connection_event(chid, callback=None):
 
     # store the reference so it won't be garbage collected
     return ECA(status)
-
 
 
 @ffi.callback('void(*)(struct access_rights_handler_args)')
