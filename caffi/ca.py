@@ -113,7 +113,7 @@ from .dbr import *
 from .macros import *
 
 __all__ = ['create_context', 'current_context', 'attach_context', 'destroy_context', 'show_context',
-           'add_exception_event', 'replace_access_rights_event',
+           'add_exception_event', 'replace_access_rights_event', 'change_connection_event',
            'create_channel', 'clear_channel', 'get', 'put', 'create_subscription', 'clear_subscription',
            'field_type', 'element_count', 'name', 'state', 'host_name', 'read_access', 'write_access',
            'pend_event', 'pend_io', 'poll', 'pend', 'flush_io', 'test_io', 'message',
@@ -299,7 +299,14 @@ def _connect_callback(carg):
         'op':   CA_OP(carg.op)
     }
 
-    user_callback = ffi.from_handle(libca.ca_puser(carg.chid))
+    # If chid is not in cache, it well indicates
+    # that the python object has been garbage collected.
+    # Then don't try to call from_handle, that is undefined and may crash.
+    if carg.chid not in __channels:
+        return
+
+    user_callback = __channels[carg.chid]['connection_callback']
+
     if callable(user_callback):
         user_callback(epics_arg)
 
@@ -378,18 +385,48 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
 
     if callable(callback):
         connect_callback = _connect_callback
-        user_connect_callback = ffi.new_handle(callback)
     else:
         connect_callback = ffi.NULL
-        user_connect_callback = ffi.NULL
-    status = libca.ca_create_channel(name, connect_callback, user_connect_callback, priority, pchid)
+
+    status = libca.ca_create_channel(name, connect_callback, ffi.NULL, priority, pchid)
     if status != ECA_NORMAL:
         return ECA(status), None
+
     chid = pchid[0]
     __channels[chid] = {'callbacks': set(), 'monitors': {}}
-    if user_connect_callback != ffi.NULL:
-        __channels[chid]['callbacks'].add(user_connect_callback)
+
+    if callable(callback):
+        __channels[chid]['connection_callback'] = callback
+    else:
+        __channels[chid]['connection_callback'] = None
+
     return ECA(status), chid
+
+
+def change_connection_event(chid, callback=None):
+    """
+    Change the connection event callback function.
+
+    :param name:        Process variable name string.
+    :param callback:    User's call back function to be run when the connection state changes. The callback receives
+                        the same argument as :func:`create_channel`. This will replace the previous connection callback
+                        function. If an invalid *callback* is given, no connection callback is used.
+    :return:
+        - ECA.NORMAL - Normal successful completion
+    """
+    if chid not in __channels:
+        return ECA.BADCHID
+
+    if callable(callback):
+        __channels[chid]['connection_callback'] = callback
+        status = libca.ca_change_connection_event(chid, _connect_callback)
+    else:
+        __channels[chid]['connection_callback'] = None
+        status = libca.ca_change_connection_event(chid, ffi.NULL)
+
+    # store the reference so it won't be garbage collected
+    return ECA(status)
+
 
 
 @ffi.callback('void(*)(struct access_rights_handler_args)')
