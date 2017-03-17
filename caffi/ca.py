@@ -202,8 +202,14 @@ def add_exception_event(callback=None):
     # keep a reference to the returned pointer of (callback, args),
     # otherwise it will be garbage collected
     global __exception_callback
-    __exception_callback = ffi.new_handle(callback)
-    status = libca.ca_add_exception_event(_exception_callback, __exception_callback)
+
+    if callable(callback):
+        __exception_callback = ffi.new_handle(callback)
+        status = libca.ca_add_exception_event(_exception_callback, __exception_callback)
+    else:
+        __exception_callback = None
+        status = libca.ca_add_exception_event(ffi.NULL, ffi.NULL)
+
     return ECA(status)
 
 
