@@ -447,11 +447,9 @@ def _access_rights_callback(arg):
     if arg.chid not in __channels:
         return
 
-    handle = __channels[arg.chid]['access_rights_callback']
-    if handle != ffi.NULL:
-        user_callback = ffi.from_handle(handle)
-        if callable(user_callback):
-            user_callback(epics_arg)
+    callback = __channels[arg.chid]['access_rights_callback']
+    if callable(callback):
+        callback(epics_arg)
 
 
 def replace_access_rights_event(chid, callback=None):
@@ -488,13 +486,12 @@ def replace_access_rights_event(chid, callback=None):
         return ECA.BADCHID
 
     if callable(callback):
-        user_access_rights_callback = ffi.new_handle(callback)
+        __channels[chid]['access_rights_callback'] = callback
+        status = libca.ca_replace_access_rights_event(chid, _access_rights_callback)
     else:
-        user_access_rights_callback = ffi.NULL
+        __channels[chid]['access_rights_callback'] = None
+        status = libca.ca_replace_access_rights_event(chid, ffi.NULL)
 
-    # store the reference so it won't be garbage collected
-    __channels[chid]['access_rights_callback'] = user_access_rights_callback
-    status = libca.ca_replace_access_rights_event(chid, _access_rights_callback)
     return ECA(status)
 
 
