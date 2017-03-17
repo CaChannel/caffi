@@ -1037,7 +1037,10 @@ def state(chid):
     :return: the connection state
     :rtype: :class:`caffi.constants.ChannelState`
     """
-    return ChannelState(libca.ca_state(chid))
+    if chid is None:
+        return ChannelState.NEVER_SEARCH
+    else:
+        return ChannelState(libca.ca_state(chid))
 
 
 def message(status):
