@@ -202,8 +202,12 @@ def format_dbr_sts(cvalue, value):
 
 
 def format_dbr_time(cvalue, value):
-    timestamp_posix = cvalue.stamp.secPastEpoch + POSIX_TIME_AT_EPICS_EPOCH + cvalue.stamp.nsec / 1e9
-    value['stamp'] = timestamp_posix
+    secs_posix = cvalue.stamp.secPastEpoch + POSIX_TIME_AT_EPICS_EPOCH
+    value['stamp'] = {
+        'seconds': secs_posix,
+        'nanoseconds': cvalue.stamp.nsec,
+        'timestamp': secs_posix + cvalue.stamp.nsec / 1e9
+    }
 
 
 def format_dbr_gr(cvalue, value):
