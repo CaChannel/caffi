@@ -137,26 +137,26 @@ DBR_TYPE_STRING = {
 
 
 @ffi.callback('void(*)(struct exception_handler_args)')
-def _exception_callback(carg):
-    if carg.pFile == ffi.NULL:
+def _exception_callback(arg):
+    if arg.pFile == ffi.NULL:
         file = ''
     else:
-        file = to_string(ffi.string(carg.pFile))
+        file = to_string(ffi.string(arg.pFile))
 
     epics_arg = {
-        'chid':   carg.chid,
-        'type':   DBR(carg.type),
-        'count':  carg.count,
-        'addr':   carg.addr,
-        'stat':   ECA(carg.stat),
-        'op':     CA_OP(carg.op),
-        'ctx':    to_string(ffi.string(carg.ctx)),
+        'chid':   arg.chid,
+        'type':   DBR(arg.type),
+        'count':  arg.count,
+        'addr':   arg.addr,
+        'stat':   ECA(arg.stat),
+        'op':     CA_OP(arg.op),
+        'ctx':    to_string(ffi.string(arg.ctx)),
         'file':   file,
-        'lineNo': carg.lineNo
+        'lineNo': arg.lineNo
     }
-    if __exception_callback != carg.usr:
+    if __exception_callback != arg.usr:
         return
-    user_callback = ffi.from_handle(carg.usr)
+    user_callback = ffi.from_handle(arg.usr)
     if callable(user_callback):
         user_callback(epics_arg)
 
@@ -293,19 +293,19 @@ def show_context(context=None, level=0):
 
 
 @ffi.callback('void(*)(struct connection_handler_args)')
-def _connect_callback(carg):
+def _connect_callback(arg):
     epics_arg = {
-        'chid': carg.chid,
-        'op':   CA_OP(carg.op)
+        'chid': arg.chid,
+        'op':   CA_OP(arg.op)
     }
 
     # If chid is not in cache, it well indicates
     # that the python object has been garbage collected.
     # Then don't try to call from_handle, that is undefined and may crash.
-    if carg.chid not in __channels:
+    if arg.chid not in __channels:
         return
 
-    user_callback = __channels[carg.chid]['connection_callback']
+    user_callback = __channels[arg.chid]['connection_callback']
 
     if callable(user_callback):
         user_callback(epics_arg)
