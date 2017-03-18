@@ -105,6 +105,7 @@ Even though as same as possible, there are subtle differences:
 from __future__ import (print_function, absolute_import)
 import collections
 import numbers
+import sys
 
 from .compat import *
 from ._ca import *
@@ -1059,7 +1060,16 @@ def element_count(chid):
     :param cdata chid: channel identifier
     :return: the maximum array element count in the server for the specified IO channel.
     """
-    return libca.ca_element_count(chid)
+    # ca_element_count returns long in C, and cffi convert to a `long` in Python.
+    # In Python 2, the `long` type has a *L* suffix when displayed. This is disturbing since mostly this number will
+    # not exceed the integer range. In Python 3, there is only a `long` type for integers and without *L* suffix.
+    # Only for the sake of visual pleasure, the number is converted to `int` in Python 2. In any case, if the number
+    # indeed exceeds 2*31-1 (on 32bit) or 2**63-1 (on 64bit), it gets up casted to `long`.
+    count = libca.ca_element_count(chid)
+    if sys.hexversion < 0x03000000:
+        return int(count)
+    else:
+        return count
 
 
 def name(chid):
