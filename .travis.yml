@@ -30,7 +30,7 @@ script:
   - py.test tests/test_put_types.py
   - py.test tests/test_get_dbrtypes.py
   - export CACHANNEL_BACKEND=caffi
-  - python -m CaChannel.CaChannel
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy' ]]; then python -m CaChannel.CaChannel; fi;
   - kill -9 $PID
 
 after_success:
