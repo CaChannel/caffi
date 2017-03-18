@@ -22,6 +22,7 @@ script:
   - export EPICS_CA_AUTO_ADDR_LIST=NO
   - export EPICS_CA_ADDR_LIST=localhost
   - cd softIoc
+  - export PATH=`pwd`:$PATH
   - ./softIoc -D softIoc.dbd -S -d test.db &
   - PID=$!
   - cd ..
