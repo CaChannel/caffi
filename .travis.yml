@@ -16,6 +16,7 @@ install:
     fi
   - wget -O softIoc.tgz "https://drive.google.com/uc?export=download&id=0B71karoHGq-HNHkxTEw4Tkh5MDA"
   - tar zxf softIoc.tgz
+  - pip install git+https://github.com/CaChannel/CaChannel.git
 
 script:
   - export EPICS_CA_AUTO_ADDR_LIST=NO
@@ -28,6 +29,8 @@ script:
   - py.test tests/test_callbacks.py
   - py.test tests/test_put_types.py
   - py.test tests/test_get_dbrtypes.py
+  - export CACHANNEL_BACKEND=caffi
+  - python -m CaChannel.CaChannel
   - kill -9 $PID
 
 after_success:
