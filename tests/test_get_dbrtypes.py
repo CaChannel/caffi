@@ -74,7 +74,9 @@ def test_dbrtype(dbrtype):
         assert value['severity'] == ca.AlarmSeverity.No
 
         if dbrtype.isTIME():
-            assert isinstance(value['stamp'], float)
+            assert isinstance(value['stamp'], dict)
+            assert 'seconds' in value['stamp']
+            assert 'nanoseconds' in value['stamp']
 
         if dbrtype.isSTRING():
             return
