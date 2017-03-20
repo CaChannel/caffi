@@ -15,6 +15,7 @@ Channel
 -------
 .. autofunction:: create_channel
 .. autofunction:: clear_channel
+.. autofunction:: change_connection_event
 
 Operation
 ---------

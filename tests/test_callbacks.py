@@ -108,6 +108,10 @@ def test_callbacks():
     # wait for callbacks to happen
     get_done.wait(5)
 
+    # exception callback
+    status = ca.add_exception_event()
+    assert status == ca.ECA.NORMAL
+
     # clean up
     ca.clear_subscription(evid)
     ca.clear_channel(chid)

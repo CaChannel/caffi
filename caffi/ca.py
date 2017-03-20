@@ -105,6 +105,7 @@ Even though as same as possible, there are subtle differences:
 from __future__ import (print_function, absolute_import)
 import collections
 import numbers
+import sys
 
 from .compat import *
 from ._ca import *
@@ -113,7 +114,7 @@ from .dbr import *
 from .macros import *
 
 __all__ = ['create_context', 'current_context', 'attach_context', 'destroy_context', 'show_context',
-           'add_exception_event', 'replace_access_rights_event',
+           'add_exception_event', 'replace_access_rights_event', 'change_connection_event',
            'create_channel', 'clear_channel', 'get', 'put', 'create_subscription', 'clear_subscription',
            'field_type', 'element_count', 'name', 'state', 'host_name', 'read_access', 'write_access',
            'pend_event', 'pend_io', 'poll', 'pend', 'flush_io', 'test_io', 'message',
@@ -137,26 +138,26 @@ DBR_TYPE_STRING = {
 
 
 @ffi.callback('void(*)(struct exception_handler_args)')
-def _exception_callback(carg):
-    if carg.pFile == ffi.NULL:
+def _exception_callback(arg):
+    if arg.pFile == ffi.NULL:
         file = ''
     else:
-        file = to_string(ffi.string(carg.pFile))
+        file = to_string(ffi.string(arg.pFile))
 
     epics_arg = {
-        'chid':   carg.chid,
-        'type':   DBR(carg.type),
-        'count':  carg.count,
-        'addr':   carg.addr,
-        'stat':   ECA(carg.stat),
-        'op':     CA_OP(carg.op),
-        'ctx':    to_string(ffi.string(carg.ctx)),
+        'chid':   arg.chid,
+        'type':   DBR(arg.type),
+        'count':  arg.count,
+        'addr':   arg.addr,
+        'stat':   ECA(arg.stat),
+        'op':     CA_OP(arg.op),
+        'ctx':    to_string(ffi.string(arg.ctx)),
         'file':   file,
-        'lineNo': carg.lineNo
+        'lineNo': arg.lineNo
     }
-    if __exception_callback != carg.usr:
+    if __exception_callback != arg.usr:
         return
-    user_callback = ffi.from_handle(carg.usr)
+    user_callback = ffi.from_handle(arg.usr)
     if callable(user_callback):
         user_callback(epics_arg)
 
@@ -202,8 +203,14 @@ def add_exception_event(callback=None):
     # keep a reference to the returned pointer of (callback, args),
     # otherwise it will be garbage collected
     global __exception_callback
-    __exception_callback = ffi.new_handle(callback)
-    status = libca.ca_add_exception_event(_exception_callback, __exception_callback)
+
+    if callable(callback):
+        __exception_callback = ffi.new_handle(callback)
+        status = libca.ca_add_exception_event(_exception_callback, __exception_callback)
+    else:
+        __exception_callback = None
+        status = libca.ca_add_exception_event(ffi.NULL, ffi.NULL)
+
     return ECA(status)
 
 
@@ -293,13 +300,20 @@ def show_context(context=None, level=0):
 
 
 @ffi.callback('void(*)(struct connection_handler_args)')
-def _connect_callback(carg):
+def _connect_callback(arg):
     epics_arg = {
-        'chid': carg.chid,
-        'op':   CA_OP(carg.op)
+        'chid': arg.chid,
+        'op':   CA_OP(arg.op)
     }
 
-    user_callback = ffi.from_handle(libca.ca_puser(carg.chid))
+    # If chid is not in cache, it well indicates
+    # that the python object has been garbage collected.
+    # Then don't try to call from_handle, that is undefined and may crash.
+    if arg.chid not in __channels:
+        return
+
+    user_callback = __channels[arg.chid]['connection_callback']
+
     if callable(user_callback):
         user_callback(epics_arg)
 
@@ -378,18 +392,47 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
 
     if callable(callback):
         connect_callback = _connect_callback
-        user_connect_callback = ffi.new_handle(callback)
     else:
         connect_callback = ffi.NULL
-        user_connect_callback = ffi.NULL
-    status = libca.ca_create_channel(name, connect_callback, user_connect_callback, priority, pchid)
+
+    status = libca.ca_create_channel(name, connect_callback, ffi.NULL, priority, pchid)
     if status != ECA_NORMAL:
         return ECA(status), None
+
     chid = pchid[0]
     __channels[chid] = {'callbacks': set(), 'monitors': {}}
-    if user_connect_callback != ffi.NULL:
-        __channels[chid]['callbacks'].add(user_connect_callback)
+
+    if callable(callback):
+        __channels[chid]['connection_callback'] = callback
+    else:
+        __channels[chid]['connection_callback'] = None
+
     return ECA(status), chid
+
+
+def change_connection_event(chid, callback=None):
+    """
+    Change the connection event callback function.
+
+    :param chid:        Channel identifier
+    :param callback:    User's call back function to be run when the connection state changes. The callback receives
+                        the same argument as :func:`create_channel`. This will replace the previous connection callback
+                        function. If an invalid *callback* is given, no connection callback is used.
+    :return:
+        - ECA.NORMAL - Normal successful completion
+    """
+    if chid not in __channels:
+        return ECA.BADCHID
+
+    if callable(callback):
+        __channels[chid]['connection_callback'] = callback
+        status = libca.ca_change_connection_event(chid, _connect_callback)
+    else:
+        __channels[chid]['connection_callback'] = None
+        status = libca.ca_change_connection_event(chid, ffi.NULL)
+
+    # store the reference so it won't be garbage collected
+    return ECA(status)
 
 
 @ffi.callback('void(*)(struct access_rights_handler_args)')
@@ -405,11 +448,9 @@ def _access_rights_callback(arg):
     if arg.chid not in __channels:
         return
 
-    handle = __channels[arg.chid]['access_rights_callback']
-    if handle != ffi.NULL:
-        user_callback = ffi.from_handle(handle)
-        if callable(user_callback):
-            user_callback(epics_arg)
+    callback = __channels[arg.chid]['access_rights_callback']
+    if callable(callback):
+        callback(epics_arg)
 
 
 def replace_access_rights_event(chid, callback=None):
@@ -446,13 +487,12 @@ def replace_access_rights_event(chid, callback=None):
         return ECA.BADCHID
 
     if callable(callback):
-        user_access_rights_callback = ffi.new_handle(callback)
+        __channels[chid]['access_rights_callback'] = callback
+        status = libca.ca_replace_access_rights_event(chid, _access_rights_callback)
     else:
-        user_access_rights_callback = ffi.NULL
+        __channels[chid]['access_rights_callback'] = None
+        status = libca.ca_replace_access_rights_event(chid, ffi.NULL)
 
-    # store the reference so it won't be garbage collected
-    __channels[chid]['access_rights_callback'] = user_access_rights_callback
-    status = libca.ca_replace_access_rights_event(chid, _access_rights_callback)
     return ECA(status)
 
 
@@ -1020,7 +1060,16 @@ def element_count(chid):
     :param cdata chid: channel identifier
     :return: the maximum array element count in the server for the specified IO channel.
     """
-    return libca.ca_element_count(chid)
+    # ca_element_count returns long in C, and cffi convert to a `long` in Python.
+    # In Python 2, the `long` type has a *L* suffix when displayed. This is disturbing since mostly this number will
+    # not exceed the integer range. In Python 3, there is only a `long` type for integers and without *L* suffix.
+    # Only for the sake of visual pleasure, the number is converted to `int` in Python 2. In any case, if the number
+    # indeed exceeds 2*31-1 (on 32bit) or 2**63-1 (on 64bit), it gets up casted to `long`.
+    count = libca.ca_element_count(chid)
+    if sys.hexversion < 0x03000000:
+        return int(count)
+    else:
+        return count
 
 
 def name(chid):
@@ -1037,7 +1086,10 @@ def state(chid):
     :return: the connection state
     :rtype: :class:`caffi.constants.ChannelState`
     """
-    return ChannelState(libca.ca_state(chid))
+    if chid is None:
+        return ChannelState.NEVER_SEARCH
+    else:
+        return ChannelState(libca.ca_state(chid))
 
 
 def message(status):
