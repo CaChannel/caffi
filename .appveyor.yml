@@ -1,0 +1,52 @@
+environment:
+
+  matrix:
+    - PYTHON_VERSION: 2.7
+      PYTHON_ARCH: "32"
+      MINICONDA: C:\Miniconda
+      EPICS_HOST_ARCH: "win32-x86"
+    - PYTHON_VERSION: 2.7
+      PYTHON_ARCH: "64"
+      MINICONDA: C:\Miniconda-x64
+      EPICS_HOST_ARCH: "windows-x64"
+    - PYTHON_VERSION: 3.5
+      PYTHON_ARCH: "32"
+      MINICONDA: C:\Miniconda35
+      EPICS_HOST_ARCH: "win32-x86"
+    - PYTHON_VERSION: 3.5
+      PYTHON_ARCH: "64"
+      MINICONDA: C:\Miniconda35-x64
+      EPICS_HOST_ARCH: "windows-x64"
+    - PYTHON_VERSION: 3.6
+      PYTHON_ARCH: "32"
+      MINICONDA: C:\Miniconda36
+      EPICS_HOST_ARCH: "win32-x86"
+    - PYTHON_VERSION: 3.6
+      PYTHON_ARCH: "64"
+      MINICONDA: C:\Miniconda36-x64
+      EPICS_HOST_ARCH: "windows-x64"
+
+install:
+  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;C:\Program Files\7-Zip;%PATH%"
+  - conda config --set always_yes true
+  - conda install pytest
+  - curl -fsSL -o softIoc.tgz "https://drive.google.com/uc?export=download&id=0B71karoHGq-HNHkxTEw4Tkh5MDA"
+  - 7z x softIoc.tgz
+  - pip install -e .
+  - pip install git+https://github.com/CaChannel/CaChannel.git
+
+build_script:
+  - set EPICS_CA_AUTO_ADDR_LIST=NO
+  - set EPICS_CA_ADDR_LIST=127.255.255.255
+  - cd softIoc
+  - ps: $caRepeater = Start-Process caRepeater.exe -PassThru
+  - ps: $SoftIOC = Start-Process softIoc.exe -ArgumentList "-D softIoc.dbd -S -d test.db" -PassThru
+  - cd ..
+  - py.test tests/test_preemptive.py
+  - py.test tests/test_callbacks.py
+  - py.test tests/test_put_types.py
+  - py.test tests/test_get_dbrtypes.py
+  - set CACHANNEL_BACKEND=caffi
+  - python -m CaChannel.CaChannel
+  - ps: Stop-Process -Id $SoftIOC.Id
+  - ps: Stop-Process -Id $caRepeater.Id
