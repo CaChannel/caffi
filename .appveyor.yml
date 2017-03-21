@@ -30,9 +30,8 @@ install:
   - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;C:\\Program Files\\7-Zip;C:\\Program Files\\Git\\mingw64\\bin;%PATH%"
   - conda config --set always_yes true
   - conda install pytest
-  - curl -fsSL -o softIoc.tgz "https://drive.google.com/uc?export=download&id=0B71karoHGq-HNHkxTEw4Tkh5MDA"
-  - 7z x softIoc.tgz
-  - 7z x softIoc.tar
+  - curl -fsSL -o softIoc.zip "https://drive.google.com/uc?export=download&id=0B71karoHGq-HOGxhdC0xX183R0U"
+  - 7z x softIoc.zip
   - pip install -e .
   - pip install git+https://github.com/CaChannel/CaChannel.git
 
@@ -40,8 +39,8 @@ build_script:
   - set EPICS_CA_AUTO_ADDR_LIST=NO
   - set EPICS_CA_ADDR_LIST=127.255.255.255
   - cd softIoc
-  - ps: $caRepeater = Start-Process caRepeater.exe -PassThru
-  - ps: $SoftIOC = Start-Process softIoc.exe -ArgumentList "-D softIoc.dbd -S -d test.db" -PassThru
+  - ps: $caRepeater = Start-Process -FilePath caRepeater.exe -PassThru
+  - ps: $SoftIOC = Start-Process -FilePath softIoc.exe -ArgumentList "-D softIoc.dbd -S -d test.db" -PassThru
   - cd ..
   - py.test tests/test_preemptive.py
   - py.test tests/test_callbacks.py
