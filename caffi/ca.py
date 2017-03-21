@@ -890,6 +890,9 @@ def clear_subscription(evid):
     status = libca.ca_clear_subscription(evid)
     chid = libca.ca_evid_to_chid(evid)
 
+    if chid not in __channels:
+        return ECA.BADCHID, None
+
     if evid in __channels[chid]['monitors']:
         del __channels[chid]['monitors'][evid]
 
@@ -914,6 +917,9 @@ def clear_channel(chid):
     registered with the channel.
 
     """
+    if chid not in __channels:
+        return ECA.BADCHID, None
+
     # clear all subscriptions for this channel
     for evid in list(__channels[chid]['monitors']):
         clear_subscription(evid)
@@ -921,8 +927,7 @@ def clear_channel(chid):
     status = libca.ca_clear_channel(chid)
 
     # remove from channels list
-    if chid in __channels:
-        del __channels[chid]
+    del __channels[chid]
 
     return ECA(status)
 
