@@ -32,6 +32,7 @@ install:
   - conda install pytest
   - curl -fsSL -o softIoc.tgz "https://drive.google.com/uc?export=download&id=0B71karoHGq-HNHkxTEw4Tkh5MDA"
   - 7z x softIoc.tgz
+  - 7z x softIoc.tar
   - pip install -e .
   - pip install git+https://github.com/CaChannel/CaChannel.git
 
