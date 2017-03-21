@@ -27,9 +27,9 @@ environment:
       EPICS_HOST_ARCH: "windows-x64"
 
 install:
-  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;C:\\Program Files\\7-Zip;%PATH%"
+  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;C:\\Program Files\\7-Zip;C:\\Program Files\\Git\\mingw64\\bin;%PATH%"
   - conda config --set always_yes true
-  - conda install curl pytest
+  - conda install pytest
   - curl -fsSL -o softIoc.tgz "https://drive.google.com/uc?export=download&id=0B71karoHGq-HNHkxTEw4Tkh5MDA"
   - 7z x softIoc.tgz
   - pip install -e .
