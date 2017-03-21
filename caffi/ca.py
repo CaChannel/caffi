@@ -122,7 +122,7 @@ __all__ = ['create_context', 'current_context', 'attach_context', 'destroy_conte
 
 # globals
 __channels = {}
-__exception_callback = None
+__exception_callback = {}
 
 DBR_TYPE_STRING = {
     DBR.STRING:   'dbr_string_t',
@@ -155,8 +155,7 @@ def _exception_callback(arg):
         'file':   file,
         'lineNo': arg.lineNo
     }
-    if __exception_callback != arg.usr:
-        return
+
     user_callback = ffi.from_handle(arg.usr)
     if callable(user_callback):
         user_callback(epics_arg)
@@ -200,16 +199,17 @@ def add_exception_event(callback=None):
                 For other failed operations the value of the *addr* field should not be used.
 
     """
+    if callable(callback):
+        callback_handle = ffi.new_handle(callback)
+        status = libca.ca_add_exception_event(_exception_callback, callback_handle)
+    else:
+        callback_handle = None
+        status = libca.ca_add_exception_event(ffi.NULL, ffi.NULL)
+
     # keep a reference to the returned pointer of (callback, args),
     # otherwise it will be garbage collected
-    global __exception_callback
-
-    if callable(callback):
-        __exception_callback = ffi.new_handle(callback)
-        status = libca.ca_add_exception_event(_exception_callback, __exception_callback)
-    else:
-        __exception_callback = None
-        status = libca.ca_add_exception_event(ffi.NULL, ffi.NULL)
+    context = libca.ca_current_context()
+    __exception_callback[context] = callback_handle
 
     return ECA(status)
 
@@ -254,6 +254,10 @@ def destroy_context():
     :func:`destroy_context` hasn't been called, but on light weight systems such as vxWorks or RTEMS
     no cleanup occurs unless the application calls :func:`destroy_context`.
     """
+    context = libca.ca_current_context()
+    if context != ffi.NULL and context in __exception_callback:
+        del __exception_callback[context]
+
     libca.ca_context_destroy()
 
 
