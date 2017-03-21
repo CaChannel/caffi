@@ -29,7 +29,7 @@ environment:
 install:
   - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;C:\\Program Files\\7-Zip;C:\\Program Files\\Git\\mingw64\\bin;%PATH%"
   - conda config --set always_yes true
-  - conda install pytest
+  - conda install numpy pytest
   - curl -fsSL -o softIoc.zip "https://drive.google.com/uc?export=download&id=0B71karoHGq-HOGxhdC0xX183R0U"
   - 7z x softIoc.zip
   - pip install -e .
