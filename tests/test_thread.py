@@ -26,7 +26,7 @@ assert status == ca.ECA.NORMAL
 ca.flush_io()
 
 def monitor(epics_arg):
-    print(epics_arg['value']['stamp'], epics_arg['value']['value'])
+    print(epics_arg['value']['stamp']['timestamp'], epics_arg['value']['value'])
 
 status, evid = ca.create_subscription(chid, monitor, chtype=ca.DBR.TIME_DOUBLE)
 
