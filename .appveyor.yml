@@ -42,11 +42,11 @@ build_script:
   - ps: $caRepeater = Start-Process -FilePath caRepeater.exe -PassThru
   - ps: $SoftIOC = Start-Process -FilePath softIoc.exe -ArgumentList "-D softIoc.dbd -S -d test.db" -PassThru
   - cd ..
-  - if %PYTHON_ARCH% == "32" (py.test tests/test_preemptive.py)
-  - if %PYTHON_ARCH% == "32" (py.test tests/test_callbacks.py)
-  - if %PYTHON_ARCH% == "32" (py.test tests/test_put_types.py)
-  - if %PYTHON_ARCH% == "32" (py.test tests/test_get_dbrtypes.py)
+  - if "%PYTHON_ARCH%" == "32" (py.test tests/test_preemptive.py)
+  - if "%PYTHON_ARCH%" == "32" (py.test tests/test_callbacks.py)
+  - if "%PYTHON_ARCH%" == "32" (py.test tests/test_put_types.py)
+  - if "%PYTHON_ARCH%" == "32" (py.test tests/test_get_dbrtypes.py)
   - set CACHANNEL_BACKEND=caffi
-  - if %PYTHON_ARCH% == "32" (python -m CaChannel.CaChannel)
+  - if "%PYTHON_ARCH%" == "32" (python -m CaChannel.CaChannel)
   - ps: Stop-Process -Id $SoftIOC.Id
   - ps: Stop-Process -Id $caRepeater.Id
