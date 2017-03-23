@@ -1126,11 +1126,13 @@ def get_libca():
     cwd = os.path.dirname(os.path.abspath(__file__))
     osname = platform.system()
     is64bit = sys.maxsize > 2**32
+    flags = 0
     if osname == 'Darwin':
         host_arch = 'darwin-x86'
         libca_name = 'libca.dylib'
     elif osname == 'Linux':
         libca_name = 'libca.so'
+        flags = ffi.RTLD_NODELETE
         if is64bit:
             host_arch = 'linux-x86_64'
         else:
@@ -1150,19 +1152,19 @@ def get_libca():
     epics_base = os.environ.get('EPICS_BASE')
     if epics_base and host_arch != 'win32-x86':
         host_arch = os.environ.get('EPICS_HOST_ARCH', host_arch)
-        return os.path.join(epics_base, 'lib', host_arch), libca_name
+        return os.path.join(epics_base, 'lib', host_arch), libca_name, flags
     else:
-        return os.path.join(cwd, 'lib', host_arch), libca_name
+        return os.path.join(cwd, 'lib', host_arch), libca_name, flags
 
 #
-libca_path, libca_name = get_libca()
+libca_path, libca_name, libca_flags = get_libca()
 
 # save and set current dir to ca library's path
 old_cwd = os.getcwd()
 os.chdir(libca_path)
 
 # load ca library
-libca = ffi.dlopen(os.path.join(libca_path, libca_name))
+libca = ffi.dlopen(os.path.join(libca_path, libca_name), libca_flags)
 
 # restore current dir
 os.chdir(old_cwd)
