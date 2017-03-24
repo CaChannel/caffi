@@ -4,8 +4,7 @@ caffi
 caffi is the Channel Access Foreign Function Interface.
 It uses `CFFI <https://pypi.python.org/pypi/cffi>`_ to call EPICS channel access library.
 
-It is the goal of this package to provide direct low level
-interface to channel access, alike the C API.
+This package provides direct low level interface to channel access, alike the C API.
 
 
 Install
@@ -39,7 +38,8 @@ Example
 
     import caffi.ca as ca
 
-    context = ca.create_context()
+    status = ca.create_context()
+    assert status == ca.ECA.NORMAL
 
     status, chid = ca.create_channel('catest')
     assert status == ca.ECA.NORMAL
