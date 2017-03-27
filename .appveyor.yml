@@ -32,7 +32,7 @@ install:
   - conda install numpy pytest
   - curl -fsSL -o softIoc.zip "https://drive.google.com/uc?export=download&id=0B71karoHGq-HOGxhdC0xX183R0U"
   - 7z x softIoc.zip
-  - if "%PYTHON_ARCH%" == "64" if not "%PYTHON_VERSION" == "2.7" pip install hg+https://bitbucket.org/xwang/cffi
+  - if "%PYTHON_ARCH%" == "64" if not "%PYTHON_VERSION%" == "2.7" pip install hg+https://bitbucket.org/xwang/cffi
   - pip install -e .
   - pip install git+https://github.com/CaChannel/CaChannel.git
 
