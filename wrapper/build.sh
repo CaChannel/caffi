@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 if [[ `uname` == "Darwin" ]]; then
     clang -dynamiclib cawrapper.c -o libcawrapper.dylib
 else
