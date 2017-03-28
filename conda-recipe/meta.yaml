@@ -10,12 +10,12 @@ requirements:
     - python
     - setuptools
     - cffi >=0.8
-    - enum34
+    - enum34 # [py2k]
 
   run:
     - python
     - cffi >=0.8
-    - enum34
+    - enum34 # [py2k]
 
 build:
   binary_relocation: False

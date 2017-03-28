@@ -4,6 +4,7 @@
 setup.py file for caffi
 """
 import imp
+import sys
 # Use setuptools to include build_sphinx, upload/sphinx commands
 try:
     from setuptools import setup
@@ -13,6 +14,10 @@ except ImportError:
 long_description = open('README.rst').read()
 
 _version = imp.load_source('_version','caffi/_version.py')
+
+requirements = ['cffi>=0.8']
+if sys.hexversion < 0x03040000:
+    requirements.append('enum34')
 
 setup(name='caffi',
       version=_version.__version__,
@@ -27,7 +32,7 @@ setup(name='caffi',
                               "lib/windows-x64/*.dll",
                               "lib/linux-x86/*.so",
                               "lib/linux-x86_64/*.so"]},
-      install_requires=['cffi>=0.8', 'enum34'],
+      install_requires=requirements,
       license="BSD",
       platforms=["Windows", "Linux", "Mac OS X"],
       classifiers=['Development Status :: 4 - Beta',
