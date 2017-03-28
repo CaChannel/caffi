@@ -184,8 +184,12 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 __attribute__((constructor)) void load_ca(void) {
     unsigned short * array;
     int i;
-    
+
+    #ifdef __APPLE__
+    libca = load_library("libca.dylib");
+    #else
     libca = load_library("libca.so");
+    #endif
 
     array = (unsigned short *)find_symbol(libca, "dbr_size");
     for (i=0; i<= LAST_BUFFER_TYPE; i++)
