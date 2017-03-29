@@ -9,8 +9,8 @@ This package provides direct low level interface to channel access, alike the C 
 
 Install
 -------
-EPICS dynamic libraries have been shipped with the package for Windows, Linux and OS X.
-But if the environment variables *EPICS_BASE* and *EPICS_HOST_ARCH* are set,
+EPICS dynamic libraries have been shipped with the package for Windows, Linux and macOS.
+But if the environment variables *EPICS_BASE* and *EPICS_HOST_ARCH* are set on macOS and Linux,
 those libraries under path ``${EPICS_BASE}/lib/${EPICS_HOST_ARCH}`` will be used.
 
 Either use *pip*,
