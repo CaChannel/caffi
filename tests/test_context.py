@@ -33,6 +33,8 @@ def test_multiple_contexts():
         tids.append(tid)
         tid.start()
 
+    print("wait for threads")
+
     for tid in tids:
         tid.join()
 
@@ -71,6 +73,8 @@ def test_shared_contexts():
         tid = threading.Thread(target=shared_context_thread, args=(context, pv))
         tids.append(tid)
         tid.start()
+
+    print("wait for threads")
 
     for tid in tids:
         tid.join()
