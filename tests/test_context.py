@@ -5,27 +5,32 @@ import caffi.ca as ca
 
 # each thread creates its own context
 def independent_context_thread(pv):
-    ca.create_context(True)
-
-    context = ca.current_context()
+    print(pv, "create context")
+    status = ca.create_context(True)
+    assert status == ca.ECA.NORMAL
 
     # exception callback
+    print(pv, "add exception event")
     status = ca.add_exception_event(lambda arg: print(arg['ctx']))
     assert status == ca.ECA.NORMAL
 
     # create channel
+    print(pv, "create channel")
     status, chid = ca.create_channel(pv)
     assert status == ca.ECA.NORMAL
 
+    print(pv, "wait for connection")
     status = ca.pend_io(5)
     assert status == ca.ECA.NORMAL
 
+    print(pv, "pend event 1s")
     ca.pend_event(1)
 
+    print(pv, "destroy context")
     ca.destroy_context()
 
 
-def test_multiple_contexts():
+def test_independent_contexts():
     # create a new thread for each PV
     tids = []
     for pv in ['catest', 'cawave', 'cabo', 'cawaves', 'cawavec']:
