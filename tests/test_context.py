@@ -37,11 +37,10 @@ def test_independent_contexts():
         tid = threading.Thread(target=independent_context_thread, args=(pv,))
         tids.append(tid)
         tid.start()
-
-    print("wait for threads")
-
-    for tid in tids:
         tid.join()
+
+    #for tid in tids:
+    #    tid.join()
 
 
 def shared_context_thread(context, pv):
