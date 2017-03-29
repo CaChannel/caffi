@@ -113,7 +113,7 @@ from .constants import *
 from .dbr import *
 from .macros import *
 
-__all__ = ['create_context', 'current_context', 'attach_context', 'destroy_context', 'show_context',
+__all__ = ['create_context', 'current_context', 'attach_context', 'detach_context', 'destroy_context', 'show_context',
            'add_exception_event', 'replace_access_rights_event', 'change_connection_event',
            'create_channel', 'clear_channel', 'get', 'put', 'create_subscription', 'clear_subscription',
            'field_type', 'element_count', 'name', 'state', 'host_name', 'read_access', 'write_access',
@@ -276,6 +276,15 @@ def attach_context(context):
     """
     status = libca.ca_attach_context(context)
     return ECA(status)
+
+
+def detach_context():
+    """
+    Detach from any CA context currently attached to the calling thread.
+
+    This does not cleanup or shutdown any currently attached CA context.
+    """
+    libca.ca_detach_context()
 
 
 def current_context():

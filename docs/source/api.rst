@@ -8,6 +8,7 @@ Context
 .. autofunction:: create_context
 .. autofunction:: destroy_context
 .. autofunction:: attach_context
+.. autofunction:: detach_context
 .. autofunction:: current_context
 .. autofunction:: show_context
 
