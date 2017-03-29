@@ -160,8 +160,8 @@ class DBF(IntEnum):
     """
     INVALID = TYPENOTCONN #: the channel's native type when disconnected
     STRING  = DBF_STRING #: array of 40 characters
-    INT     = DBF_INT #: int16
     SHORT   = DBF_SHORT #: int16
+    INT     = DBF_INT #: int16, synonym of SHORT
     FLOAT   = DBF_FLOAT #: float
     ENUM    = DBF_ENUM #: uint16
     CHAR    = DBF_CHAR #: uint8
