@@ -18,7 +18,11 @@ install:
   - tar zxf softIoc.tgz
   - pip install git+https://github.com/CaChannel/CaChannel.git
 
+# The travis Python 3.5 with numpy compiled with OpenBLAS, which has the following deadlock
+# https://github.com/xianyi/OpenBLAS/issues/937
+
 script:
+  - export OPENBLAS_NUM_THREADS=1
   - export EPICS_CA_AUTO_ADDR_LIST=NO
   - export EPICS_CA_ADDR_LIST=127.255.255.255
   - cd softIoc
