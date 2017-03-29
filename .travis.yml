@@ -32,6 +32,7 @@ script:
   - py.test tests/test_callbacks.py
   - py.test tests/test_put_types.py
   - py.test tests/test_get_dbrtypes.py
+  - py.test tests/test_sg.py
   - export CACHANNEL_BACKEND=caffi
   - python -m CaChannel.CaChannel
   - kill -9 $PID
