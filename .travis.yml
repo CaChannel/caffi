@@ -28,6 +28,7 @@ script:
   - cd ..
   - py.test tests/test_context.py
   - py.test tests/test_preemptive.py
+  - py.test tests/test_thread.py
   - py.test tests/test_callbacks.py
   - py.test tests/test_put_types.py
   - py.test tests/test_get_dbrtypes.py
