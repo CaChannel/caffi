@@ -402,16 +402,15 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
     name = to_bytes(name)
 
     pchid = ffi.new('chid *')
-    print('ca.create_channel', callable(callback))
+
     if callable(callback):
         connect_callback = _connect_callback
     else:
         connect_callback = ffi.NULL
-    print('ca.create_channel before')
+
     status = libca.ca_create_channel(name, connect_callback, ffi.NULL, priority, pchid)
     if status != ECA_NORMAL:
         return ECA(status), None
-    print('ca.create_channel after')
 
     chid = pchid[0]
     __channels[chid] = {'callbacks': set(), 'monitors': {}}
