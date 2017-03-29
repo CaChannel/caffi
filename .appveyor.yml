@@ -43,6 +43,7 @@ build_script:
   - ps: $caRepeater = Start-Process -FilePath caRepeater.exe -PassThru
   - ps: $SoftIOC = Start-Process -FilePath softIoc.exe -ArgumentList "-D softIoc.dbd -S -d test.db" -PassThru
   - cd ..
+  - py.test tests/test_context.py
   - py.test tests/test_preemptive.py
   - py.test tests/test_callbacks.py
   - py.test tests/test_put_types.py
