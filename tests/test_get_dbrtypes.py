@@ -59,7 +59,7 @@ def test_dbrtype(dbrtype):
     if dbrtype == ca.DBR.STSACK_STRING:
         assert value['value'] == '1.0000'
         assert value['ackt'] == 1
-        assert value['acks'] == ca.AlarmSeverity.No
+        assert value['acks'] == ca.AlarmSeverity.Major
         return
 
     value_expected = 1
