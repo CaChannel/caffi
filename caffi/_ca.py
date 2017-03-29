@@ -1132,7 +1132,7 @@ def get_libca():
         libca_name = 'libca.dylib'
     elif osname == 'Linux':
         libca_name = 'libca.so'
-        flags = ffi.RTLD_NODELETE | ffi.RTLD_GLOBAL | ffi.RTLD_NOW
+        flags = ffi.RTLD_NODELETE
         if is64bit:
             host_arch = 'linux-x86_64'
         else:
