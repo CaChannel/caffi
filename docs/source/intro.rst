@@ -9,17 +9,17 @@ Flushing and Blocking
 Significant performance gains can be realized when the CA client library doesn't wait for
 a response to return from the server after each request.
 All requests which require interaction with a CA server are accumulated (buffered) and not forwarded to the IOC
-until one of :func:`caffi.ca.flush_io`, :func:`caffi.ca.pend_io`, :func:`caffi.ca.pend_event`, or :func:`caffi.ca.sg_pend`
+until one of :func:`caffi.ca.flush_io`, :func:`caffi.ca.pend_io`, :func:`caffi.ca.pend_event`, or :func:`caffi.ca.sg_block`
 are called allowing several operations to be efficiently sent over the network together.
 
 
 Status Codes
 ------------
-If successful, the functions return the status code ECA_NORMAL.
+If successful, the functions return the status code :data:`caffi.constants.ECA.NORMAL`.
 Unsuccessful status codes returned from the client library are listed with each function.
 
 Operations that appear to be valid to the client can still fail in the server.
-Writing the string "off" to a floating point field is an example of this type of error.
+Writing the string *off* to a floating point field is an example of this type of error.
 If the server for a channel is located in a different address space than the client then
 the operations that communicate with the server return status indicating the validity of the request and
 whether it was successfully enqueued to the server, but communication of completion status is deferred
@@ -33,10 +33,11 @@ Certain CA client initiated requests asynchronously execute an application suppl
 when a response arrives. The functions :func:`caffi.ca.put`, :func:`caffi.ca.get` and :func:`caffi.ca.create_subscription`
 all request notification of asynchronous completion via this mechanism.
 
-A dict, *epics_arg* and a tuple, *user_arg* are passed to the application supplied callback.
-In this dict the *value* field is a dict containing any data that might be returned.
-The *status* field will be set to one of the CA error codes and will indicate the status of the operation performed in the IOC.
-If the status field isn't set to ECA_NORMAL or data isn't normally returned from the operation (i.e. put call back)
+A dict, *epics_arg* is passed to the application supplied callback.
+In this dict the *value* field, if present, is any data that might be returned.
+The *status* field will be set to one of the CA error codes :data:`caffi.constants.ECA` and will indicate
+the status of the operation performed in the IOC.
+If the status field isn't set to :data:`caffi.constants.ECA.NORMAL` or data isn't normally returned from the operation (i.e. put call back)
 then you should expect that the *value* field will be set to None.
 The fields *chid* and *type* are set to the values specified when the request was made by the application.
 
@@ -119,7 +120,7 @@ An application specific auxiliary thread can join a CA context by calling :func:
 using the CA context identifier that was returned from :func:`caffi.ca.current_context`
 when it is called by the thread that created the context which needs to be joined.
 A context which is to be joined must be preemptive - it must be created using *create_context(True)*.
-It is not possible to attach a thread to a non-preemptive CA context created explicitly or implicitly with *create_context(False)*.
+It is not possible to attach a thread to a non-preemptive CA context created implicitly or explicitly with *create_context(False)*.
 Once a thread has joined with a CA context it need only make ordinary function calls to use the context.
 
 A CA client library context can be shut down and cleaned up,
