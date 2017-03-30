@@ -590,6 +590,12 @@ int ca_context_status ( struct ca_client_context *, unsigned level );
 
 const char * ca_message(long ca_status);
 
+/*
+ * ca_version()
+ *
+ * returns the CA version string
+ */
+const char * ca_version (void);
 """)
 
 # alarm.h

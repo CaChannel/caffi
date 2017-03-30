@@ -118,7 +118,7 @@ __all__ = ['create_context', 'current_context', 'attach_context', 'detach_contex
            'create_channel', 'clear_channel', 'get', 'put', 'create_subscription', 'clear_subscription',
            'field_type', 'element_count', 'name', 'state', 'host_name', 'read_access', 'write_access',
            'pend_event', 'pend_io', 'poll', 'pend', 'flush_io', 'test_io', 'message',
-           'sg_create', 'sg_delete', 'sg_get', 'sg_put', 'sg_reset', 'sg_block', 'sg_test']
+           'sg_create', 'sg_delete', 'sg_get', 'sg_put', 'sg_reset', 'sg_block', 'sg_test', 'version']
 
 # globals
 __channels = {}
@@ -1329,3 +1329,11 @@ def sg_get(gid, chid, chtype=None, count=None, use_numpy=False):
         return ECA(status), None
     else:
         return ECA(status), DBRValue(chtype, count, cvalue, use_numpy)
+
+
+def version():
+    """
+    :return: CA version string
+    :rtype: str
+    """
+    return to_string(ffi.string(libca.ca_version()))
