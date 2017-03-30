@@ -5,6 +5,12 @@ Even though as same as possible, there are subtle differences:
   - The `ca_` prefix of the C function name has been removed, e.g. C function `ca_create_channel` is now
     Python function :func:`create_channel`.
 
+  - The C function `ca_context_destroy` has been renamed to :func:`destroy_context` to have the same symmetry
+    as *XXX*\_context.
+
+  - The two separate C functions `ca_client_status` and `ca_context_status` have been merged into :func:`show_context`.
+    Internally it calls the appropriate C function depending on whether *context* is given.
+
   - The order of the argument might have been altered to allow default arguments, thus more pythonic.
     Take C function `array_put_callback` for example,
     ::
