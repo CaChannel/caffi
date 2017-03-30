@@ -59,12 +59,17 @@ Misc
 ----
 .. autofunction:: add_exception_event
 .. autofunction:: replace_access_rights_event
+.. autoclass:: DBRValue
 
+    .. automethod:: get
 
-Module :mod:`caffi.dbr`
-=======================
+Constants
+---------
 
-.. module:: caffi.dbr
+.. autoclass:: ECA
+   :inherited-members:
+
+   .. automethod:: message
 
 .. autoclass:: DBF
    :inherited-members:
@@ -89,22 +94,10 @@ Module :mod:`caffi.dbr`
     .. automethod:: isGR
     .. automethod:: isCTRL
 
-.. autoclass:: DBRValue
-
-    .. automethod:: get
-
-.. autofunction:: format_dbr
-
-
-Module :mod:`caffi.constants`
-=============================
-
-.. automodule:: caffi.constants
-
-.. autoclass:: ChannelState
+.. autoclass:: DBE
    :inherited-members:
 
-.. autoclass:: DBE
+.. autoclass:: ChannelState
    :inherited-members:
 
 .. autoclass:: CA_PRIORITY
@@ -112,11 +105,13 @@ Module :mod:`caffi.constants`
 .. autoclass:: CA_OP
    :inherited-members:
 
-.. autoclass:: ECA
-   :inherited-members:
-
-   .. automethod:: message
-
 .. autoclass:: AlarmSeverity
 
 .. autoclass:: AlarmCondition
+
+Module :mod:`caffi.dbr`
+=======================
+
+.. module:: caffi.dbr
+
+.. autofunction:: format_dbr

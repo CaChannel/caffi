@@ -43,32 +43,32 @@ Even though as same as possible, there are subtle differences:
     this but have exceptions:
 
     - The get functions in C require a user supplied memory pointer passed as argument. In Python the function
-      :func:`get` and :func:`sg_get` returns a tuple of form (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
+      :func:`get` and :func:`sg_get` returns a tuple of form (:class:`caffi.ca.ECA`, :class:`caffi.ca.DBRValue`)
 
-      The first item is the status code, which must be :data:`caffi.constants.ECA.NORMAL`, before using the second item.
+      The first item is the status code, which must be :data:`caffi.ca.ECA.NORMAL`, before using the second item.
 
       The second item holds the reference to the allocated memory. And the memory is not stable until a subsequent
-      call of :func:`pend_io` returns :data:`caffi.constants.ECA.NORMAL`. Then the value can be retrieved by calling
-      :meth:`caffi.dbr.DBRValue.get`.
+      call of :func:`pend_io` returns :data:`caffi.ca.ECA.NORMAL`. Then the value can be retrieved by calling
+      :meth:`caffi.ca.DBRValue.get`.
 
 
     - All the creation functions, :func:`create_channel`, :func:`create_subscription` and :func:`sg_create`
-      return a tuple of the form (:class:`caffi.constants.ECA`, *object identifier*).
-      The object identifier can only be used if the first item is :data:`caffi.constants.ECA.NORMAL`.
+      return a tuple of the form (:class:`caffi.ca.ECA`, *object identifier*).
+      The object identifier can only be used if the first item is :data:`caffi.ca.ECA.NORMAL`.
 
   - In C the following macros definition are also accessible as :class:`enum.IntEnum` type:
 
     ======================  ============
     C Macros                Python Enum
     ======================  ============
-    *ECA_XXX*               :class:`caffi.constants.ECA`
-    *DBE_XXX*               :class:`caffi.constants.DBE`
-    *DBF_XXX*               :class:`caffi.dbr.DBF`
-    *DBR_XXX*               :class:`caffi.dbr.DBR`
-    *CA_OP_XXX*             :class:`caffi.constants.CA_OP`
-    *cs_xxx*                :class:`caffi.constants.ChannelState`
-    *XXX_ALARM* (severity)  :class:`caffi.constants.AlarmSeverity`
-    *XXX_ALARM* (status)    :class:`caffi.constants.AlarmCondition`
+    *ECA_XXX*               :class:`caffi.ca.ECA`
+    *DBE_XXX*               :class:`caffi.ca.DBE`
+    *DBF_XXX*               :class:`caffi.ca.DBF`
+    *DBR_XXX*               :class:`caffi.ca.DBR`
+    *CA_OP_XXX*             :class:`caffi.ca.CA_OP`
+    *cs_xxx*                :class:`caffi.ca.ChannelState`
+    *XXX_ALARM* (severity)  :class:`caffi.ca.AlarmSeverity`
+    *XXX_ALARM* (status)    :class:`caffi.ca.AlarmCondition`
     ======================  ============
 
     This makes it convenient when interactively examine the code value. e.g.
@@ -176,8 +176,8 @@ def add_exception_event(callback=None):
                         type    type requested
                         count   count requested
                         addr    user's address to write results of CA_OP.GET (may be NULL)
-                        stat    status code, :class:`caffi.constants.ECA`
-                        op      operation, :class:`caffi.constants.CA_OP`
+                        stat    status code, :class:`caffi.ca.ECA`
+                        op      operation, :class:`caffi.ca.CA_OP`
                         ctx     a character string containing context info
                         file    source file name (may be empty)
                         lineNo  source file line number (may be zero)
@@ -362,9 +362,9 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
                         data structures, is created for each priority that is used on a particular server.
     :type name:         str
     :type callback:     callable, None
-    :type priority:     int, :class:`caffi.constants.CA_PRIORITY`
+    :type priority:     int, :class:`caffi.ca.CA_PRIORITY`
     :return:            (status code, channel identifier)
-    :rtype:             (:class:`caffi.constants.ECA`, cdata)
+    :rtype:             (:class:`caffi.ca.ECA`, cdata)
 
     The CA client library will attempt to establish and maintain a virtual circuit between the caller's application
     and a named process variable in a CA server. Each call to ca_create_channel allocates resources
@@ -378,7 +378,7 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
     and the location of the channel. A channel will only enter a connected state
     after the server's address is determined, and only if channel access successfully establishes a virtual circuit
     through the network to the server. Channel access routines that send a request to a server
-    will return :data:`caffi.constants.ECA.DISCONNCHID` if the channel is currently disconnected.
+    will return :data:`caffi.ca.ECA.DISCONNCHID` if the channel is currently disconnected.
 
     There are two ways to obtain asynchronous notification when a channel enters a connected state.
 
@@ -548,27 +548,27 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
                       field          value
                       ============   =============
                       chid           channel identifier
-                      type           the type of the item returned, :class:`caffi.dbr.DBR`
+                      type           the type of the item returned, :class:`caffi.ca.DBR`
                       count          the element count of the item returned
-                      status         status code of the request from the server, :class:`caffi.constants.ECA`
+                      status         status code of the request from the server, :class:`caffi.ca.ECA`
                       value          If *type* is a plain type, this is the PV's value. Otherwise it is a dict
                                      containing the meta information associated with this *type*.
                       ============   =============
 
     :param use_numpy: whether to format numeric waveform as numpy array
     :type chid:       cdata
-    :type chtype:     int, :class:`caffi.dbr.DBR`, None
+    :type chtype:     int, :class:`caffi.ca.DBR`, None
     :type count:      int, None
     :type callback:   callable, None
     :type use_numpy:  bool
-    :return:          (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
+    :return:          (:class:`caffi.ca.ECA`, :class:`caffi.ca.DBRValue`)
     :rtype:           tuple
 
     When no *callback* is specified the returned channel value can't be assumed to be stable
-    in the application supplied buffer until after :data:`caffi.constants.ECA.NORMAL` is returned from :func:`pend_io`.
+    in the application supplied buffer until after :data:`caffi.ca.ECA.NORMAL` is returned from :func:`pend_io`.
     If a connection is lost outstanding ca get requests are not automatically reissued following reconnect.
 
-    Call :meth:`caffi.dbr.DBRValue.get` to retrieve the value.
+    Call :meth:`caffi.ca.DBRValue.get` to retrieve the value.
 
     When *callback* is specified a value is read from the channel and
     then the user's callback is invoked with a dict containing the value.
@@ -576,7 +576,7 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
     If the channel disconnects before a ca get callback request can be completed,
     then the clients call back function is called with failure status.
 
-    All of these functions return :data:`caffi.constants.ECA.DISCONN` if the channel is currently disconnected.
+    All of these functions return :data:`caffi.ca.ECA.DISCONN` if the channel is currently disconnected.
 
     All get requests are accumulated (buffered) and not forwarded to the IOC until one of
     :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
@@ -709,12 +709,12 @@ def put(chid, value, chtype=None, count=None, callback=None):
                      chid           channel identifier
                      type           DBR.INVALID (-1)
                      count          0
-                     status         status code of the request from the server, :class:`caffi.constants.ECA`
+                     status         status code of the request from the server, :class:`caffi.ca.ECA`
                      ============   =============
 
     :type chid:      cdata
     :type value:     int, float, bytes, str, tuple, list, array
-    :type chtype:    int, :class:`caffi.dbr.DBR`, None
+    :type chtype:    int, :class:`caffi.ca.DBR`, None
     :type count:     int, None
     :type callback:  callable, None
     :return:
@@ -740,7 +740,7 @@ def put(chid, value, chtype=None, count=None, callback=None):
     before the disconnect. If a connection is lost and then resumed outstanding ca put requests are not automatically
     reissued following reconnect.
 
-    All of these functions return :data:`caffi.constants.ECA.DISCONN` if the channel is currently disconnected.
+    All of these functions return :data:`caffi.ca.ECA.DISCONN` if the channel is currently disconnected.
 
     All put requests are accumulated (buffered) and not forwarded to the IOC until
     one of :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
@@ -799,9 +799,9 @@ def create_subscription(chid, callback, chtype=None, count=None, mask=None, use_
                       field          value
                       ============   =============
                       chid           channel identifier
-                      type           the type of the item returned, :class:`caffi.dbr.DBR`
+                      type           the type of the item returned, :class:`caffi.ca.DBR`
                       count          the element count of the item returned
-                      status         status code of the request from the server, :class:`caffi.constants.ECA`
+                      status         status code of the request from the server, :class:`caffi.ca.ECA`
                       value          If *type* is a plain type, this is the PV's value. Otherwise it is a dict
                                      containing the meta information associated with this *type*.
                       ============   =============
@@ -811,17 +811,17 @@ def create_subscription(chid, callback, chtype=None, count=None, mask=None, use_
                       Default is the native type.
     :param count:     Element count to be written to the channel. Default is native element count.
     :param mask:      A mask with bits set for each of the event trigger types requested.
-                      The event trigger mask must be a bitwise or of one or more of :class:`caffi.constants.DBE`.
+                      The event trigger mask must be a bitwise or of one or more of :class:`caffi.ca.DBE`.
     :param use_numpy: whether to format numeric waveform as numpy array
     :type chid:       cdata
     :type callback:   callable
-    :type chtype:     :class:`caffi.constants.DBR`, None
+    :type chtype:     :class:`caffi.ca.DBR`, None
     :type count:      int, None
-    :type mask:       :class:`caffi.constants.DBE`, None
+    :type mask:       :class:`caffi.ca.DBE`, None
     :type use_numpy:  bool
 
     :return: (status code, event identifier)
-    :rtype: (:class:`caffi.constants.ECA`, cdata)
+    :rtype: (:class:`caffi.ca.ECA`, cdata)
 
     A significant change can be a change in the process variable's value, alarm status, or alarm severity.
     In the process control function block database the deadband field determines
@@ -959,7 +959,7 @@ def pend_event(timeout):
     all unfinished channel access labor has been processed, and unlike :func:`pend_io`
     returning from the function does not indicate anything about the status of pending IO requests.
 
-    It return :data:`caffi.constants.ECA.TIMEOUT` when successful. This behavior probably isn't intuitive,
+    It return :data:`caffi.ca.ECA.TIMEOUT` when successful. This behavior probably isn't intuitive,
     but it is preserved to insure backwards compatibility.
 
     See also Thread Safety and Preemptive Callback to User Code.
@@ -990,14 +990,14 @@ def pend_io(timeout):
         - ECA.TIMEOUT - Selected IO requests didn't complete before specified timeout
         - ECA.EVDISALLOW - Function inappropriate for use within an event handler
 
-    If :data:`caffi.constants.ECA.NORMAL` is returned then it can be safely assumed that
+    If :data:`caffi.ca.ECA.NORMAL` is returned then it can be safely assumed that
     all outstanding get requests *without* callback have completed successfully and
     channels created *without* callback have connected for the first time.
 
-    If :data:`caffi.constants.ECA.TIMEOUT` is returned then it must be assumed for all previous get requests and
+    If :data:`caffi.ca.ECA.TIMEOUT` is returned then it must be assumed for all previous get requests and
     properly qualified first time channel connects have failed.
 
-    If :data:`caffi.constants.ECA.TIMEOUT` is returned then get requests may be reissued
+    If :data:`caffi.ca.ECA.TIMEOUT` is returned then get requests may be reissued
     followed by a subsequent call to :func:`pend_io`.
     Specifically, the function will block only for outstanding get requests issued,
     and also any channels created *without* callback,
@@ -1068,7 +1068,7 @@ def field_type(chid):
     """
     :param cdata chid: channel identifier
     :return: the native type in the server of the process variable.
-    :rtype: :class:`caffi.dbr.DBF`
+    :rtype: :class:`caffi.ca.DBF`
     """
     return DBF(libca.ca_field_type(chid))
 
@@ -1102,7 +1102,7 @@ def state(chid):
     """
     :param cdata chid: channel identifier
     :return: the connection state
-    :rtype: :class:`caffi.constants.ChannelState`
+    :rtype: :class:`caffi.ca.ChannelState`
     """
     if chid is None:
         return ChannelState.NEVER_SEARCH
@@ -1148,7 +1148,7 @@ def sg_create():
     """
     Create a synchronous group and return an identifier for it.
 
-    :return: (:class:`caffi.constants.ECA`, Synchronous group identifier)
+    :return: (:class:`caffi.ca.ECA`, Synchronous group identifier)
     :rtype: tuple
 
     A synchronous group can be used to guarantee that a set of channel access requests have completed.
@@ -1188,7 +1188,7 @@ def sg_block(gid, timeout):
     """
     Flushes the send buffer and then waits until outstanding requests complete or the specified time out expires.
     At this time outstanding requests include calls to :func:`sg_get` and calls to :func:`sg_put`.
-    If :data:`caffi.constants.ECA.TIMEOUT` is returned then failure must be assumed for all outstanding queries.
+    If :data:`caffi.ca.ECA.TIMEOUT` is returned then failure must be assumed for all outstanding queries.
     Operations can be reissued followed by another :func:`sg_block`.
     This routine will only block on outstanding queries issued after the last call to :func:`sg_block`,
     :func:`sg_reset`, or :func:`sg_create` whichever occurs later in time.
@@ -1196,7 +1196,7 @@ def sg_block(gid, timeout):
     without processing any pending channel access activities.
 
     Values written into your program's variables by a channel access synchronous group request should not be
-    referenced by your program until :data:`caffi.constants.ECA.NORMAL` has been received from :func:`sg_block`.
+    referenced by your program until :data:`caffi.ca.ECA.NORMAL` has been received from :func:`sg_block`.
     This routine will process pending channel access background activity while it is waiting.
 
     :param int gid:       Identifier of the synchronous group.
@@ -1262,7 +1262,7 @@ def sg_put(gid, chid, value, chtype=None, count=None):
     :type gid:     int
     :type chid:    cdata
     :type value:   int, float, bytes, str, tuple, list, array
-    :type chtype:  int, :class:`caffi.dbr.DBR`
+    :type chtype:  int, :class:`caffi.ca.DBR`
     :return:
         - ECA.NORMAL - Normal successful completion
         - ECA.BADSYNCGRP - Invalid synchronous group
@@ -1300,15 +1300,15 @@ def sg_get(gid, chid, chtype=None, count=None, use_numpy=False):
     :param use_numpy: whether to format numeric waveform as numpy array
     :type gid:        int
     :type chid:       cdata
-    :type chtype:     int, :class:`caffi.dbr.DBR`, None
+    :type chtype:     int, :class:`caffi.ca.DBR`, None
     :type count:      int, None
-    :return: (:class:`caffi.constants.ECA`, :class:`caffi.dbr.DBRValue`)
+    :return: (:class:`caffi.ca.ECA`, :class:`caffi.ca.DBRValue`)
     :rtype: tuple
 
     The values returned by :func:`sg_get` should not be referenced by your program
-    until :data:`caffi.constants.ECA.NORMAL` has been received from ca_sg_block , or until :func:`sg_test` returns True.
+    until :data:`caffi.ca.ECA.NORMAL` has been received from ca_sg_block , or until :func:`sg_test` returns True.
 
-    Call :meth:`caffi.dbr.DBRValue.get` to retrieve the value.
+    Call :meth:`caffi.ca.DBRValue.get` to retrieve the value.
 
     All remote operation requests such as the above are accumulated (buffered) and not forwarded to the server
     until one of :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
