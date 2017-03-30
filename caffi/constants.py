@@ -20,7 +20,7 @@ class ChannelState(IntEnum):
     PREV_CONN   = cs_prev_conn #: valid chid, IOC was found, but unavailable
     CONN        = cs_conn #: valid chid, IOC was found, still available
     CLOSED      = cs_closed #: channel deleted
-    NEVER_SEARCH= cs_never_search # invalid chid
+    NEVER_SEARCH= cs_never_search #: invalid chid
 
 
 class CA_OP(IntEnum):
