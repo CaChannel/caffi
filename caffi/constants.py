@@ -143,9 +143,9 @@ class ECA(IntEnum):
     BADCHID         = ECA_BADCHID #: Invalid channel identifier
     BADFUNCPTR      = ECA_BADFUNCPTR
     ISATTACHED      = ECA_ISATTACHED #: Thread is already attached to a client context
-    UNAVAILINSERV   = ECA_UNAVAILINSERV
+    UNAVAILINSERV   = ECA_UNAVAILINSERV #: Not supported by attached service
     CHANDESTROY     = ECA_CHANDESTROY
-    BADPRIORITY     = ECA_BADPRIORITY
+    BADPRIORITY     = ECA_BADPRIORITY #: Invalid channel priority
     NOTTHREADED     = ECA_NOTTHREADED #: Preemptive callback not enabled - additional threads may not join context
     # 16KARRAYCLIENT is an invalid variable name
     ARRAY16KCLIENT  = ECA_16KARRAYCLIENT
