@@ -7,7 +7,7 @@ It uses `CFFI <https://pypi.python.org/pypi/cffi>`_ to call EPICS channel access
 This package provides direct low level interface to channel access, alike the C API.
 
 .. note:: cffi `commit 9fe2a9e <https://bitbucket.org/cffi/cffi/commits/9fe2a9e>`_ contains an important fix to the
-   frequent hangup on Windows 64bit Python 3. That means until cffi 1.11 is released, one should patch manually.
+          frequent hangup on Windows 64bit Python 3. That means until cffi 1.11 is released, one should patch manually.
 
 
 Install
