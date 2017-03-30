@@ -575,7 +575,7 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
     :type count:      int, None
     :type callback:   callable, None
     :type use_numpy:  bool
-    :return:          (:class:`ECA`, :class:`DBRValue`)
+    :return:          (:class:`ECA`, :class:`DBRValue` or None)
 
                       - :data:`ECA.NORMAL` - Normal successful completion
                       - :data:`ECA.BADTYPE` - Invalid DBR_XXXX type
@@ -586,11 +586,9 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
                       - :data:`ECA.ALLOCMEM` - Unable to allocate memory
                       - :data:`ECA.DISCONN` - Channel is disconnected
 
-    When no *callback* is specified the returned channel value can't be assumed to be stable
-    in the application supplied buffer until after :data:`ECA.NORMAL` is returned from :func:`pend_io`.
+    When no *callback* is specified, call :meth:`DBRValue.get` to retrieve the value only if :data:`ECA.NORMAL`
+    is returned from a subsequent :func:`pend_io`.
     If a connection is lost outstanding ca get requests are not automatically reissued following reconnect.
-
-    Call :meth:`DBRValue.get` to retrieve the value.
 
     When *callback* is specified a value is read from the channel and
     then the user's callback is invoked with a dict containing the value.
@@ -1333,10 +1331,8 @@ def sg_get(gid, chid, chtype=None, count=None, use_numpy=False):
                     - :data:`ECA.BADTYPE` - Invalid DBR_XXXX type
                     - :data:`ECA.GETFAIL` - A local database get failed
 
-    The values returned by :func:`sg_get` should not be referenced by your program
-    until :data:`ECA.NORMAL` has been received from ca_sg_block , or until :func:`sg_test` returns True.
-
-    Call :meth:`DBRValue.get` to retrieve the value.
+    Call :meth:`DBRValue.get` to retrieve the value only if :data:`ECA.NORMAL` has been received from ca_sg_block ,
+    or until :func:`sg_test` returns True.
 
     All remote operation requests such as the above are accumulated (buffered) and not forwarded to the server
     until one of :func:`flush_io`, :func:`pend_io`, or :func:`pend_event` are called.
