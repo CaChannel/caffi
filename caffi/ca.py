@@ -373,8 +373,9 @@ def create_channel(name, callback=None, priority=CA_PRIORITY.DEFAULT):
     :return:            (:class:`ECA`, channel identifier or None)
 
                         - :data:`ECA.NORMAL` - Normal successful completion
-                        - :data:`ECA.BADTYPE` - Invalid DBR_XXXX type
-                        - :data:`ECA.STRTOBIG` - Unusually large string
+                        - :data:`ECA.BADSTR` - Invalid string
+                        - :data:`ECA.BADPRIORITY` - Invalid priority
+                        - :data:`ECA.UNAVAILINSERV` - Not supported by attached service
                         - :data:`ECA.ALLOCMEM` - Unable to allocate memory
 
     The CA client library will attempt to establish and maintain a virtual circuit between the caller's application
