@@ -4,4 +4,4 @@ include MANIFEST.in
 include caffi/*.py
 graft caffi/lib
 include tests/*.py
-
+include python-caffi.spec
