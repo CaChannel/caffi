@@ -1,7 +1,10 @@
-include README
+include README.rst
 include LICENSE
 include MANIFEST.in
 include caffi/*.py
 graft caffi/lib
 include tests/*.py
 include python-caffi.spec
+include setup.py
+include setup.cfg
+include requirements.txt
