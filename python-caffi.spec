@@ -8,6 +8,7 @@ Group: Development/Libraries
 Vendor: Xiaoqiang Wang <xiaoqiang.wang AT psi DOT ch>
 Url: https://github.com/CaChannel/caffi
 
+BuildRequires: python-setuptools
 Requires: python-cffi python-enum34
 
 # Do not check .so files in the python_sitelib directory
