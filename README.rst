@@ -29,6 +29,25 @@ or checkout source code from the git repository,
     $ python setup.py install
 
 
+Package
+-------
+
+RPM
+^^^
+The SPEC file *python-caffi.spec* is included. Get the source tarball either from PyPI
+or create it by `python setup.py sdist`, and run::
+
+    $ rpmbuild -ta caffi-1.0.0.tar.gz
+
+The binary and source RPM will be created. The package name is *python-caffi*.
+
+Anaconda
+^^^^^^^^
+The recipe is included.::
+
+    $ conda build conda-recipe
+
+
 Documents
 ---------
 Latest documents are hosted at `Read the Dcos <http://caffi.readthedocs.org>`_.
