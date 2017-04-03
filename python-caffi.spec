@@ -13,6 +13,7 @@ Requires: python-cffi python-enum34
 
 # Do not check .so files in the python_sitelib directory
 # or any files in the application's directory for provides
+%global __provides_exclude_from ^%{python_sitelib}/.*\\.so$
 %global _unpackaged_files_terminate_build      0
 %global _binaries_in_noarch_packages_terminate_build   0
 
