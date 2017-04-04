@@ -1,6 +1,6 @@
 Name: python-caffi
 Summary: Channel Access Foreign Function Interface
-Version: 1.0.0c1
+Version: 1.0.0rc1
 Release: 1%{?dist}
 Source0: https://pypi.io/packages/source/c/caffi/caffi-%{version}.tar.gz
 License: BSD
@@ -14,6 +14,7 @@ Requires: python-cffi python-enum34
 # Do not check .so files in the python_sitelib directory
 # or any files in the application's directory for provides
 %global __provides_exclude_from ^%{python_sitelib}/.*\\.so$
+%global __requires_exclude_from ^%{python_sitelib}/.*\\.so$
 %global _unpackaged_files_terminate_build      0
 %global _binaries_in_noarch_packages_terminate_build   0
 
