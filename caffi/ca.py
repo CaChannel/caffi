@@ -613,16 +613,17 @@ def get(chid, chtype=None, count=None, callback=None, use_numpy=False):
         return ECA.BADTYPE, None
 
     native_count = element_count(chid)
-    if count is None or count <= 0 or count > native_count:
-        count = native_count
-
     if callable(callback):
+        if count is None or count < 0 or count > native_count:
+            count = native_count
         get_callback = ffi.new_handle((callback, use_numpy))
         status = libca.ca_array_get_callback(chtype, count, chid, _get_callback, get_callback)
         if status == ECA.NORMAL:
             __channels[chid]['callbacks'].add(get_callback)
         return ECA(status), None
     else:
+        if count is None or count <= 0 or count > native_count:
+            count = native_count
         value = ffi.new('char[]', dbr_size_n(chtype, count))
         status = libca.ca_array_get(chtype, count, chid, value)
         return ECA(status), DBRValue(chtype, count, value, use_numpy)
