@@ -25,14 +25,22 @@ environment:
       PYTHON_ARCH: "64"
       MINICONDA: C:\Miniconda36-x64
       EPICS_HOST_ARCH: "windows-x64"
+    - PYTHON_VERSION: 3.7
+      PYTHON_ARCH: "32"
+      MINICONDA: C:\Miniconda37
+      EPICS_HOST_ARCH: "win32-x86"
+    - PYTHON_VERSION: 3.7
+      PYTHON_ARCH: "64"
+      MINICONDA: C:\Miniconda37-x64
+      EPICS_HOST_ARCH: "windows-x64"
 
 install:
-  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;C:\\Program Files\\7-Zip;C:\\Program Files\\Git\\mingw64\\bin;%PATH%"
+  - "set PATH=C:\\Program Files\\7-Zip;C:\\Program Files\\Git\\mingw64\\bin;%PATH%"
+  - "%MINICONDA%\\Scripts\\activate.bat"
   - conda config --set always_yes true
   - conda install numpy pytest
   - curl -fsSL -o softIoc.zip "https://drive.google.com/uc?export=download&id=0B71karoHGq-HOGxhdC0xX183R0U"
   - 7z x softIoc.zip
-  - if "%PYTHON_ARCH%" == "64" if not "%PYTHON_VERSION%" == "2.7" pip install hg+https://bitbucket.org/xwang/cffi
   - pip install -e .
   - pip install git+https://github.com/CaChannel/CaChannel.git
 
