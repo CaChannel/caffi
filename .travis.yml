@@ -10,7 +10,7 @@ python:
 
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then
-      pip install pycparser=2.18;
+      pip install pycparser==2.18;
     fi
   - pip install twine;
   - pip install -e .
