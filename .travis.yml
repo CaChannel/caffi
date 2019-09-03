@@ -1,17 +1,14 @@
 language: python
 
 python:
-  - "2.6"
   - "2.7"
   - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7"
   - "pypy"
 
 install:
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then
-      pip install pycparser==2.18;
-    fi
   - pip install twine;
   - pip install -e .
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then
