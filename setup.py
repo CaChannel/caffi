@@ -3,7 +3,6 @@
 """
 setup.py file for caffi
 """
-import imp
 import sys
 # Use setuptools to include build_sphinx, upload/sphinx commands
 try:
@@ -11,9 +10,21 @@ try:
 except ImportError:
     from distutils.core import setup
 
+# python 2/3 compatible way to load module from file
+def load_module(name, location):
+    if sys.hexversion < 0x03040000:
+        import imp
+        module = imp.load_source(name, location)
+    else:
+        import importlib
+        spec = importlib.util.spec_from_file_location(name, location)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    return module
+
 long_description = open('README.rst').read()
 
-_version = imp.load_source('_version','caffi/_version.py')
+_version = load_module('_version','caffi/_version.py')
 
 requirements = ['cffi>=1.3.0']
 if sys.hexversion < 0x03040000:
