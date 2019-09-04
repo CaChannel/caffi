@@ -3,12 +3,18 @@
 """
 setup.py file for caffi
 """
+import os
 import sys
 # Use setuptools to include build_sphinx, upload/sphinx commands
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
+
+if os.environ.get('NOLIBCA'):
+    pkg_data = {}
+else:
+    pkg_data = {"caffi": ["lib/*/*"]}
 
 # python 2/3 compatible way to load module from file
 def load_module(name, location):
@@ -38,7 +44,7 @@ setup(name='caffi',
       author_email="xiaoqiang.wang@psi.ch",
       url="https://github.com/CaChannel/caffi",
       packages=["caffi"],
-      package_data={"caffi": ["lib/*/*"]},
+      package_data=pkg_data,
       install_requires=requirements,
       license="BSD",
       platforms=["Windows", "Linux", "Mac OS X"],
