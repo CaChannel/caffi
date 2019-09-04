@@ -15,7 +15,7 @@ long_description = open('README.rst').read()
 
 _version = imp.load_source('_version','caffi/_version.py')
 
-requirements = ['cffi>=0.8']
+requirements = ['cffi>=1.3.0']
 if sys.hexversion < 0x03040000:
     requirements.append('enum34')
 
