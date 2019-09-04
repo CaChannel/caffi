@@ -9,16 +9,17 @@ requirements:
   build:
     - python
     - setuptools
-    - cffi >=0.8
+    - cffi >=1.3
     - enum34 # [py2k]
 
   run:
     - python
-    - cffi >=0.8
+    - cffi >=1.3
     - enum34 # [py2k]
+    - epics-base
 
 build:
-  binary_relocation: False
+  noarch: python
 
 test:
   imports:
