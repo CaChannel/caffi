@@ -38,7 +38,7 @@ install:
   - "set PATH=C:\\Program Files\\7-Zip;C:\\Program Files\\Git\\mingw64\\bin;%PATH%"
   - "%MINICONDA%\\Scripts\\activate.bat"
   - conda config --set always_yes true
-  - conda install numpy pytest
+  - conda install numpy pytest anaconda-client
   - curl -fsSL -o softIoc.zip "https://drive.google.com/uc?export=download&id=0B71karoHGq-HOGxhdC0xX183R0U"
   - 7z x softIoc.zip
   - pip install -e .
@@ -62,3 +62,7 @@ build_script:
   - python -m CaChannel.CaChannel
   - ps: Stop-Process -Id $SoftIOC.Id
   - ps: Stop-Process -Id $caRepeater.Id
+  - conda build -c %MY_CONDA_CHANNEL% conda-recipe
+
+on_success:
+  - if %APPVEYOR_REPO_TAG% == true (anaconda -t %CONDA_TOKEN% upload --skip-existing %MINICONDA%\\conda-bld\\win-%PYTHON_ARCH%\\*.tar.bz2)
