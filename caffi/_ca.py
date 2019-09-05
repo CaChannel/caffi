@@ -1134,9 +1134,11 @@ def get_libca():
     is64bit = sys.maxsize > 2**32
     flags = 0
     if osname == 'Darwin':
+        libca_dir = 'lib'
         host_arch = 'darwin-x86'
         libca_name = 'libca.dylib'
     elif osname == 'Linux':
+        libca_dir = 'lib'
         libca_name = 'libca.so'
         flags = ffi.RTLD_NODELETE
         if is64bit:
@@ -1144,6 +1146,7 @@ def get_libca():
         else:
             host_arch = 'linux-x86'
     elif osname == 'Windows':
+        libca_dir = 'bin'
         libca_name = 'ca.dll'
         if is64bit:
             host_arch = 'windows-x64'
@@ -1156,7 +1159,7 @@ def get_libca():
     epics_base = os.environ.get('EPICS_BASE', '')
     if os.path.exists(epics_base):
         host_arch = os.environ.get('EPICS_HOST_ARCH', host_arch)
-        return os.path.join(epics_base, 'lib', host_arch), libca_name, flags
+        return os.path.join(epics_base, libca_dir, host_arch), libca_name, flags
     else:
         return os.path.join(cwd, 'lib', host_arch), libca_name, flags
 
