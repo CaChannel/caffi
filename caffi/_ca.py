@@ -1162,13 +1162,15 @@ def get_libca():
         return os.path.join(epics_base, libca_dir, host_arch), libca_name, flags
     else:
         return os.path.join(cwd, 'lib', host_arch), libca_name, flags
-
 #
 libca_path, libca_name, libca_flags = get_libca()
 
 # save and set current dir to ca library's path
 old_cwd = os.getcwd()
-os.chdir(libca_path)
+if os.path.exists(libca_path):
+    os.chdir(libca_path)
+else:
+    libca_path = ''
 
 # load ca library
 libca = ffi.dlopen(os.path.join(libca_path, libca_name), libca_flags)
