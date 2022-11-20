@@ -1111,20 +1111,20 @@ union db_access_val{
 };
 
 /* size for each type - array indexed by the DBR_ type code */
-const unsigned short dbr_size[];
+extern const unsigned short dbr_size[];
 
 /* size for each type's value - array indexed by the DBR_ type code */
-const unsigned short dbr_value_size[];
+extern const unsigned short dbr_value_size[];
 
-const unsigned short dbr_value_offset[];
+extern const unsigned short dbr_value_offset[];
 
-const char   *dbf_text[];
-const short  dbf_text_dim;
-const char   *dbf_text_invalid;
+extern const char   *dbf_text[];
+extern const short  dbf_text_dim;
+extern const char   *dbf_text_invalid;
 
-const char   *dbr_text[];
-const short  dbr_text_dim;
-const char   *dbr_text_invalid;
+extern const char   *dbr_text[];
+extern const short  dbr_text_dim;
+extern const char   *dbr_text_invalid;
 """)
 
 
