@@ -9,9 +9,9 @@ Build Notes:
    Change the RPATH
         $ chrpath -r '${ORIGIN}' libca.so
 2. On Windows, EPICS calling convention changes from __stdcall to __cdecl (shareLib.h).
-3. On macOS, the libraries include both 32 and 64-bit architecture
+3. On macOS, the x86 libraries include both 32 and 64-bit architecture
         configure/os/CONFIG_SITE.Common.darwin-x86
-   and change library name and rpath
+   In addition change library name and rpath, e.g. for darwin-x86.
         $ chmod +w libca.dylib libCom.dylib
         $ install_name_tool -id libCom.dylib libCom.dylib
         $ install_name_tool -id libca.dylib libca.dylib

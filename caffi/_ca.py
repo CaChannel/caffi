@@ -1135,8 +1135,11 @@ def get_libca():
     flags = 0
     if osname == 'Darwin':
         libca_dir = 'lib'
-        host_arch = 'darwin-x86'
         libca_name = 'libca.dylib'
+        if platform.machine() == 'arm64':
+            host_arch = 'darwin-aarch64'
+        else:
+            host_arch = 'darwin-x86'
     elif osname == 'Linux':
         libca_dir = 'lib'
         libca_name = 'libca.so'
