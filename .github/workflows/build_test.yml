@@ -1,0 +1,49 @@
+name: Python package
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        python: ["3.6", "3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install Conda packages
+        run: |
+          conda install numpy pytest
+          conda install -c paulscherrerinstitute epics-base
+      - name: Install pip packages
+        run: |
+          pip install -e .
+          pip install git+https://github.com/CaChannel/CaChannel.git
+      - name: Start EPICS IOC
+        if: ${{ runner.os }} != "windows"
+        run: |
+          $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc tests/test.db &
+      - name: Start EPICS IOC
+        if: ${{ runner.os }} == "windows"
+        shell: powershell
+        run: |
+          $SoftIOC = Start-Process -FilePath softIoc.exe -WorkingDirectory $Env:EPICS_BASE/bin/$Env:EPICS_HOST_ARCH -ArgumentList "-D softIoc.dbd -S -d test.db" -PassThru
+      - name: Run tests
+        run: |
+            py.test tests/test_context.py
+            py.test tests/test_preemptive.py
+            py.test tests/test_thread.py
+            py.test tests/test_callbacks.py
+            py.test tests/test_put_types.py
+            py.test tests/test_get_dbrtypes.py
+            py.test tests/test_sg.py
+            python -m CaChannel.CaChannel
+        env:
+          CACHANNEL_BACKEND: caffi
+      - name: Stop EPICS IOC
+        run: killall softIoc
