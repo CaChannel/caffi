@@ -26,12 +26,12 @@ jobs:
           pip install -e .
           pip install git+https://github.com/CaChannel/CaChannel.git
       - name: Start EPICS IOC
-        if: runner.os != "Windows"
+        if: ${{ runner.os != "Windows" }}
         run: |
           printenv
           $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc tests/test.db &
       - name: Start EPICS IOC
-        if: runner.os == "Windows"
+        if: ${{ runner.os == "Windows" }}
         shell: powershell
         run: |
           $SoftIOC = Start-Process -FilePath softIoc.exe -WorkingDirectory $Env:EPICS_BASE/bin/$Env:EPICS_HOST_ARCH -ArgumentList "-D softIoc.dbd -S -d test.db" -PassThru
