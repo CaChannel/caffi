@@ -40,6 +40,8 @@ jobs:
         if: ${{ runner.os == 'Windows' }}
         shell: powershell
         run: |
+          conda info
+          Get-Variable
           $SoftIOC = Start-Process -FilePath softIoc.exe -WorkingDirectory $Env:EPICS_BASE/bin/$Env:EPICS_HOST_ARCH -ArgumentList "-S -d test.db" -PassThru
       - name: Run tests
         run: |
