@@ -16,6 +16,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python }}
+          activate-environment: test
       - name: Install Conda packages
         run: |
           conda info
