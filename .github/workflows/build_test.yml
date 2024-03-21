@@ -2,6 +2,10 @@ name: Python package
 
 on: [push]
 
+defaults:
+  run:
+    shell: bash -l {0}
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -19,7 +23,6 @@ jobs:
           activate-environment: test
       - name: Install Conda packages
         run: |
-          conda activate test
           conda info
           conda env list
           conda install numpy pytest cffi
@@ -32,18 +35,14 @@ jobs:
       - name: Start EPICS IOC
         if: ${{ runner.os != 'Windows' }}
         run: |
-          conda activate test
-          printenv
           $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc tests/test.db &
       - name: Start EPICS IOC
         if: ${{ runner.os == 'Windows' }}
         shell: powershell
         run: |
-          conda activate test
           $SoftIOC = Start-Process -FilePath softIoc.exe -WorkingDirectory $Env:EPICS_BASE/bin/$Env:EPICS_HOST_ARCH -ArgumentList "-D softIoc.dbd -S -d test.db" -PassThru
       - name: Run tests
         run: |
-            conda activate test
             py.test tests/test_context.py
             py.test tests/test_preemptive.py
             py.test tests/test_thread.py
