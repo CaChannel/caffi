@@ -109,9 +109,14 @@ Even though as same as possible, there are subtle differences:
 
 """
 from __future__ import (print_function, absolute_import)
-import collections
-import numbers
 import sys
+
+if sys.hexversion < 0x03030000:
+    from collections import Sequence
+else:
+    from collections.abc import Sequence
+
+import numbers
 
 from .compat import *
 from ._ca import *
@@ -663,7 +668,7 @@ def _setup_put(chid, value, chtype=None, count=None):
 
     if isinstance(value, numbers.Number):
         value_count = 1
-    elif isinstance(value, collections.Sequence):
+    elif isinstance(value, Sequence):
         value_count = len(value)
         if isinstance(value, basestring):
             # convert to bytes
