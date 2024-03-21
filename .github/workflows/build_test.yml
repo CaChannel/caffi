@@ -43,6 +43,7 @@ jobs:
           $SoftIOC = Start-Process -FilePath softIoc.exe -WorkingDirectory $Env:EPICS_BASE/bin/$Env:EPICS_HOST_ARCH -ArgumentList "-D softIoc.dbd -S -d test.db" -PassThru
       - name: Run tests
         run: |
+            conda activate test
             py.test tests/test_context.py
             py.test tests/test_preemptive.py
             py.test tests/test_thread.py
