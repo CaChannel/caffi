@@ -39,7 +39,7 @@ install:
   - "%MINICONDA%\\Scripts\\activate.bat"
   - conda config --set always_yes true
   - conda install numpy pytest conda-build anaconda-client
-    conda install -c paulscherrerinstitute epics-base
+  - conda install -c paulscherrerinstitute epics-base
   - pip install -e .
   - pip install git+https://github.com/CaChannel/CaChannel.git
 
