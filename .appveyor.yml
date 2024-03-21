@@ -39,18 +39,15 @@ install:
   - "%MINICONDA%\\Scripts\\activate.bat"
   - conda config --set always_yes true
   - conda install numpy pytest conda-build anaconda-client
-  - curl -fsSL -o softIoc.zip "https://drive.google.com/uc?export=download&id=0B71karoHGq-HOGxhdC0xX183R0U"
-  - 7z x softIoc.zip
+    conda install -c paulscherrerinstitute epics-base
   - pip install -e .
   - pip install git+https://github.com/CaChannel/CaChannel.git
 
 build_script:
   - set EPICS_CA_AUTO_ADDR_LIST=NO
   - set EPICS_CA_ADDR_LIST=127.255.255.255
-  - cd softIoc
-  - ps: $caRepeater = Start-Process -FilePath caRepeater.exe -PassThru
-  - ps: $SoftIOC = Start-Process -FilePath softIoc.exe -ArgumentList "-D softIoc.dbd -S -d test.db" -PassThru
-  - cd ..
+  - ps: $caRepeater = Start-Process -FilePath caRepeater.exe -WorkingDirectory $Env:EPICS_BASE/bin/$Env:EPICS_HOST_ARCH -PassThru
+  - ps: $SoftIOC = Start-Process -FilePath softIoc.exe -WorkingDirectory $Env:EPICS_BASE/bin/$Env:EPICS_HOST_ARCH -ArgumentList "-D softIoc.dbd -S -d test.db" -PassThru
   - py.test tests/test_context.py
   - py.test tests/test_preemptive.py
   - py.test tests/test_thread.py
