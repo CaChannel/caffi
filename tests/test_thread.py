@@ -33,9 +33,11 @@ def setup_module(module):
 
     global evid
     status, evid = ca.create_subscription(chid, monitor, chtype=ca.DBR.TIME_DOUBLE)
+    ca.flush_io()
 
 
 def thread_even():
+    global ctx
     status = ca.attach_context(ctx)
     assert status == ca.ECA.NORMAL
 
@@ -45,6 +47,7 @@ def thread_even():
 
 
 def thread_odd():
+    global ctx
     status = ca.attach_context(ctx)
     assert status == ca.ECA.NORMAL
 
