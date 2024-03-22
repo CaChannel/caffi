@@ -33,17 +33,17 @@ jobs:
           conda env list
           conda install numpy pytest cffi
           conda install -c paulscherrerinstitute epics-base
+      - name: Install pip packages
+        run: |
+          conda activate test
+          pip install -e .
+          pip install git+https://github.com/CaChannel/CaChannel.git
       - name: Dump EPICS base env
         if: runner.os == 'Windows'
         shell: cmd /C CALL {0}
         run: |
           echo EPICS_BASE=%EPICS_BASE% >> "%GITHUB_ENV%"
           echo EPICS_HOST_ARCH=%EPICS_HOST_ARCH% >> "%GITHUB_ENV%"
-      - name: Install pip packages
-        run: |
-          conda activate test
-          pip install -e .
-          pip install git+https://github.com/CaChannel/CaChannel.git
       - name: Start EPICS IOC
         run: |
           if [[ -z "$EPICS_BASE" ]]; then
@@ -69,7 +69,11 @@ jobs:
         env:
           CACHANNEL_BACKEND: caffi
       - name: Stop EPICS IOC
-        if: runner.os != 'Windows'
         run: |
-          killall softIoc
-          killall caRepeater
+          if [[ $RUNNER_OS == "Windows" ]]; then
+            taskkill /F /IM softIoc.exe
+            taskkill /F /IM caRepeater.exe
+          else
+            killall softIoc
+            killall caRepeater
+          fi
