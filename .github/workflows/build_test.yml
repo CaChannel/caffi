@@ -13,11 +13,6 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
         python: ["3.6", "3.12"]
-        # On windows, epics-base conda package only exports
-        # EPICS_BASE and EPICS_HOST_ARCH for cmd shell.
-        include:
-          - epics-host-arch: "windows-x64"
-            os: "windows-latest"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,16 +21,9 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           auto-activate-base: false
-          activate-environment: test
-      - name: Install Conda packages
-        run: |
-          conda info
-          conda env list
-          conda install numpy pytest cffi
-          conda install -c paulscherrerinstitute epics-base
+          activate-environment: .github/workflows/conda-test-environment.yml
       - name: Install pip packages
         run: |
-          conda activate test
           pip install -e .
           pip install git+https://github.com/CaChannel/CaChannel.git
       - name: Dump EPICS base env
@@ -46,14 +34,6 @@ jobs:
           echo EPICS_HOST_ARCH=%EPICS_HOST_ARCH% >> "%GITHUB_ENV%"
       - name: Start EPICS IOC
         run: |
-          if [[ -z "$EPICS_BASE" ]]; then
-            EPICS_BASE=$CONDA_PREFIX/epics
-            echo "set EPICS_BASE=$CONDA_PREFIX/epics"
-          fi
-          if [[ -z "$EPICS_HOST_ARCH" ]]; then
-            EPICS_HOST_ARCH=${{ matrix.epics-host-arch }}
-            echo "set EPICS_HOST_ARCH=${{ matrix.epics-host-arch }}"
-          fi
           $EPICS_BASE/bin/$EPICS_HOST_ARCH/caRepeater &
           $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc -D $EPICS_BASE/dbd/softIoc.dbd -S -d tests/test.db &
       - name: Run tests
