@@ -29,6 +29,7 @@ jobs:
       - name: Dump EPICS base env
         if: runner.os == 'Windows'
         shell: cmd /C CALL {0}
+        # Note: No space before ">>", otherwise the space will be part of the value
         run: |
           echo EPICS_BASE=%EPICS_BASE%>> "%GITHUB_ENV%"
           echo EPICS_HOST_ARCH=%EPICS_HOST_ARCH%>> "%GITHUB_ENV%"
