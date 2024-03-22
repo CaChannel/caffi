@@ -25,6 +25,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python }}
+          auto-activate-base: false
           activate-environment: test
       - name: Install Conda packages
         run: |
@@ -34,8 +35,9 @@ jobs:
           conda install -c paulscherrerinstitute epics-base
       - name: Dump EPICS base env
         if: runner.os == 'Windows'
-        shell: cmd
+        shell: cmd /C CALL {0}
         run: |
+          set
           conda info
           echo EPICS_BASE=%EPICS_BASE% >> "%GITHUB_ENV%"
           echo EPICS_HOST_ARCH=%EPICS_HOST_ARCH% >> "%GITHUB_ENV%"
@@ -69,6 +71,7 @@ jobs:
         env:
           CACHANNEL_BACKEND: caffi
       - name: Stop EPICS IOC
+        if: runner.os != 'Windows'
         run: |
           killall softIoc
           killall caRepeater
