@@ -1,6 +1,6 @@
 Name: python-caffi
 Summary: Channel Access Foreign Function Interface
-Version: 1.0.3
+Version: 1.0.4
 Release: 1%{?dist}
 Source0: https://pypi.io/packages/source/c/caffi/caffi-%{version}.tar.gz
 License: BSD
