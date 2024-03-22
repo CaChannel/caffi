@@ -33,16 +33,8 @@ jobs:
           pip install -e .
           pip install git+https://github.com/CaChannel/CaChannel.git
       - name: Start EPICS IOC
-        if: ${{ runner.os != 'Windows' }}
         run: |
           $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc -S -d tests/test.db &
-      - name: Start EPICS IOC
-        if: ${{ runner.os == 'Windows' }}
-        shell: powershell
-        run: |
-          conda info
-          Get-Variable
-          $SoftIOC = Start-Process -FilePath softIoc.exe -WorkingDirectory $Env:EPICS_BASE/bin/$Env:EPICS_HOST_ARCH -ArgumentList "-S -d test.db" -PassThru
       - name: Run tests
         run: |
             py.test tests/test_context.py
