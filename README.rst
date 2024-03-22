@@ -6,6 +6,12 @@ It uses `CFFI <https://pypi.python.org/pypi/cffi>`_ to call EPICS channel access
 
 This package provides direct low level interface to channel access, alike the C API.
 
+.. warning::
+
+   On certain platforms, `callback <https://cffi.readthedocs.io/en/stable/using.html#callbacks-old-style>`_
+   might not work. On macOS arm64 platform, the module fails in import and is unusable.
+
+
 Install
 -------
 EPICS dynamic libraries have been shipped with the package for Windows, Linux and macOS.
