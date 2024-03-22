@@ -34,6 +34,8 @@ jobs:
           pip install git+https://github.com/CaChannel/CaChannel.git
       - name: Start EPICS IOC
         run: |
+          conda info
+          printenv
           $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc -S -d tests/test.db &
       - name: Run tests
         run: |
