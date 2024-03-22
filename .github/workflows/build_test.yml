@@ -37,10 +37,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd /C CALL {0}
         run: |
-          set
-          conda info
-          echo EPICS_BASE=%EPICS_BASE% >> "%GITHUB_ENV%"
-          echo EPICS_HOST_ARCH=%EPICS_HOST_ARCH% >> "%GITHUB_ENV%"
+          echo "EPICS_BASE=%EPICS_BASE%" >> "%GITHUB_ENV%"
+          echo "EPICS_HOST_ARCH=%EPICS_HOST_ARCH%" >> "%GITHUB_ENV%"
       - name: Install pip packages
         run: |
           conda activate test
