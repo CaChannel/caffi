@@ -6,6 +6,10 @@ def setup_module(module):
     pvs = {}
     vals = {}
 
+    # create context
+    status = ca.create_context(True)
+    assert status == ca.ECA.NORMAL
+
     # create channels
     for name in ['cawaves', 'cawaveh', 'cawavef', 'cawavec', 'cawavel', 'cawave']:
         status, chid = ca.create_channel(name)
@@ -69,3 +73,6 @@ def teardown_module():
 
     pvs.clear()
     vals.clear()
+
+    # destroy context
+    ca.destroy_context()
