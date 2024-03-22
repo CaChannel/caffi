@@ -32,6 +32,12 @@ jobs:
           conda env list
           conda install numpy pytest cffi
           conda install -c paulscherrerinstitute epics-base
+      - name: Dump EPICS base env
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          echo "EPICS_BASE=%EPICS_BASE%" >> "%GITHUB_ENV%"
+          echo "EPICS_HOST_ARCH=%EPICS_HOST_ARCH%" >> "%GITHUB_ENV%"
       - name: Install pip packages
         run: |
           conda activate test
@@ -41,9 +47,11 @@ jobs:
         run: |
           if [[ -z "$EPICS_BASE" ]]; then
             EPICS_BASE=$CONDA_PREFIX/epics
+            echo "set EPICS_BASE=$CONDA_PREFIX/epics"
           fi
           if [[ -z "$EPICS_HOST_ARCH" ]]; then
             EPICS_HOST_ARCH=${{ matrix.epics-host-arch }}
+            echo "set EPICS_HOST_ARCH=${{ matrix.epics-host-arch }}"
           fi
           $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc -S -D $EPICS_BASE/dbd/softIoc.dbd -d tests/test.db &
       - name: Run tests
