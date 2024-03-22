@@ -36,8 +36,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
-          echo "EPICS_BASE=%EPICS_BASE%" >> "%GITHUB_ENV%"
-          echo "EPICS_HOST_ARCH=%EPICS_HOST_ARCH%" >> "%GITHUB_ENV%"
+          conda info
+          echo EPICS_BASE=%EPICS_BASE% >> "%GITHUB_ENV%"
+          echo EPICS_HOST_ARCH=%EPICS_HOST_ARCH% >> "%GITHUB_ENV%"
       - name: Install pip packages
         run: |
           conda activate test
@@ -53,6 +54,7 @@ jobs:
             EPICS_HOST_ARCH=${{ matrix.epics-host-arch }}
             echo "set EPICS_HOST_ARCH=${{ matrix.epics-host-arch }}"
           fi
+          $EPICS_BASE/bin/$EPICS_HOST_ARCH/caRepeater &
           $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc -D $EPICS_BASE/dbd/softIoc.dbd -S -d tests/test.db &
       - name: Run tests
         run: |
@@ -67,4 +69,6 @@ jobs:
         env:
           CACHANNEL_BACKEND: caffi
       - name: Stop EPICS IOC
-        run: killall softIoc
+        run: |
+          killall softIoc
+          killall caRepeater
