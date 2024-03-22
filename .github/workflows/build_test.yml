@@ -45,7 +45,7 @@ jobs:
           if [[ -z "$EPICS_HOST_ARCH" ]]; then
             EPICS_HOST_ARCH=${{ matrix.epics-host-arch }}
           fi
-          $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc -S -d tests/test.db &
+          $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc -S -D $EPICS_BASE/dbd/softIoc.dbd -d tests/test.db &
       - name: Run tests
         run: |
             py.test tests/test_context.py
