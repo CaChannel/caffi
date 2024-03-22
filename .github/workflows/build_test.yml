@@ -51,8 +51,8 @@ jobs:
       - name: Stop EPICS IOC
         run: |
           if [[ $RUNNER_OS == "Windows" ]]; then
-            taskkill /IM softIoc.exe /F
-            taskkill /IM caRepeater.exe /F
+            taskkill -IM softIoc.exe -F
+            taskkill -IM caRepeater.exe -F
           else
             killall softIoc
             killall caRepeater
