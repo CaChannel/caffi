@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           auto-activate-base: false
-          environment-file: .github/workflows/conda-test-environment.txt
+          environment-file: .github/workflows/etc/conda-test-environment.yml
       - name: Install pip packages
         run: |
           pip install -e .
