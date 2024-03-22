@@ -13,6 +13,11 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
         python: ["3.6", "3.12"]
+        # On windows, epics-base conda package only exports
+        # EPICS_BASE and EPICS_HOST_ARCH for cmd shell.
+        include:
+          - epics-host-arch: "windows-x64"
+            os: "windows-latest"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,8 +39,12 @@ jobs:
           pip install git+https://github.com/CaChannel/CaChannel.git
       - name: Start EPICS IOC
         run: |
-          conda info
-          printenv
+          if [[ -z "$EPICS_BASE" ]]; then
+            EPICS_BASE=$CONDA_PREFIX/epics
+          fi
+          if [[ -z "EPICS_HOST_ARCH" ]]; then
+            EPICS_HOST_ARCH=${{ matrix.epics-host-arch }}
+          fi
           $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc -S -d tests/test.db &
       - name: Run tests
         run: |
