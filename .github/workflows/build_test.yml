@@ -32,7 +32,6 @@ jobs:
         run: |
           echo EPICS_BASE=%EPICS_BASE%>> "%GITHUB_ENV%"
           echo EPICS_HOST_ARCH=%EPICS_HOST_ARCH%>> "%GITHUB_ENV%"
-          tree /F "%EPICS_BASE%/bin/%EPICS_HOST_ARCH%"
       - name: Start EPICS IOC
         run: |
           "$EPICS_BASE/bin/$EPICS_HOST_ARCH/caRepeater" &
