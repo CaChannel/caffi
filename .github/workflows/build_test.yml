@@ -42,7 +42,7 @@ jobs:
           if [[ -z "$EPICS_BASE" ]]; then
             EPICS_BASE=$CONDA_PREFIX/epics
           fi
-          if [[ -z "EPICS_HOST_ARCH" ]]; then
+          if [[ -z "$EPICS_HOST_ARCH" ]]; then
             EPICS_HOST_ARCH=${{ matrix.epics-host-arch }}
           fi
           $EPICS_BASE/bin/$EPICS_HOST_ARCH/softIoc -S -d tests/test.db &
